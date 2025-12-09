@@ -1,7 +1,0 @@
-"dependencies": {
-  "next": "14.x.x",
-  "react": "18.x.x",
-  "react-dom": "18.x.x",
-  "firebase": "^11.0.0",
-  "stripe": "^16.0.0"
-}
