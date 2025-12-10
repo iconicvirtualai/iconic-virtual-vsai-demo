@@ -1,16 +1,14 @@
 // pages/api/vsai-variation.js
-
 import fetch from "node-fetch";
 
 const VSAI_API_KEY = process.env.VSAI_API_KEY;
 
-if (!VSAI_API_KEY) {
-  throw new Error("VSAI_API_KEY is not set in environment variables");
-}
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+  if (!VSAI_API_KEY) {
+    return res.status(500).json({ error: "VSAI_API_KEY not configured" });
   }
 
   try {
@@ -20,14 +18,13 @@ export default async function handler(req, res) {
       style,
       removeExistingFurniture,
       addFurniture,
-      baseVariationId, // optional; can be used to branch off a specific variation
-    } = req.body;
+      baseVariationId,
+    } = req.body || {};
 
     if (!renderId) {
       return res.status(400).json({ error: "renderId is required" });
     }
 
-    // Build config for variation
     const config = {
       type: "staging",
       output_resolution: "default",
@@ -36,11 +33,9 @@ export default async function handler(req, res) {
 
     if (addFurniture) {
       config.add_furniture = {
-        style: style || "standard",
         room_type: roomType || "living",
+        style: style || "standard",
       };
-
-      // optional: branch from a specific base variation
       if (baseVariationId) {
         config.add_furniture.base_variation_id = baseVariationId;
       }
@@ -55,7 +50,7 @@ export default async function handler(req, res) {
     const body = {
       config,
       variation_count: 1,
-      wait_for_completion: true, // wait until variation is done and result URL is ready
+      wait_for_completion: true,
     };
 
     const vsaiRes = await fetch(
@@ -76,14 +71,11 @@ export default async function handler(req, res) {
 
     if (!vsaiRes.ok) {
       console.error("VSAI variation error:", data);
-      return res.status(vsaiRes.status).json({
-        error: data?.message || "Failed to create variation",
-        raw: data,
-      });
+      return res
+        .status(vsaiRes.status)
+        .json({ error: data?.message || "Failed to create variation" });
     }
 
-    // Response example shows { variations: [ { result: { url } } ] }
-    // https://docs.virtualstagingai.app/v2-api/endpoints  :contentReference[oaicite:2]{index=2}
     const variationsArray = data.variations?.items || data.variations || [];
     const variation = variationsArray[0] || null;
 
@@ -94,10 +86,9 @@ export default async function handler(req, res) {
       renderId,
       variationId,
       resultImageUrl,
-      raw: data,
     });
   } catch (err) {
-    console.error("VSAI variation handler error:", err);
+    console.error("vsai-variation error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 }
