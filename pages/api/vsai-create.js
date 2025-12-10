@@ -1,5 +1,4 @@
 // pages/api/vsai-create.js
-import fetch from "node-fetch";
 
 const VSAI_API_KEY = process.env.VSAI_API_KEY;
 
