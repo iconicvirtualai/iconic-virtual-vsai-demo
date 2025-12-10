@@ -1,68 +1,92 @@
 // pages/api/vsai-create.js
 
+import fetch from "node-fetch";
+
+const VSAI_API_KEY = process.env.VSAI_API_KEY;
+
+if (!VSAI_API_KEY) {
+  throw new Error("VSAI_API_KEY is not set in environment variables");
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const VSAI_API_KEY = process.env.VSAI_API_KEY;
-  const VSAI_API_BASE =
-    process.env.VSAI_API_BASE || "https://api.virtualstagingai.app/v1";
-
-  if (!VSAI_API_KEY) {
-    return res.status(500).json({ error: "VSAI_API_KEY not configured" });
-  }
-
   try {
     const {
       imageUrl,
-      roomType = "living",
-      style = "standard",
-      declutterMode = "off",
-      addFurniture = true,
-      resolution = "full-hd",
-      addWatermark = true
-    } = req.body || {};
+      roomType,
+      style,
+      removeExistingFurniture,
+      addFurniture,
+    } = req.body;
 
     if (!imageUrl) {
       return res.status(400).json({ error: "imageUrl is required" });
     }
 
-    const body = {
-      image_url: imageUrl,
-      room_type: roomType,
-      style: style,
-      declutter_mode: declutterMode,
-      add_furniture: addFurniture,
-      resolution: resolution,
-      wait_for_completion: true,
-      add_virtually_staged_watermark: addWatermark
+    // Build VSAI v2 config
+    const config = {
+      type: "staging",
+      output_resolution: "default",
+      add_virtually_staged_watermark: true,
     };
 
-    const resp = await fetch(`${VSAI_API_BASE}/render/create`, {
-      method: "POST",
-      headers: {
-        Authorization: `Api-Key ${VSAI_API_KEY}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(body)
-    });
-
-    if (!resp.ok) {
-      const text = await resp.text();
-      console.error("VSAI error:", resp.status, text);
-      return res.status(500).json({ error: "VSAI error", details: text });
+    if (addFurniture) {
+      config.add_furniture = {
+        room_type: roomType || "living",
+        style: style || "standard",
+      };
     }
 
-    const data = await resp.json();
+    if (removeExistingFurniture) {
+      config.remove_furniture = {
+        mode: "on",
+      };
+    }
+
+    const body = {
+      config,
+      image_url: imageUrl,
+      variation_count: 1,
+      wait_for_completion: true, // wait until first variation is done
+    };
+
+    const vsaiRes = await fetch("https://api.virtualstagingai.app/v2/renders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Api-Key ${VSAI_API_KEY}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const data = await vsaiRes.json();
+
+    if (!vsaiRes.ok) {
+      console.error("VSAI create error:", data);
+      return res.status(vsaiRes.status).json({
+        error: data?.message || "Failed to create render",
+        raw: data,
+      });
+    }
+
+    // Response is a Render object with variations
+    const renderId = data.id;
+    const variation =
+      data?.variations?.items?.[0] || data?.variations?.[0] || null;
+    const resultImageUrl = variation?.result?.url || null;
+    const variationId = variation?.id || null;
 
     return res.status(200).json({
-      renderId: data.render_id,
-      resultImageUrl: data.result_image_url || null,
-      removalOutput: data.removal_output || null
+      renderId,
+      variationId,
+      resultImageUrl,
+      raw: data,
     });
   } catch (err) {
-    console.error("vsai-create error:", err);
+    console.error("VSAI create handler error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 }
