@@ -6,9 +6,10 @@ import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 export default function UploadAndStage() {
   // Image + URLs
   const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
-  const [originalPreviewUrl, setOriginalPreviewUrl] = useState(null);
-  const [vacantPreviewUrl, setVacantPreviewUrl] = useState(null); // decluttered / removal_output
-  const [stagedPreviewUrl, setStagedPreviewUrl] = useState(null); // staged result_image_url
+
+  // All staged options (watermarked) from VSAI
+  const [stagedImages, setStagedImages] = useState([]); // array of URLs
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   // Options from VSAI
   const [roomTypes, setRoomTypes] = useState([]);
@@ -72,7 +73,7 @@ export default function UploadAndStage() {
     loadOptions();
   }, []);
 
-  // Handle file upload to Firebase Storage
+  // Handle file upload to Firebase Storage (NO auto-staging)
   const handleFiles = useCallback(
     async (files) => {
       if (!files || !files.length) return;
@@ -88,12 +89,11 @@ export default function UploadAndStage() {
         const imageUrl = await getDownloadURL(storageRef);
 
         setUploadedImageUrl(imageUrl);
-        setOriginalPreviewUrl(imageUrl);
-        setVacantPreviewUrl(null);
-        setStagedPreviewUrl(null);
+        setStagedImages([]);
+        setCurrentIndex(0);
 
         setStatus("uploaded");
-        setMessage("Image uploaded. Adjust options and click 'Stage Now'.");
+        setMessage("Image uploaded. Choose options and click 'Stage Now'.");
       } catch (err) {
         console.error(err);
         setStatus("error");
@@ -143,7 +143,7 @@ export default function UploadAndStage() {
     return { declutterMode, addFurnitureFlag };
   };
 
-  // Call VSAI to stage/declutter based on settings
+  // Stage Now: manual trigger only
   const handleStageNow = async () => {
     if (!uploadedImageUrl) {
       setStatus("error");
@@ -155,7 +155,7 @@ export default function UploadAndStage() {
       const { declutterMode, addFurnitureFlag } = computeVsaiOptions();
 
       setStatus("staging");
-      setMessage("Sending image to VirtualStagingAI...");
+      setMessage("Rendering your staged image...");
 
       const vsaiResp = await fetch("/api/vsai-create", {
         method: "POST",
@@ -183,22 +183,20 @@ export default function UploadAndStage() {
 
       const data = await vsaiResp.json();
       const stagedUrl = data.resultImageUrl || null;
-      const vacantUrl = data.removalOutput || null;
 
-      setStagedPreviewUrl(stagedUrl);
-      setVacantPreviewUrl(vacantUrl);
-
-      if (stagedUrl || vacantUrl) {
-        setStatus("ready");
-        setMessage(
-          vacantUrl && stagedUrl
-            ? "Vacant and staged images ready. You can regenerate or purchase."
-            : "Image ready. You can regenerate or purchase."
-        );
-      } else {
-        setStatus("error");
-        setMessage("VSAI did not return any output images.");
+      if (!stagedUrl) {
+        throw new Error("VSAI did not return a staged image.");
       }
+
+      // Add this staged image to the slideshow (at the end)
+      setStagedImages((prev) => {
+        const next = [...prev, stagedUrl];
+        setCurrentIndex(next.length - 1); // show newest
+        return next;
+      });
+
+      setStatus("ready");
+      setMessage("Staged image ready. You can regenerate or purchase below.");
     } catch (err) {
       console.error(err);
       setStatus("error");
@@ -206,14 +204,15 @@ export default function UploadAndStage() {
     }
   };
 
-  // Purchase button (Stripe)
+  // Purchase: buy the currently selected staged image
   const handlePay = async () => {
-    const urlToBuy = stagedPreviewUrl || vacantPreviewUrl;
-    if (!urlToBuy) {
+    if (!stagedImages.length) {
       setStatus("error");
-      setMessage("No image available to purchase yet.");
+      setMessage("No staged image available to purchase yet.");
       return;
     }
+
+    const urlToBuy = stagedImages[currentIndex];
 
     try {
       setStatus("paying");
@@ -248,18 +247,47 @@ export default function UploadAndStage() {
     }
   };
 
-  // Regenerate = call VSAI again with the same settings
+  // Regenerate = call VSAI again with the same settings (new variation)
   const handleRegenerate = async () => {
-    // Just call handleStageNow again
     await handleStageNow();
   };
 
-  // --- UI layout: left 1/3 controls, right 2/3 image/drop zone ---
+  // Carousel navigation
+  const showPrev = () => {
+    if (stagedImages.length <= 1) return;
+    setCurrentIndex((idx) => (idx === 0 ? stagedImages.length - 1 : idx - 1));
+  };
+
+  const showNext = () => {
+    if (stagedImages.length <= 1) return;
+    setCurrentIndex((idx) => (idx === stagedImages.length - 1 ? 0 : idx + 1));
+  };
+
+  // Determine what to show in the main preview:
+  // - If we have staged images, show current staged
+  // - Else if we have upload, show uploaded original
+  let mainImage = null;
+  let mainLabel = "";
+
+  if (stagedImages.length > 0) {
+    mainImage = stagedImages[currentIndex];
+    mainLabel =
+      stagedImages.length > 1
+        ? `Staged option ${currentIndex + 1} of ${stagedImages.length}`
+        : "Staged result";
+  } else if (uploadedImageUrl) {
+    mainImage = uploadedImageUrl;
+    mainLabel = "Uploaded image (not yet staged)";
+  }
+
+  const isStaging = status === "staging";
+
+  // --- UI layout: left 1/3 controls, right 2/3 big preview ---
   return (
     <div
       style={{
         width: "100%",
-        maxWidth: "900px",
+        maxWidth: "960px",
         margin: "0 auto",
         borderRadius: "16px",
         border: "1px solid #ddd",
@@ -270,7 +298,14 @@ export default function UploadAndStage() {
       }}
     >
       {/* LEFT 1/3: Controls */}
-      <div style={{ flex: "0 0 33%", display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div
+        style={{
+          flex: "0 0 33%",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px"
+        }}
+      >
         {/* Remove existing furniture */}
         <label
           style={{
@@ -357,18 +392,23 @@ export default function UploadAndStage() {
         {/* Stage Now Button */}
         <button
           onClick={handleStageNow}
+          disabled={!uploadedImageUrl || isStaging}
           style={{
             marginTop: "16px",
             padding: "8px 12px",
             borderRadius: "8px",
             border: "none",
-            backgroundColor: "#111827",
+            backgroundColor: !uploadedImageUrl
+              ? "#9ca3af"
+              : isStaging
+              ? "#6b7280"
+              : "#111827",
             color: "#fff",
             fontSize: "14px",
-            cursor: "pointer"
+            cursor: !uploadedImageUrl || isStaging ? "not-allowed" : "pointer"
           }}
         >
-          Stage Now
+          {isStaging ? "Staging..." : "Stage Now"}
         </button>
 
         {/* Status + message */}
@@ -379,9 +419,16 @@ export default function UploadAndStage() {
           )}
         </div>
 
-        {/* Purchase / Regenerate buttons (only after we have output) */}
-        {(vacantPreviewUrl || stagedPreviewUrl) && (
-          <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+        {/* Purchase / Regenerate buttons (only after we have outputs) */}
+        {stagedImages.length > 0 && (
+          <div
+            style={{
+              marginTop: "16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px"
+            }}
+          >
             <button
               onClick={handlePay}
               style={{
@@ -394,7 +441,7 @@ export default function UploadAndStage() {
                 cursor: "pointer"
               }}
             >
-              Purchase
+              Purchase Selected Image
             </button>
             <button
               onClick={handleRegenerate}
@@ -408,14 +455,21 @@ export default function UploadAndStage() {
                 cursor: "pointer"
               }}
             >
-              Regenerate
+              Regenerate New Option
             </button>
           </div>
         )}
       </div>
 
-      {/* RIGHT 2/3: Image preview + drag & drop */}
-      <div style={{ flex: "0 0 67%", display: "flex", flexDirection: "column", gap: "12px" }}>
+      {/* RIGHT 2/3: Drag & drop + big preview */}
+      <div
+        style={{
+          flex: "0 0 67%",
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px"
+        }}
+      >
         {/* Drag & Drop uploader */}
         <div
           onDrop={onDrop}
@@ -423,9 +477,9 @@ export default function UploadAndStage() {
           onDragEnter={preventDefaults}
           onDragLeave={preventDefaults}
           style={{
-            border: "2px dashed #cbd5f5".replace("f5", "f5"), // just a soft blue-ish
+            border: "2px dashed #cbd5f5",
             borderRadius: "12px",
-            padding: "24px",
+            padding: "16px",
             textAlign: "center",
             cursor: "pointer",
             backgroundColor: "#f9fafb"
@@ -434,119 +488,141 @@ export default function UploadAndStage() {
           <p style={{ fontWeight: "600", marginBottom: "8px" }}>
             Drag & drop a photo here
           </p>
-          <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "16px" }}>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#6b7280",
+              marginBottom: "12px"
+            }}
+          >
             or click to browse
           </p>
           <input type="file" accept="image/*" onChange={onBrowseChange} />
         </div>
 
-        {/* Preview area */}
+        {/* Big preview area (single main box) */}
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "12px"
+            position: "relative",
+            borderRadius: "16px",
+            border: "1px solid #e5e7eb",
+            minHeight: "360px",
+            maxHeight: "520px",
+            overflow: "hidden",
+            backgroundColor: "#f3f4f6",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxSizing: "border-box"
           }}
         >
-          {/* Original preview */}
-          <div
-            style={{
-              borderRadius: "12px",
-              border: "1px solid #e5e7eb",
-              padding: "8px",
-              minHeight: "120px",
-              boxSizing: "border-box"
-            }}
-          >
-            <p style={{ fontSize: "13px", fontWeight: 600, marginBottom: "4px" }}>
-              Original
-            </p>
-            {originalPreviewUrl ? (
-              <img
-                src={originalPreviewUrl}
-                alt="Original"
+          {/* Rendered image or uploaded image */}
+          {mainImage ? (
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                padding: "8px",
+                boxSizing: "border-box",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px"
+              }}
+            >
+              <div
                 style={{
-                  width: "100%",
-                  borderRadius: "8px",
-                  border: "1px solid #e5e7eb"
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  color: "#374151"
                 }}
-              />
-            ) : (
-              <p style={{ fontSize: "12px", color: "#9ca3af" }}>
-                Upload a photo to see it here.
-              </p>
-            )}
-          </div>
+              >
+                {mainLabel}
+              </div>
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                <img
+                  src={mainImage}
+                  alt="Preview"
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "100%",
+                    borderRadius: "12px",
+                    border: "1px solid #e5e7eb",
+                    objectFit: "contain"
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
+            <p style={{ fontSize: "13px", color: "#9ca3af" }}>
+              Upload a photo to see it here.
+            </p>
+          )}
 
-          {/* Vacant + Staged side-by-side vertically */}
+          {/* Loading overlay while staging */}
+          {isStaging && (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                backgroundColor: "rgba(17,24,39,0.45)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#fff",
+                fontSize: "15px",
+                fontWeight: 500
+              }}
+            >
+              Rendering your staged image...
+            </div>
+          )}
+        </div>
+
+        {/* Simple slideshow controls under preview if multiple staged options */}
+        {stagedImages.length > 1 && (
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
-              gap: "8px"
+              justifyContent: "center",
+              gap: "12px",
+              marginTop: "4px"
             }}
           >
-            {/* Vacant preview */}
-            <div
+            <button
+              onClick={showPrev}
               style={{
-                borderRadius: "12px",
-                border: "1px solid #e5e7eb",
-                padding: "8px",
-                minHeight: "80px",
-                boxSizing: "border-box"
+                padding: "6px 10px",
+                borderRadius: "9999px",
+                border: "1px solid #d4d4d4",
+                backgroundColor: "#fff",
+                fontSize: "12px",
+                cursor: "pointer"
               }}
             >
-              <p style={{ fontSize: "13px", fontWeight: 600, marginBottom: "4px" }}>
-                Vacant (Decluttered)
-              </p>
-              {vacantPreviewUrl ? (
-                <img
-                  src={vacantPreviewUrl}
-                  alt="Vacant"
-                  style={{
-                    width: "100%",
-                    borderRadius: "8px",
-                    border: "1px solid #e5e7eb"
-                  }}
-                />
-              ) : (
-                <p style={{ fontSize: "12px", color: "#9ca3af" }}>
-                  Will appear here when decluttering is used.
-                </p>
-              )}
-            </div>
-
-            {/* Staged preview */}
-            <div
+              ◀ Previous
+            </button>
+            <button
+              onClick={showNext}
               style={{
-                borderRadius: "12px",
-                border: "1px solid #e5e7eb",
-                padding: "8px",
-                minHeight: "80px",
-                boxSizing: "border-box"
+                padding: "6px 10px",
+                borderRadius: "9999px",
+                border: "1px solid #d4d4d4",
+                backgroundColor: "#fff",
+                fontSize: "12px",
+                cursor: "pointer"
               }}
             >
-              <p style={{ fontSize: "13px", fontWeight: 600, marginBottom: "4px" }}>
-                Staged
-              </p>
-              {stagedPreviewUrl ? (
-                <img
-                  src={stagedPreviewUrl}
-                  alt="Staged"
-                  style={{
-                    width: "100%",
-                    borderRadius: "8px",
-                    border: "1px solid #e5e7eb"
-                  }}
-                />
-              ) : (
-                <p style={{ fontSize: "12px", color: "#9ca3af" }}>
-                  Staged result will appear here after rendering.
-                </p>
-              )}
-            </div>
+              Next ▶
+            </button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
