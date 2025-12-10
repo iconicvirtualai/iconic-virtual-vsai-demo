@@ -1,16 +1,14 @@
 // pages/api/vsai-create.js
-
 import fetch from "node-fetch";
 
 const VSAI_API_KEY = process.env.VSAI_API_KEY;
 
-if (!VSAI_API_KEY) {
-  throw new Error("VSAI_API_KEY is not set in environment variables");
-}
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+  if (!VSAI_API_KEY) {
+    return res.status(500).json({ error: "VSAI_API_KEY not configured" });
   }
 
   try {
@@ -20,13 +18,12 @@ export default async function handler(req, res) {
       style,
       removeExistingFurniture,
       addFurniture,
-    } = req.body;
+    } = req.body || {};
 
     if (!imageUrl) {
       return res.status(400).json({ error: "imageUrl is required" });
     }
 
-    // Build VSAI v2 config
     const config = {
       type: "staging",
       output_resolution: "default",
@@ -50,7 +47,7 @@ export default async function handler(req, res) {
       config,
       image_url: imageUrl,
       variation_count: 1,
-      wait_for_completion: true, // wait until first variation is done
+      wait_for_completion: true,
     };
 
     const vsaiRes = await fetch("https://api.virtualstagingai.app/v2/renders", {
@@ -66,13 +63,11 @@ export default async function handler(req, res) {
 
     if (!vsaiRes.ok) {
       console.error("VSAI create error:", data);
-      return res.status(vsaiRes.status).json({
-        error: data?.message || "Failed to create render",
-        raw: data,
-      });
+      return res
+        .status(vsaiRes.status)
+        .json({ error: data?.message || "Failed to create render" });
     }
 
-    // Response is a Render object with variations
     const renderId = data.id;
     const variation =
       data?.variations?.items?.[0] || data?.variations?.[0] || null;
@@ -83,10 +78,9 @@ export default async function handler(req, res) {
       renderId,
       variationId,
       resultImageUrl,
-      raw: data,
     });
   } catch (err) {
-    console.error("VSAI create handler error:", err);
+    console.error("vsai-create error:", err);
     return res.status(500).json({ error: "Internal server error" });
   }
 }
