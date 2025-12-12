@@ -1,1 +1,10 @@
+// pages/api/upload.ts
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    res.setHeader("Allow", ["POST"]);
+    return res.status(405).json({ ok: false, error: "Method not allowed" });
+  }
+
+  // TODO: Firebase upload logic
+}
 
