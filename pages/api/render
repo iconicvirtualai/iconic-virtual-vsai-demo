@@ -1,10 +1,86 @@
 // pages/api/render.ts
-export default async function handler(req, res) {
+import type { NextApiRequest, NextApiResponse } from "next";
+import { randomUUID } from "crypto";
+import { fetchVsai } from "../../lib/vsai";
+import { Job, saveJob } from "../../lib/jobs";
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
+    return res
+      .status(405)
+      .json({ ok: false, error: "Method not allowed" });
   }
 
-  // TODO: VSAI render-create logic
-}
+  const { userId, imageUrl, room_type, style } = req.body || {};
 
+  if (!userId || !imageUrl || !room_type || !style) {
+    return res
+      .status(400)
+      .json({ ok: false, error: "Missing userId, imageUrl, room_type or style" });
+  }
+
+  try {
+    const hasRealKey =
+      !!process.env.VSAI_API_KEY ||
+      !!process.env.VIRTUAL_STAGING_AI_API_KEY;
+
+    let json: any;
+
+    if (!hasRealKey) {
+      // Demo mode
+      json = {
+        render_id: randomUUID(),
+        status: "done",
+        outputs: [
+          "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
+        ],
+      };
+    } else {
+      const payload = {
+        image_url: imageUrl,
+        room_type,
+        style,
+        wait_for_completion: false,
+        add_virtually_staged_watermark: "true",
+      };
+
+      json = await fetchVsai("/render/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    }
+
+    const job: Job = {
+      id: randomUUID(),
+      userId,
+      source: {
+        fileName: "",
+        storagePath: "",
+        publicUrl: imageUrl,
+      },
+      renderId: json.render_id || json.id || json.renderId,
+      status: "rendering",
+      room_type,
+      style,
+    };
+
+    saveJob(job);
+
+    return res.status(200).json({
+      ok: true,
+      data: {
+        jobId: job.id,
+        renderId: job.renderId,
+        status: job.status,
+      },
+    });
+  } catch (e: any) {
+    console.error("[render] Error:", e.message || e);
+    return res.status(500).json({ ok: false, error: e.message || "Render failed" });
+  }
+}
