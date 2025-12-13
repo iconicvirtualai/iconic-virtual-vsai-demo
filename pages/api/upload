@@ -1,10 +1,43 @@
 // pages/api/upload.ts
-export default async function handler(req, res) {
+import type { NextApiRequest, NextApiResponse } from "next";
+import { firebaseUpload } from "../../lib/firebaseAdmin";
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     res.setHeader("Allow", ["POST"]);
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
+    return res
+      .status(405)
+      .json({ ok: false, error: "Method not allowed" });
   }
 
-  // TODO: Firebase upload logic
-}
+  const { userId, fileName, fileBase64 } = req.body || {};
 
+  if (!userId || !fileName || !fileBase64) {
+    return res
+      .status(400)
+      .json({ ok: false, error: "Missing userId, fileName or fileBase64" });
+  }
+
+  try {
+    const buffer = Buffer.from(fileBase64, "base64");
+    const safeName = String(fileName).replace(/[^a-zA-Z0-9_.-]/g, "_");
+    const destPath = `orders/${userId}/${Date.now()}-${safeName}`;
+
+    const { publicUrl, storagePath } = await firebaseUpload(
+      buffer,
+      destPath,
+      "image/jpeg"
+    );
+
+    return res.status(200).json({
+      ok: true,
+      data: { publicUrl, storagePath },
+    });
+  } catch (e: any) {
+    console.error("[upload] Error:", e.message || e);
+    return res.status(500).json({ ok: false, error: e.message || "Upload failed" });
+  }
+}
