@@ -1,10 +1,91 @@
 // pages/api/jobs/[jobId].ts
-export default async function handler(req, res) {
+import type { NextApiRequest, NextApiResponse } from "next";
+import { getJob, saveJob } from "../../../lib/jobs";
+import { fetchVsai, pickFirstOutputUrl } from "../../../lib/vsai";
+import { firebaseUpload } from "../../../lib/firebaseAdmin";
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "GET") {
     res.setHeader("Allow", ["GET"]);
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
+    return res
+      .status(405)
+      .json({ ok: false, error: "Method not allowed" });
   }
 
-  // TODO: Poll VSAI, upload staged image to Firebase "completed", return Job
-}
+  const { jobId } = req.query;
 
+  if (!jobId || typeof jobId !== "string") {
+    return res
+      .status(400)
+      .json({ ok: false, error: "jobId is required" });
+  }
+
+  const job = getJob(jobId);
+  if (!job) {
+    return res.status(404).json({ ok: false, error: "Job not found" });
+  }
+
+  if (!job.renderId) {
+    // Nothing to poll yet
+    return res.status(200).json({ ok: true, data: job });
+  }
+
+  try {
+    const hasRealKey =
+      !!process.env.VSAI_API_KEY ||
+      !!process.env.VIRTUAL_STAGING_AI_API_KEY;
+
+    let status = "rendering";
+    let outputs: any[] = [];
+
+    if (hasRealKey) {
+      const json: any = await fetchVsai(
+        `/render?render_id=${encodeURIComponent(job.renderId)}`
+      );
+      status = json.status || json.state || "rendering";
+      outputs = json.outputs || [];
+    } else {
+      // Demo mode: pretend it's done
+      status = "done";
+      outputs = [
+        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
+      ];
+    }
+
+    const stagedUrl = pickFirstOutputUrl(outputs);
+
+    if (status === "done" && stagedUrl && !job.watermarked) {
+      // Download staged image from VSAI
+      const imgResp = await fetch(stagedUrl);
+      if (!imgResp.ok) {
+        throw new Error(`Failed to download staged image: ${imgResp.status}`);
+      }
+      const arrayBuf = await imgResp.arrayBuffer();
+      const buffer = Buffer.from(arrayBuf);
+
+      const destPath = `orders/${job.userId}/completed/wm-${job.renderId}.jpg`;
+
+      const { publicUrl } = await firebaseUpload(
+        buffer,
+        destPath,
+        imgResp.headers.get("content-type") || "image/jpeg"
+      );
+
+      job.watermarked = { url: publicUrl, storagePath: destPath };
+      job.status = "done";
+      saveJob(job);
+    } else if (status === "error") {
+      job.status = "error";
+      job.error = "Render failed";
+      saveJob(job);
+    }
+
+    return res.status(200).json({ ok: true, data: job });
+  } catch (e: any) {
+    console.error("[jobs] Error:", e.message || e);
+    return res.status(500).json({ ok: false, error: e.message || "Status check failed" });
+  }
+}
