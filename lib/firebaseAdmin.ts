@@ -1,6 +1,5 @@
 import admin from "firebase-admin";
 
-// keep this untyped to avoid Bucket type mismatch
 let bucket: any;
 
 if (!admin.apps.length) {
@@ -26,6 +25,10 @@ if (!admin.apps.length) {
   bucket = admin.storage().bucket();
 }
 
+/**
+ * Uploads a buffer to Firebase Storage and returns a long-lived signed URL
+ * that can be accessed publicly (no auth).
+ */
 export async function firebaseUpload(
   buffer: Buffer,
   destPath: string,
@@ -33,11 +36,20 @@ export async function firebaseUpload(
 ) {
   const file = bucket.file(destPath);
 
+  // NO `public: true` here – avoids legacy ACLs with uniform bucket-level access
   await file.save(buffer, {
     contentType,
-    public: true, // change this later if you want signed URLs
   });
 
-  const publicUrl = `https://storage.googleapis.com/${bucket.name}/${destPath}`;
-  return { publicUrl, storagePath: destPath };
+  // Create a READ signed URL that VSAI and clients can access
+  const [signedUrl] = await file.getSignedUrl({
+    action: "read",
+    // far-future expiry so it’s effectively “permanent”
+    expires: "2500-01-01",
+  });
+
+  return {
+    publicUrl: signedUrl,
+    storagePath: destPath,
+  };
 }
