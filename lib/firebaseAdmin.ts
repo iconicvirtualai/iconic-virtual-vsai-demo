@@ -1,6 +1,7 @@
 import admin from "firebase-admin";
 
-let bucket: admin.storage.Bucket;
+// keep this untyped to avoid Bucket type mismatch
+let bucket: any;
 
 if (!admin.apps.length) {
   const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
@@ -34,7 +35,7 @@ export async function firebaseUpload(
 
   await file.save(buffer, {
     contentType,
-    public: true, // if you want public URLs; change if you need signed URLs later
+    public: true, // change this later if you want signed URLs
   });
 
   const publicUrl = `https://storage.googleapis.com/${bucket.name}/${destPath}`;
