@@ -67,9 +67,9 @@ const DRAG_DROP_PATTERN = `data:image/svg+xml,${encodeURIComponent(
 
 const DEFAULT_SETTINGS = {
   heroTitle: "Transform vacant spaces into story-rich interiors",
-  heroTitleAccent: "VirtuoStage Studio",
+  heroTitleAccent: "Iconic Virtual.AI Studio",
   heroCopy:
-    "Upload a room photo, pick your mood, and watch the AI stage it with thoughtful lighting, textures, and furniture.",
+    "Upload a photo. Pick your mood. Watch the magic happen.",
   processLabel: "Stage Image",
   regenerateLabel: "Regenerate Image",
   purchaseLabel: "Purchase Staged Image",
@@ -282,8 +282,8 @@ export default function Index() {
       const imageUrl: string = uploadJson.data.publicUrl;
       setStatusText("Image uploaded. Starting AI staging...");
 
-      // 2) Create VSAI render
-      const renderResp = await fetch("/api/render", {
+      // 2) Create VSAI render (preview / watermarked)
+      const renderResp = await fetch("/api/vsai-create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -334,7 +334,7 @@ export default function Index() {
 
           if (j.status === "done" || j.status === "paid_done") {
             clearPolling();
-            const imgUrl = j.final?.url || j.watermarked?.url || imageUrl;
+            const imgUrl = j.watermarked?.url || j.final?.url || imageUrl;
             setStagedUrl(imgUrl);
             setIsProcessing(false);
             setIsProcessed(true);
@@ -362,7 +362,7 @@ export default function Index() {
     startRender();
   };
 
-  // True re-stage via backend (new job)
+  // True VSAI re-stage via /api/vsai-variation
   const handleRegenerateClick = async () => {
     if (!job || !job.source?.publicUrl || isProcessing) return;
 
@@ -373,10 +373,11 @@ export default function Index() {
       const userId = getUserId();
       const imageUrl = job.source.publicUrl;
 
-      const renderResp = await fetch("/api/render", {
+      const renderResp = await fetch("/api/vsai-variation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          jobId: job.id,
           userId,
           imageUrl,
           room_type: roomType,
@@ -392,11 +393,11 @@ export default function Index() {
         return;
       }
 
-      const jobId: string = renderJson.data.jobId;
+      const newJobId: string = renderJson.data.jobId || job.id;
       const initialStatus: JobStatus = renderJson.data.status || "rendering";
 
       const newJob: Job = {
-        id: jobId,
+        id: newJobId,
         userId,
         status: initialStatus,
         room_type: roomType,
@@ -408,7 +409,7 @@ export default function Index() {
       clearPolling();
       pollRef.current = setInterval(async () => {
         try {
-          const jobResp = await fetch(`/api/jobs/${jobId}`);
+          const jobResp = await fetch(`/api/jobs/${newJobId}`);
           const jobJson = await jobResp.json();
           if (!jobResp.ok || !jobJson.ok) {
             setStatusText(jobJson.error || "Status check failed.");
@@ -419,7 +420,7 @@ export default function Index() {
 
           if (j.status === "done" || j.status === "paid_done") {
             clearPolling();
-            const imgUrl = j.final?.url || j.watermarked?.url || imageUrl;
+            const imgUrl = j.watermarked?.url || j.final?.url || imageUrl;
             setStagedUrl(imgUrl);
             setIsProcessing(false);
             setIsProcessed(true);
@@ -445,7 +446,7 @@ export default function Index() {
     }
   };
 
-  // Purchase -> Stripe Checkout (then /success page will call /api/checkout)
+  // Purchase -> Stripe Checkout
   const handlePurchaseClick = async () => {
     if (!job) {
       setStatusText("No staged image to purchase yet.");
@@ -819,8 +820,8 @@ export default function Index() {
               Key outcomes
             </p>
             <ul className="space-y-4 text-sm text-slate-700">
-              <li>Real-time before &amp; after reveal with motion slider.</li>
-              <li>Furnished presets tuned by room and style selectors.</li>
+              <li>Real-time before &amp; after reveal.</li>
+              <li>Furnished results by room and style selectors.</li>
               <li>
                 Auto-crop, lighting, and mood adjustments with every request.
               </li>
