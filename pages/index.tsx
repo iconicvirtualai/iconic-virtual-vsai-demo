@@ -101,7 +101,7 @@ async function fileToBase64(file: File): Promise<string> {
 }
 
 export default function Index() {
-  // image + job state
+  // Image + job state
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [stagedUrl, setStagedUrl] = useState<string | null>(null);
@@ -129,19 +129,16 @@ export default function Index() {
   const userIdRef = useRef<string | null>(null);
   const settings = DEFAULT_SETTINGS;
 
-  // Generate a stable userId per browser session
+  // Stable per-session user id
   const getUserId = () => {
     if (!userIdRef.current) {
       userIdRef.current =
-        "user-" +
-        Date.now() +
-        "-" +
-        Math.random().toString(36).slice(2, 8);
+        "user-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
     }
     return userIdRef.current;
   };
 
-  // Get VSAI options from backend
+  // Fetch VSAI options from backend
   useEffect(() => {
     const fetchOptions = async () => {
       try {
@@ -174,7 +171,7 @@ export default function Index() {
     fetchOptions();
   }, []);
 
-  // Cleanup file object URL on unmount/change
+  // Cleanup
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -206,9 +203,9 @@ export default function Index() {
     }
   };
 
-  const handleNewFile = (file: File) => {
-    setFile(file);
-    const url = URL.createObjectURL(file);
+  const handleNewFile = (f: File) => {
+    setFile(f);
+    const url = URL.createObjectURL(f);
     setPreviewUrl(url);
     setStagedUrl(null);
     setIsProcessed(false);
@@ -221,9 +218,7 @@ export default function Index() {
 
   const handleFileCapture = (event: ChangeEvent<HTMLInputElement>) => {
     const f = event.target.files?.[0];
-    if (f) {
-      handleNewFile(f);
-    }
+    if (f) handleNewFile(f);
     event.target.value = "";
   };
 
@@ -240,9 +235,7 @@ export default function Index() {
     event.preventDefault();
     setIsDragActive(false);
     const f = event.dataTransfer.files?.[0];
-    if (f) {
-      handleNewFile(f);
-    }
+    if (f) handleNewFile(f);
   };
 
   const startRender = async () => {
@@ -297,8 +290,7 @@ export default function Index() {
       }
 
       const jobId: string = renderJson.data.jobId;
-      const initialStatus: JobStatus =
-        renderJson.data.status || "rendering";
+      const initialStatus: JobStatus = renderJson.data.status || "rendering";
 
       const initialJob: Job = {
         id: jobId,
@@ -329,8 +321,7 @@ export default function Index() {
 
           if (j.status === "done" || j.status === "paid_done") {
             clearPolling();
-            const imgUrl =
-              j.final?.url || j.watermarked?.url || imageUrl;
+            const imgUrl = j.final?.url || j.watermarked?.url || imageUrl;
             setStagedUrl(imgUrl);
             setIsProcessing(false);
             setIsProcessed(true);
@@ -353,7 +344,7 @@ export default function Index() {
     }
   };
 
-  const handleProcess = () => {
+  const handleProcessClick = () => {
     if (!previewUrl || isProcessing) return;
     startRender();
   };
@@ -420,20 +411,18 @@ export default function Index() {
         {/* Hero */}
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
           <p className="text-sm uppercase tracking-[0.4em] text-slate-500">
-            {DEFAULT_SETTINGS.heroTitleAccent}
+            {settings.heroTitleAccent}
           </p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
-            {DEFAULT_SETTINGS.heroTitle}
+            {settings.heroTitle}
           </h1>
-          <p className="mt-4 text-lg text-slate-600">
-            {DEFAULT_SETTINGS.heroCopy}
-          </p>
+          <p className="mt-4 text-lg text-slate-600">{settings.heroCopy}</p>
         </div>
 
         {/* Main layout */}
         <div
           className={`grid gap-8 ${
-            DEFAULT_SETTINGS.layoutMode === "modern"
+            settings.layoutMode === "modern"
               ? "lg:grid-cols-[2fr_1fr]"
               : "lg:grid-cols-[3fr_2fr]"
           }`}
@@ -441,4 +430,100 @@ export default function Index() {
           {/* Left: upload + preview */}
           <section className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
             <div className="space-y-6">
-              <p
+              <p className="text-xs text-center uppercase tracking-[0.2em] text-slate-500">
+                {statusText}
+              </p>
+
+              {/* Drag/drop or preview */}
+              {!previewUrl ? (
+                <div
+                  className={`relative flex h-full min-h-[360px] flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-300 ${
+                    isDragActive
+                      ? "border-slate-700 bg-slate-50"
+                      : "border-slate-300 bg-white"
+                  }`}
+                  style={{
+                    backgroundImage: isDragActive
+                      ? `linear-gradient(rgba(248,249,250,0.95), rgba(248,249,250,0.95)), url("${DRAG_DROP_PATTERN}")`
+                      : `url("${DRAG_DROP_PATTERN}")`,
+                    backgroundSize: "70px 70px",
+                    backgroundRepeat: "repeat",
+                  }}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-4 text-center">
+                    <ImageIcon size={32} className="text-slate-500" />
+                    <p className="text-2xl font-semibold leading-snug text-slate-900">
+                      Drag &amp; Drop
+                      <span className="block text-base text-slate-500">
+                        or upload files
+                      </span>
+                    </p>
+                    <span className="rounded-full border border-slate-400 px-5 py-2 text-sm font-medium text-slate-900">
+                      Browse files
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileCapture}
+                    />
+                  </label>
+                </div>
+              ) : isProcessed && currentVariation && stagedOrPreview ? (
+                <div className="space-y-4">
+                  <div
+                    className="relative overflow-hidden rounded-3xl border border-slate-300 bg-white"
+                    style={{ aspectRatio: "1024 / 683" }}
+                  >
+                    {/* Before */}
+                    <img
+                      src={previewUrl || undefined}
+                      alt="Before"
+                      className="h-full w-full object-cover grayscale-50 brightness-90"
+                    />
+                    {/* After overlay */}
+                    <div
+                      className="absolute inset-0 overflow-hidden"
+                      style={{
+                        clipPath: `inset(0 ${100 - sliderValue}% 0 0)`,
+                      }}
+                    >
+                      <img
+                        src={stagedOrPreview || undefined}
+                        alt="After"
+                        className="h-full w-full object-cover"
+                        style={{ filter: currentVariation.filter }}
+                      />
+                    </div>
+                    <div
+                      className="absolute inset-y-0 -ml-0.5 hidden w-px bg-white/80 sm:block"
+                      style={{ left: `${sliderValue}%` }}
+                    />
+                    <div
+                      className="pointer-events-none absolute -top-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-lg"
+                      style={{ left: `calc(${sliderValue}% - 1.5rem)` }}
+                    >
+                      <Sparkles size={20} />
+                    </div>
+                    {/* Variation arrows */}
+                    <div className="absolute inset-y-0 left-4 flex items-center">
+                      <button
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600"
+                        onClick={() =>
+                          setVariationIndex(
+                            (prev) =>
+                              (prev - 1 + variations.length) %
+                              (variations.length || 1)
+                          )
+                        }
+                        type="button"
+                      >
+                        <ArrowLeft size={20} />
+                      </button>
+                    </div>
+                    <div className="absolute inset-y-0 right-4 flex items-center">
+                      <button
+                        className="flex h-10 w-10 items-center justify-center rounded-full bor
