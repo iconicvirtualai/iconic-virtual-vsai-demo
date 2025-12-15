@@ -526,4 +526,247 @@ export default function Index() {
                     </div>
                     <div className="absolute inset-y-0 right-4 flex items-center">
                       <button
-                        className="flex h-10 w-10 items-center justify-center rounded-full bor
+                        className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600"
+                        onClick={() =>
+                          setVariationIndex(
+                            (prev) => (prev + 1) % (variations.length || 1)
+                          )
+                        }
+                        type="button"
+                      >
+                        <ArrowRight size={20} />
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={10}
+                    max={90}
+                    value={sliderValue}
+                    onChange={(event) =>
+                      setSliderValue(Number(event.target.value))
+                    }
+                    className="w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-slate-500"
+                  />
+                </div>
+              ) : (
+                <div className="relative">
+                  <div
+                    className="relative rounded-3xl border border-slate-300 bg-white shadow-inner shadow-slate-300/60"
+                    style={{ aspectRatio: "1024 / 683" }}
+                  >
+                    <img
+                      src={previewUrl || undefined}
+                      alt="Uploaded preview"
+                      width={1024}
+                      height={683}
+                      className="h-full w-full rounded-3xl object-cover"
+                    />
+                    <div className="absolute inset-0 rounded-3xl border border-slate-300/60" />
+                    {isProcessing && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl bg-slate-50/90 text-center">
+                        <span className="h-12 w-12 animate-spin rounded-full border-2 border-transparent border-t-slate-500" />
+                        <p className="text-sm uppercase tracking-[0.4em] text-slate-500">
+                          Rendering furniture...
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Controls */}
+            {previewUrl && (
+              <div className="space-y-6">
+                {/* Room + style */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                      Room Type
+                    </p>
+                    <select
+                      id="vsai-room-type"
+                      className="mt-3 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
+                      value={roomType}
+                      onChange={(e) => setRoomType(e.target.value)}
+                    >
+                      {roomTypes.map((rt) => (
+                        <option
+                          key={rt}
+                          value={rt}
+                          className="bg-white text-slate-900"
+                        >
+                          {formatLabel(rt)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                      Style Type
+                    </p>
+                    <select
+                      id="vsai-style"
+                      className="mt-3 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
+                      value={style}
+                      onChange={(e) => setStyle(e.target.value)}
+                    >
+                      {styles.map((s) => (
+                        <option
+                          key={s}
+                          value={s}
+                          className="bg-white text-slate-900"
+                        >
+                          {formatLabel(s)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Declutter / Day-to-dusk toggles – UI only */}
+                <div className="flex flex-col gap-4">
+                  {[
+                    {
+                      label: "Declutter or Furniture Removal?",
+                      active: declutter,
+                      onToggle: () => setDeclutter((prev) => !prev),
+                    },
+                    {
+                      label: "Day to Dusk?",
+                      active: dayToDusk,
+                      onToggle: () => setDayToDusk((prev) => !prev),
+                    },
+                  ].map((option) => (
+                    <button
+                      key={option.label}
+                      className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                        option.active
+                          ? "border-slate-800 bg-slate-100 text-slate-900"
+                          : "border-slate-300 bg-white text-slate-700"
+                      }`}
+                      onClick={option.onToggle}
+                      type="button"
+                    >
+                      <span
+                        className={`flex h-7 w-7 items-center justify-center rounded-2xl border ${
+                          option.active
+                            ? "border-slate-800 bg-white text-slate-900"
+                            : "border-slate-300 text-slate-500"
+                        }`}
+                      >
+                        <Check
+                          size={16}
+                          className={
+                            option.active ? "text-slate-900" : "text-slate-500"
+                          }
+                        />
+                      </span>
+                      <span>{option.label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Main CTAs */}
+                {!isProcessed && (
+                  <div className="flex justify-center">
+                    <button
+                      className="w-1/2 max-w-[260px] rounded-2xl border border-slate-700 bg-slate-100 px-6 py-3 text-lg font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={handleProcessClick}
+                      type="button"
+                      disabled={!previewUrl || isProcessing}
+                    >
+                      {isProcessing ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-transparent border-t-slate-700" />
+                          Processing...
+                        </span>
+                      ) : (
+                        settings.processLabel
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {isProcessed && currentVariation && (
+                  <div className="space-y-5">
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <p className="text-sm uppercase tracking-[0.4em] text-slate-500">
+                          Before / After
+                        </p>
+                        <h2 className="text-2xl font-semibold text-slate-900">
+                          Virtually staged transformation ready for review
+                        </h2>
+                      </div>
+                      <div className="overflow-hidden rounded-2xl border border-slate-300 bg-white px-4 py-3 shadow-sm">
+                        <div className="flex flex-col gap-1 text-slate-700">
+                          <div className="text-[10px] uppercase tracking-[0.4em] text-slate-500">
+                            Variant {variationIndex + 1} / {variations.length}
+                          </div>
+                          <p className="text-lg font-semibold text-slate-900">
+                            {currentVariation.label}
+                          </p>
+                          <p className="text-sm leading-relaxed text-slate-600">
+                            {currentVariation.description}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-center gap-3">
+                        <button
+                          className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
+                          onClick={handleRegenerate}
+                          type="button"
+                          disabled={isProcessing}
+                        >
+                          <RefreshCw size={16} />
+                          {settings.regenerateLabel}
+                        </button>
+                        <button
+                          className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
+                          type="button"
+                          onClick={checkout}
+                          disabled={isProcessing}
+                        >
+                          {settings.purchaseLabel}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {hasRegenerated && (
+                  <div className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                    Click the arrows to peek additional finished directions.
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+
+          {/* Right: explainer */}
+          <aside className="space-y-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-200/60">
+            <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+              Key outcomes
+            </p>
+            <ul className="space-y-4 text-sm text-slate-700">
+              <li>Real-time before &amp; after reveal with motion slider.</li>
+              <li>Furnished presets tuned by room and style selectors.</li>
+              <li>
+                Auto-crop, lighting, and mood adjustments with every request.
+              </li>
+            </ul>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+              <p className="font-semibold text-slate-900">Tips</p>
+              <p className="text-slate-600">
+                Use high-resolution interior photos with neutral lighting for
+                best results.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  );
+}
