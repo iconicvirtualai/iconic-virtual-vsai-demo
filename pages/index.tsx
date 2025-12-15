@@ -49,17 +49,14 @@ const variationPalette = [
   {
     label: "Cozy Plush",
     description: "Warm hues & soft light",
-    accent: "from-rose-500/30 to-orange-400/30",
   },
   {
     label: "Luminous Drift",
     description: "Bright, airy illumination",
-    accent: "from-sky-500/30 to-cyan-500/30",
   },
   {
     label: "Twilight Luxe",
     description: "Deep contrasts & drama",
-    accent: "from-purple-500/30 to-fuchsia-500/30",
   },
 ];
 
@@ -75,7 +72,7 @@ const DEFAULT_SETTINGS = {
     "Upload a room photo, pick your mood, and watch the AI stage it with thoughtful lighting, textures, and furniture.",
   processLabel: "Stage Image",
   regenerateLabel: "Regenerate Image",
-  purchaseLabel: "Download Full Resolution",
+  purchaseLabel: "Purchase Staged Image",
   layoutMode: "modern",
 };
 
@@ -144,28 +141,42 @@ export default function Index() {
       try {
         const resp = await fetch("/api/vsai-options");
         const json = await resp.json();
-        if (resp.ok && json.ok && json.data) {
-          const rt = json.data.room_types || [];
-          const st = json.data.styles || [];
-          if (rt.length) {
-            setRoomTypes(rt);
-            setRoomType(rt[0]);
+
+        let data: any = null;
+        if (json && typeof json === "object") {
+          if ("ok" in json && json.ok && json.data) {
+            data = json.data;
           } else {
-            setRoomTypes(["living", "bed", "kitchen", "dining", "home_office"]);
-            setRoomType("living");
-          }
-          if (st.length) {
-            setStyles(st);
-            setStyle(st[0]);
-          } else {
-            setStyles(["standard", "modern", "scandinavian", "luxury"]);
-            setStyle("standard");
+            data = json;
           }
         }
+
+        const rt: string[] =
+          data?.room_types || data?.roomTypes || data?.room_types_list || [];
+        const st: string[] =
+          data?.styles || data?.style_list || data?.design_styles || [];
+
+        const finalRoomTypes =
+          rt.length > 0
+            ? rt
+            : ["living", "bed", "kitchen", "dining", "home_office"];
+        const finalStyles =
+          st.length > 0
+            ? st
+            : ["standard", "modern", "scandinavian", "luxury"];
+
+        setRoomTypes(finalRoomTypes);
+        setStyles(finalStyles);
+        setRoomType(finalRoomTypes[0]);
+        setStyle(finalStyles[0]);
       } catch (e) {
         console.error("Failed to fetch VSAI options", e);
-        setRoomTypes(["living", "bed", "kitchen", "dining", "home_office"]);
-        setStyles(["standard", "modern", "scandinavian", "luxury"]);
+        const fallbackRooms = ["living", "bed", "kitchen", "dining", "home_office"];
+        const fallbackStyles = ["standard", "modern", "scandinavian", "luxury"];
+        setRoomTypes(fallbackRooms);
+        setStyles(fallbackStyles);
+        setRoomType(fallbackRooms[0]);
+        setStyle(fallbackStyles[0]);
       }
     };
     fetchOptions();
@@ -280,6 +291,8 @@ export default function Index() {
           imageUrl,
           room_type: roomType,
           style,
+          declutter,
+          day_to_dusk: dayToDusk,
         }),
       });
       const renderJson = await renderResp.json();
@@ -349,56 +362,111 @@ export default function Index() {
     startRender();
   };
 
-  const handleRegenerate = () => {
-    if (!stagedUrl || isProcessing) return;
-    setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
-      setIsProcessed(true);
-      setHasRegenerated(true);
-      setVariationSeed((prev) => prev + 1);
-      setSliderValue(55);
-    }, 1600);
-  };
+  // True re-stage via backend (new job)
+  const handleRegenerateClick = async () => {
+    if (!job || !job.source?.publicUrl || isProcessing) return;
 
-  const checkout = async () => {
-    if (!job) {
-      setStatusText("No job to checkout.");
-      return;
-    }
     setIsProcessing(true);
-    setStatusText("Processing final image...");
+    setStatusText("Requesting a new variation...");
 
     try {
-      const resp = await fetch("/api/checkout", {
+      const userId = getUserId();
+      const imageUrl = job.source.publicUrl;
+
+      const renderResp = await fetch("/api/render", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          imageUrl,
+          room_type: roomType,
+          style,
+          declutter,
+          day_to_dusk: dayToDusk,
+        }),
+      });
+      const renderJson = await renderResp.json();
+      if (!renderResp.ok || !renderJson.ok) {
+        setIsProcessing(false);
+        setStatusText(renderJson.error || "Variation request failed.");
+        return;
+      }
+
+      const jobId: string = renderJson.data.jobId;
+      const initialStatus: JobStatus = renderJson.data.status || "rendering";
+
+      const newJob: Job = {
+        id: jobId,
+        userId,
+        status: initialStatus,
+        room_type: roomType,
+        style,
+        source: job.source,
+      };
+      setJob(newJob);
+
+      clearPolling();
+      pollRef.current = setInterval(async () => {
+        try {
+          const jobResp = await fetch(`/api/jobs/${jobId}`);
+          const jobJson = await jobResp.json();
+          if (!jobResp.ok || !jobJson.ok) {
+            setStatusText(jobJson.error || "Status check failed.");
+            return;
+          }
+          const j: Job = jobJson.data;
+          setJob(j);
+
+          if (j.status === "done" || j.status === "paid_done") {
+            clearPolling();
+            const imgUrl = j.final?.url || j.watermarked?.url || imageUrl;
+            setStagedUrl(imgUrl);
+            setIsProcessing(false);
+            setIsProcessed(true);
+            setHasRegenerated(true);
+            setVariationSeed((prev) => prev + 1);
+            setSliderValue(55);
+            setStatusText("New variation ready.");
+          } else if (j.status === "error") {
+            clearPolling();
+            setIsProcessing(false);
+            setStatusText(j.error || "Render failed.");
+          } else {
+            setStatusText("Staging in progress...");
+          }
+        } catch (err) {
+          console.error("Polling error (variation)", err);
+        }
+      }, 2500);
+    } catch (err) {
+      console.error("handleRegenerateClick error", err);
+      setIsProcessing(false);
+      setStatusText("Unexpected error during variation request.");
+    }
+  };
+
+  // Purchase -> Stripe Checkout (then /success page will call /api/checkout)
+  const handlePurchaseClick = async () => {
+    if (!job) {
+      setStatusText("No staged image to purchase yet.");
+      return;
+    }
+
+    setStatusText("Redirecting to checkout...");
+    try {
+      const resp = await fetch("/api/stripe-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobId: job.id }),
       });
       const json = await resp.json();
-      if (!resp.ok || !json.ok) {
-        setIsProcessing(false);
-        setStatusText(json.error || "Checkout failed.");
+      if (!resp.ok || !json.url) {
+        setStatusText(json.error || "Stripe checkout failed.");
         return;
       }
-
-      const updatedJob: Job = json.data.job;
-      setJob(updatedJob);
-      const url: string = json.data.downloadUrl;
-      setStagedUrl(url);
-      setIsProcessing(false);
-      setIsProcessed(true);
-      setStatusText("Download starting...");
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "virtually-staged.jpg";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      window.location.href = json.url as string;
     } catch (err) {
-      console.error("checkout error", err);
-      setIsProcessing(false);
+      console.error("handlePurchaseClick error", err);
       setStatusText("Unexpected error during checkout.");
     }
   };
@@ -625,7 +693,7 @@ export default function Index() {
                   </div>
                 </div>
 
-                {/* Declutter / Day-to-dusk toggles – UI only */}
+                {/* Declutter / Day-to-dusk toggles */}
                 <div className="flex flex-col gap-4">
                   {[
                     {
@@ -716,7 +784,7 @@ export default function Index() {
                       <div className="flex flex-wrap items-center justify-center gap-3">
                         <button
                           className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-                          onClick={handleRegenerate}
+                          onClick={handleRegenerateClick}
                           type="button"
                           disabled={isProcessing}
                         >
@@ -726,7 +794,7 @@ export default function Index() {
                         <button
                           className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
                           type="button"
-                          onClick={checkout}
+                          onClick={handlePurchaseClick}
                           disabled={isProcessing}
                         >
                           {settings.purchaseLabel}
