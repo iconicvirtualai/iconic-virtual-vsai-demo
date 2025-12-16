@@ -362,80 +362,89 @@ export default function Index() {
     startRender();
   };
 
- // True VSAI re-stage via /api/vsai-variation
-const handleRegenerateClick = async () => {
-  // Need an existing job + uploaded image
-  if (!job || !job.source?.publicUrl || isProcessing) return;
+  // True VSAI re-stage via /api/vsai-variation
+  const handleRegenerateClick = async () => {
+    if (!job || !job.source?.publicUrl || isProcessing) return;
 
-  setIsProcessing(true);
-  setStatusText("Requesting a new variation...");
+    setIsProcessing(true);
+    setStatusText("Requesting a new variation...");
 
-  try {
-    const userId = getUserId();
-    const imageUrl = job.source.publicUrl;
+    try {
+      const userId = getUserId();
+      const imageUrl = job.source.publicUrl;
 
-    // Pull the latest selections from the dropdowns
-    const roomSelect = document.getElementById(
-      "vsai-room-type"
-    ) as HTMLSelectElement | null;
-    const styleSelect = document.getElementById(
-      "vsai-style"
-    ) as HTMLSelectElement | null;
+      const renderResp = await fetch("/api/vsai-variation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId: job.id,
+          userId,
+          imageUrl,
+          room_type: roomType,
+          style,
+          declutter,
+          day_to_dusk: dayToDusk,
+        }),
+      });
+      const renderJson = await renderResp.json();
+      if (!renderResp.ok || !renderJson.ok) {
+        setIsProcessing(false);
+        setStatusText(renderJson.error || "Variation request failed.");
+        return;
+      }
 
-    const room_type =
-      roomSelect?.value || (job as any).room_type || "living";
-    const style =
-      styleSelect?.value || (job as any).style || "standard";
+      const newJobId: string = renderJson.data.jobId || job.id;
+      const initialStatus: JobStatus = renderJson.data.status || "rendering";
 
-    const resp = await apiFetch("/api/vsai-variation", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jobId: job.id,      // base job to vary
+      const newJob: Job = {
+        id: newJobId,
         userId,
-        imageUrl,
-        room_type,
+        status: initialStatus,
+        room_type: roomType,
         style,
-        // Wire these to real toggles later if you want:
-        // declutter: declutterEnabled,
-        // day_to_dusk: dayToDuskEnabled,
-      }),
-    });
+        source: job.source,
+      };
+      setJob(newJob);
 
-    if (!resp.ok) {
-      throw new Error(resp.error || "Variation request failed");
-    }
-
-    const newJobId = resp.data.jobId as string;
-
-    // Update state so polling watches the NEW job
-    setJobId(newJobId);
-    setJob((prev) =>
-      prev
-        ? {
-            ...prev,
-            status: "rendering",
+      clearPolling();
+      pollRef.current = setInterval(async () => {
+        try {
+          const jobResp = await fetch(`/api/jobs/${newJobId}`);
+          const jobJson = await jobResp.json();
+          if (!jobResp.ok || !jobJson.ok) {
+            setStatusText(jobJson.error || "Status check failed.");
+            return;
           }
-        : prev
-    );
+          const j: Job = jobJson.data;
+          setJob(j);
 
-    // Reset the UI slider / variation state
-    setIsProcessed(false);
-    setHasRegenerated(true);
-    setVariationSeed((prev) => prev + 1);
-    setSliderValue(55);
-    setStatusText("Staging new variation...");
-
-    // Re-use your existing polling logic for job status
-    // (this is the poll() you already have in the file)
-    poll();
-  } catch (err: any) {
-    console.error("[handleRegenerateClick] error", err);
-    setStatusText(err.message || "Variation failed");
-  } finally {
-    setIsProcessing(false);
-  }
-};
+          if (j.status === "done" || j.status === "paid_done") {
+            clearPolling();
+            const imgUrl = j.watermarked?.url || j.final?.url || imageUrl;
+            setStagedUrl(imgUrl);
+            setIsProcessing(false);
+            setIsProcessed(true);
+            setHasRegenerated(true);
+            setVariationSeed((prev) => prev + 1);
+            setSliderValue(55);
+            setStatusText("New variation ready.");
+          } else if (j.status === "error") {
+            clearPolling();
+            setIsProcessing(false);
+            setStatusText(j.error || "Render failed.");
+          } else {
+            setStatusText("Staging in progress...");
+          }
+        } catch (err) {
+          console.error("Polling error (variation)", err);
+        }
+      }, 2500);
+    } catch (err) {
+      console.error("handleRegenerateClick error", err);
+      setIsProcessing(false);
+      setStatusText("Unexpected error during variation request.");
+    }
+  };
 
   // Purchase -> Stripe Checkout
   const handlePurchaseClick = async () => {
