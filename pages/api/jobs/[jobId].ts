@@ -1,19 +1,81 @@
+// pages/api/jobs/[jobId].ts
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const VSAI_BASE = "https://api.virtualstagingai.app/v1";
 const VSAI_API_KEY =
   process.env.VSAI_API_KEY || process.env.VIRTUAL_STAGING_AI_API_KEY;
 
-function pickFirstOutputUrl(outputs: any[]): string | null {
-  if (!Array.isArray(outputs) || outputs.length === 0) return null;
-  const first = outputs[0];
-  if (typeof first === "string") return first;
-  if (first && typeof first === "object") {
-    if (typeof first.url === "string") return first.url;
-    if (typeof first.image_url === "string") return first.image_url;
-    if (typeof first.result_image_url === "string") return first.result_image_url;
+async function callVsai(path: string, init?: RequestInit) {
+  if (!VSAI_API_KEY) {
+    throw new Error("VSAI_API_KEY is not configured");
   }
-  return null;
+
+  const resp = await fetch(`${VSAI_BASE}${path}`, {
+    ...init,
+    headers: {
+      Authorization: `Api-key ${VSAI_API_KEY}`,
+      "Content-Type": "application/json",
+      ...(init?.headers || {}),
+    },
+  });
+
+  const text = await resp.text();
+  let json: any = {};
+  try {
+    json = text ? JSON.parse(text) : {};
+  } catch {
+    // ignore parse error
+  }
+
+  if (!resp.ok) {
+    const message =
+      json.error || json.message || `VSAI error ${resp.status}`;
+    throw new Error(message);
+  }
+
+  return json;
+}
+
+function extractOutputUrl(output: any): string | undefined {
+  if (!output) return;
+  if (typeof output === "string" && output.trim()) return output;
+
+  const keys = [
+    "url",
+    "image_url",
+    "result_image_url",
+    "output_url",
+    "download_url",
+    "public_url",
+  ];
+
+  for (const key of keys) {
+    const value = (output as any)[key];
+    if (typeof value === "string" && value.trim()) {
+      return value;
+    }
+  }
+
+  if (Array.isArray(output.outputs) && output.outputs.length > 0) {
+    const nested = extractOutputUrl(output.outputs[0]);
+    if (nested) return nested;
+  }
+
+  if (Array.isArray(output.media) && output.media.length > 0) {
+    const nested = extractOutputUrl(output.media[0]);
+    if (nested) return nested;
+  }
+
+  return;
+}
+
+function pickFirstOutputUrl(outputs: any[]): string | undefined {
+  if (!Array.isArray(outputs)) return;
+  for (const output of outputs) {
+    const url = extractOutputUrl(output);
+    if (url) return url;
+  }
+  return;
 }
 
 export default async function handler(
@@ -21,65 +83,61 @@ export default async function handler(
   res: NextApiResponse
 ) {
   if (req.method !== "GET") {
-    res.setHeader("Allow", ["GET"]);
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
-  if (!VSAI_API_KEY) {
-    return res
-      .status(500)
-      .json({ ok: false, error: "VSAI_API_KEY not configured" });
-  }
-
   const { jobId } = req.query;
-  const renderId = Array.isArray(jobId) ? jobId[0] : jobId;
 
-  if (!renderId || typeof renderId !== "string") {
+  if (!jobId || typeof jobId !== "string") {
     return res.status(400).json({ ok: false, error: "Missing jobId" });
   }
 
+  // Demo mode when there is no VSAI key configured
+  if (!VSAI_API_KEY) {
+    const demoUrl =
+      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800";
+    return res.status(200).json({
+      ok: true,
+      data: {
+        id: jobId,
+        userId: null,
+        status: "done",
+        room_type: "living",
+        style: "standard",
+        source: { publicUrl: "" },
+        watermarked: { url: demoUrl },
+      },
+    });
+  }
+
   try {
-    const vsaiRes = await fetch(
-      `${VSAI_BASE}/render?render_id=${encodeURIComponent(renderId)}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Api-key ${VSAI_API_KEY}`,
-        },
-      }
+    const json = await callVsai(
+      `/render?render_id=${encodeURIComponent(jobId)}`
     );
 
-    const json = (await vsaiRes.json().catch(() => ({}))) as any;
+    const status: string = json.status || json.state || "rendering";
+    const outputs: any[] = json.outputs || [];
+    const firstUrl = pickFirstOutputUrl(outputs);
 
-    if (!vsaiRes.ok) {
-      return res.status(vsaiRes.status).json({
-        ok: false,
-        error: json.error || "VirtualStagingAI status failed",
-      });
-    }
-
-    const status = json.status || json.state || "rendering";
-    const outputs = json.outputs || [];
-    const url = pickFirstOutputUrl(outputs);
-
-    const job: any = {
-      id: renderId,
-      userId: "",
-      source: { fileName: "", storagePath: "", publicUrl: "" },
-      status,
-      room_type: json.room_type || "",
-      style: json.style || "",
-    };
-
-    if (url) {
-      job.watermarked = { url, storagePath: "" };
-    }
-
-    return res.status(200).json({ ok: true, data: job });
-  } catch (e: any) {
-    console.error("[api/jobs] error", e);
-    return res
-      .status(500)
-      .json({ ok: false, error: e?.message || "Status error" });
+    return res.status(200).json({
+      ok: true,
+      data: {
+        id: jobId,
+        userId: json.user_id || null,
+        status,
+        room_type: json.room_type || "living",
+        style: json.style || "standard",
+        source: {
+          publicUrl: json.image_url || json.input_image_url || "",
+        },
+        watermarked: firstUrl ? { url: firstUrl } : undefined,
+      },
+    });
+  } catch (err: any) {
+    console.error("[jobs] error:", err);
+    return res.status(500).json({
+      ok: false,
+      error: err.message || "Failed to get job status",
+    });
   }
 }
