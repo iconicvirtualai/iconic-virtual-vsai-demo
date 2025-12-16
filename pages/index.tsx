@@ -362,89 +362,80 @@ export default function Index() {
     startRender();
   };
 
-  // True VSAI re-stage via /api/vsai-variation
-  const handleRegenerateClick = async () => {
-    if (!job || !job.source?.publicUrl || isProcessing) return;
+// True VSAI re-stage via /api/vsai-variation
+const handleRegenerateClick = async () => {
+  // Need an existing job + uploaded image
+  if (!job || !job.source?.publicUrl || isProcessing) return;
 
-    setIsProcessing(true);
-    setStatusText("Requesting a new variation...");
+  setIsProcessing(true);
+  setStatusText("Requesting a new variation...");
 
-    try {
-      const userId = getUserId();
-      const imageUrl = job.source.publicUrl;
+  try {
+    const userId = getUserId();
+    const imageUrl = job.source.publicUrl;
 
-      const renderResp = await fetch("/api/vsai-variation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jobId: job.id,
-          userId,
-          imageUrl,
-          room_type: roomType,
-          style,
-          declutter,
-          day_to_dusk: dayToDusk,
-        }),
-      });
-      const renderJson = await renderResp.json();
-      if (!renderResp.ok || !renderJson.ok) {
-        setIsProcessing(false);
-        setStatusText(renderJson.error || "Variation request failed.");
-        return;
-      }
+    // Pull the latest selections from the dropdowns
+    const roomSelect = document.getElementById(
+      "vsai-room-type"
+    ) as HTMLSelectElement | null;
+    const styleSelect = document.getElementById(
+      "vsai-style"
+    ) as HTMLSelectElement | null;
 
-      const newJobId: string = renderJson.data.jobId || job.id;
-      const initialStatus: JobStatus = renderJson.data.status || "rendering";
+    const room_type =
+      roomSelect?.value || (job as any).room_type || "living";
+    const style =
+      styleSelect?.value || (job as any).style || "standard";
 
-      const newJob: Job = {
-        id: newJobId,
+    const resp = await apiFetch("/api/vsai-variation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jobId: job.id, // base job to vary
         userId,
-        status: initialStatus,
-        room_type: roomType,
+        imageUrl,
+        room_type,
         style,
-        source: job.source,
-      };
-      setJob(newJob);
+        // later you can wire declutter/day_to_dusk here
+        // declutter: declutterEnabled,
+        // day_to_dusk: dayToDuskEnabled,
+      }),
+    });
 
-      clearPolling();
-      pollRef.current = setInterval(async () => {
-        try {
-          const jobResp = await fetch(`/api/jobs/${newJobId}`);
-          const jobJson = await jobResp.json();
-          if (!jobResp.ok || !jobJson.ok) {
-            setStatusText(jobJson.error || "Status check failed.");
-            return;
-          }
-          const j: Job = jobJson.data;
-          setJob(j);
-
-          if (j.status === "done" || j.status === "paid_done") {
-            clearPolling();
-            const imgUrl = j.watermarked?.url || j.final?.url || imageUrl;
-            setStagedUrl(imgUrl);
-            setIsProcessing(false);
-            setIsProcessed(true);
-            setHasRegenerated(true);
-            setVariationSeed((prev) => prev + 1);
-            setSliderValue(55);
-            setStatusText("New variation ready.");
-          } else if (j.status === "error") {
-            clearPolling();
-            setIsProcessing(false);
-            setStatusText(j.error || "Render failed.");
-          } else {
-            setStatusText("Staging in progress...");
-          }
-        } catch (err) {
-          console.error("Polling error (variation)", err);
-        }
-      }, 2500);
-    } catch (err) {
-      console.error("handleRegenerateClick error", err);
-      setIsProcessing(false);
-      setStatusText("Unexpected error during variation request.");
+    if (!resp.ok) {
+      throw new Error(resp.error || "Variation request failed");
     }
-  };
+
+    const newJobId = resp.data.jobId as string;
+
+    // Update state so polling watches the NEW job
+    setJobId(newJobId);
+    setJob((prev) =>
+      prev
+        ? {
+            ...prev,
+            status: "rendering",
+          }
+        : prev
+    );
+
+    // Reset the UI slider / variation state
+    setIsProcessed(false);
+    setHasRegenerated(true);
+    setVariationSeed((prev) => prev + 1);
+    setSliderValue(55);
+    setStatusText("Staging new variation...");
+
+    // Re-use your existing polling logic for job status
+    poll();
+  } catch (err: any) {
+    console.error("[handleRegenerateClick] error", err);
+    setStatusText(err.message || "Variation failed");
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
 
   // Purchase -> Stripe Checkout
   const handlePurchaseClick = async () => {
@@ -784,14 +775,15 @@ export default function Index() {
                       </div>
                       <div className="flex flex-wrap items-center justify-center gap-3">
                         <button
-                          className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-                          onClick={handleRegenerateClick}
-                          type="button"
-                          disabled={isProcessing}
-                        >
-                          <RefreshCw size={16} />
-                          {settings.regenerateLabel}
-                        </button>
+  className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
+  onClick={handleRegenerateClick}
+  type="button"
+  disabled={isProcessing}
+>
+  <RefreshCw size={16} />
+  {settings.regenerateLabel}
+</button>
+
                         <button
                           className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
                           type="button"
