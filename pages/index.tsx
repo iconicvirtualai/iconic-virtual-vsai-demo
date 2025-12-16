@@ -104,8 +104,7 @@ const DRAG_DROP_PATTERN = `data:image/svg+xml,${encodeURIComponent(
 const DEFAULT_SETTINGS = {
   heroTitle: "Transform vacant spaces into story-rich interiors",
   heroTitleAccent: "Iconic Virtual.AI Studio",
-  heroCopy:
-    "Upload a photo. Pick your mood. Watch the magic happen.",
+  heroCopy: "Upload a photo. Pick your mood. Watch the magic happen.",
   processLabel: "Stage Image",
   regenerateLabel: "Regenerate Image",
   purchaseLabel: "Purchase Staged Image",
@@ -138,10 +137,9 @@ export default function Index() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [stagedUrl, setStagedUrl] = useState<string | null>(null);
-  const [job, setJob] = useState<any | null>(null);
+  const [job, setJob] = useState<Job | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [statusText, setStatusText] = useState("Awaiting upload");
-
 
   // VSAI options
   const [roomTypes, setRoomTypes] = useState<string[]>([]);
@@ -209,7 +207,13 @@ export default function Index() {
         setStyle(finalStyles[0]);
       } catch (e) {
         console.error("Failed to fetch VSAI options", e);
-        const fallbackRooms = ["living", "bed", "kitchen", "dining", "home_office"];
+        const fallbackRooms = [
+          "living",
+          "bed",
+          "kitchen",
+          "dining",
+          "home_office",
+        ];
         const fallbackStyles = ["standard", "modern", "scandinavian", "luxury"];
         setRoomTypes(fallbackRooms);
         setStyles(fallbackStyles);
@@ -228,15 +232,56 @@ export default function Index() {
     };
   }, [previewUrl]);
 
+  const clearPolling = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  };
+
+  // Shared polling function for initial render AND regenerations
+  const startPolling = (jobIdToPoll: string, fallbackImageUrl: string) => {
+    clearPolling();
+    pollRef.current = setInterval(async () => {
+      try {
+        const jobResp = await fetch(`/api/jobs/${jobIdToPoll}`);
+        const jobJson = await jobResp.json();
+        if (!jobResp.ok || !jobJson.ok) {
+          setStatusText(jobJson.error || "Status check failed.");
+          return;
+        }
+        const j: Job = jobJson.data;
+        setJob(j);
+
+        if (j.status === "done" || j.status === "paid_done") {
+          clearPolling();
+          const imgUrl = j.watermarked?.url || j.final?.url || fallbackImageUrl;
+          setStagedUrl(imgUrl);
+          setIsProcessing(false);
+          setIsProcessed(true);
+          setStatusText("Staging complete.");
+        } else if (j.status === "error") {
+          clearPolling();
+          setIsProcessing(false);
+          setStatusText(j.error || "Render failed.");
+        } else {
+          setStatusText("Staging in progress...");
+        }
+      } catch (err) {
+        console.error("Polling error", err);
+      }
+    }, 2500);
+  };
+
   const variations = useMemo(() => {
     const baseUrl = stagedUrl || previewUrl;
     if (!baseUrl) return [];
     return variationPalette.map((variation, index) => {
       const seed = variationSeed + index;
-      const contrast = (1 + ((seed % 3) * 0.05)).toFixed(2);
-      const saturate = (1 + ((seed % 4) * 0.08)).toFixed(2);
+      const contrast = (1 + (seed % 3) * 0.05).toFixed(2);
+      const saturate = (1 + (seed % 4) * 0.08).toFixed(2);
       const hue = (seed * 6) % 360;
-      const brightness = (1 + ((seed % 2) * 0.04)).toFixed(2);
+      const brightness = (1 + (seed % 2) * 0.04).toFixed(2);
       const filter = `contrast(${contrast}) saturate(${saturate}) hue-rotate(${hue}deg) brightness(${brightness})`;
       return { ...variation, filter };
     });
@@ -244,13 +289,6 @@ export default function Index() {
 
   const currentVariation =
     variations.length > 0 ? variations[variationIndex % variations.length] : null;
-
-  const clearPolling = () => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  };
 
   const handleNewFile = (f: File) => {
     setFile(f);
@@ -340,11 +378,11 @@ export default function Index() {
         return;
       }
 
-      const jobId: string = renderJson.data.jobId;
+      const newJobId: string = renderJson.data.jobId;
       const initialStatus: JobStatus = renderJson.data.status || "rendering";
 
       const initialJob: Job = {
-        id: jobId,
+        id: newJobId,
         userId,
         status: initialStatus,
         room_type: roomType,
@@ -355,39 +393,10 @@ export default function Index() {
         },
       };
       setJob(initialJob);
+      setJobId(newJobId);
 
       setStatusText("Staging in progress...");
-
-      clearPolling();
-      pollRef.current = setInterval(async () => {
-        try {
-          const jobResp = await fetch(`/api/jobs/${jobId}`);
-          const jobJson = await jobResp.json();
-          if (!jobResp.ok || !jobJson.ok) {
-            setStatusText(jobJson.error || "Status check failed.");
-            return;
-          }
-          const j: Job = jobJson.data;
-          setJob(j);
-
-          if (j.status === "done" || j.status === "paid_done") {
-            clearPolling();
-            const imgUrl = j.watermarked?.url || j.final?.url || imageUrl;
-            setStagedUrl(imgUrl);
-            setIsProcessing(false);
-            setIsProcessed(true);
-            setStatusText("Staging complete.");
-          } else if (j.status === "error") {
-            clearPolling();
-            setIsProcessing(false);
-            setStatusText(j.error || "Render failed.");
-          } else {
-            setStatusText("Staging in progress...");
-          }
-        } catch (err) {
-          console.error("Polling error", err);
-        }
-      }, 2500);
+      startPolling(newJobId, imageUrl);
     } catch (err) {
       console.error("startRender error", err);
       setIsProcessing(false);
@@ -400,25 +409,81 @@ export default function Index() {
     startRender();
   };
 
-// Call the global vsaiRegenerate handler from the embedded script
-const handleRegenerate = () => {
-  if (!previewUrl || isProcessing) return;
+  // Regenerate using /api/vsai-variation WITHOUT re-uploading / burning a new credit
+  const handleRegenerateClick = async () => {
+    if (!job || !job.source?.publicUrl || isProcessing) return;
 
-  // Ask the global script (vsaiCustomScript) to do a true VSAI re-stage
-  triggerVsaiHandler("vsaiRegenerate");
+    setIsProcessing(true);
+    setStatusText("Requesting a new variation...");
 
-  // Just manage the local UI state (spinner, flags)
-  setIsProcessing(true);
-  setHasRegenerated(true);
-  setVariationSeed((prev) => prev + 1);
-  setSliderValue(55);
+    try {
+      const userId = getUserId();
+      const imageUrl = job.source.publicUrl;
 
-  // Let the script + polling update the image; we only handle the loader here
-  setTimeout(() => {
-    setIsProcessing(false);
-    setIsProcessed(true);
-  }, 1600);
-};
+      const roomTypeValue = roomType || job.room_type || "living";
+      const styleValue = style || job.style || "standard";
+
+      const resp = await apiFetch<{ jobId: string; status?: JobStatus }>(
+        "/api/vsai-variation",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            jobId: job.id, // let backend know this is a variation of the original job
+            imageUrl,
+            room_type: roomTypeValue,
+            style: styleValue,
+            declutter,
+            day_to_dusk: dayToDusk,
+          }),
+        }
+      );
+
+      if (!resp.ok || !resp.data) {
+        setIsProcessing(false);
+        setStatusText(resp.error || "Variation request failed.");
+        return;
+      }
+
+      const newJobId = resp.data.jobId;
+      const newStatus: JobStatus = resp.data.status || "rendering";
+
+      // Update state so polling watches the NEW job
+      setJobId(newJobId);
+      setJob((prev) =>
+        prev
+          ? {
+              ...prev,
+              id: newJobId,
+              status: newStatus,
+              room_type: roomTypeValue,
+              style: styleValue,
+            }
+          : {
+              id: newJobId,
+              userId,
+              status: newStatus,
+              room_type: roomTypeValue,
+              style: styleValue,
+              source: job.source,
+            }
+      );
+
+      setHasRegenerated(true);
+      setVariationSeed((prev) => prev + 1);
+      setSliderValue(55);
+      setIsProcessed(false);
+
+      setStatusText("Staging new variation...");
+      startPolling(newJobId, imageUrl);
+    } catch (err: any) {
+      console.error("[handleRegenerateClick] error", err);
+      setIsProcessing(false);
+      setStatusText(err.message || "Variation failed.");
+    }
+  };
+
   // Purchase -> Stripe Checkout
   const handlePurchaseClick = async () => {
     if (!job) {
@@ -757,14 +822,14 @@ const handleRegenerate = () => {
                       </div>
                       <div className="flex flex-wrap items-center justify-center gap-3">
                         <button
-  className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-  onClick={handleRegenerate}
-  type="button"
-  disabled={isProcessing}
->
-  <RefreshCw size={16} />
-  {settings.regenerateLabel}
-</button>
+                          className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
+                          onClick={handleRegenerateClick}
+                          type="button"
+                          disabled={isProcessing}
+                        >
+                          <RefreshCw size={16} />
+                          {settings.regenerateLabel}
+                        </button>
 
                         <button
                           className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
