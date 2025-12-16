@@ -5,7 +5,6 @@ const VSAI_BASE = "https://api.virtualstagingai.app/v1";
 const VSAI_API_KEY =
   process.env.VSAI_API_KEY || process.env.VIRTUAL_STAGING_AI_API_KEY;
 
-// Shared helper to call the Virtual Staging AI API
 async function callVsai(path: string, init?: RequestInit) {
   if (!VSAI_API_KEY) {
     throw new Error("VSAI_API_KEY is not configured");
@@ -25,7 +24,7 @@ async function callVsai(path: string, init?: RequestInit) {
   try {
     json = text ? JSON.parse(text) : {};
   } catch {
-    // keep json as {}
+    // ignore parse error
   }
 
   if (!resp.ok) {
@@ -72,7 +71,7 @@ export default async function handler(
   const rt = room_type || "living";
   const st = style || "standard";
 
-  // Make this `any` so we can safely add optional flags
+  // payload is `any` so we can attach whatever VSAI supports
   const payload: any = {
     image_url: imageUrl,
     room_type: rt,
@@ -81,27 +80,20 @@ export default async function handler(
     add_virtually_staged_watermark: true,
   };
 
-  // Optional flags – these will be ignored by VSAI if unsupported
-  if (declutter) {
-    payload.declutter = true;
-  }
-  if (day_to_dusk) {
-    payload.day_to_dusk = true;
-  }
+  // optional flags; VSAI will ignore unknown ones
+  if (declutter) payload.declutter = true;
+  if (day_to_dusk) payload.day_to_dusk = true;
 
-  // Optionally attach "add_furniture" style block as well
-  payload.add_furniture = {
-    room_type: rt,
-    style: st,
-  };
+  // if VSAI ever supports free variations by parent id, pass it along
+  if (jobId) payload.parent_render_id = jobId;
 
-  // Demo mode if no API key
+  // Demo mode (no VSAI key configured)
   if (!VSAI_API_KEY) {
-    const fakeJobId = `variation-${Date.now()}`;
+    const fakeId = `variation-${Date.now()}`;
     return res.status(200).json({
       ok: true,
       data: {
-        jobId: fakeJobId,
+        jobId: fakeId,
         status: "rendering",
         basedOnJobId: jobId || null,
       },
