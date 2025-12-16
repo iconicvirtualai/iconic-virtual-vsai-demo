@@ -400,81 +400,25 @@ export default function Index() {
     startRender();
   };
 
-// True VSAI re-stage via /api/vsai-variation
-const handleRegenerateClick = async () => {
-  // Need an existing job + uploaded image
-  if (!job || !job.source?.publicUrl || isProcessing) return;
+// Call the global vsaiRegenerate handler from the embedded script
+const handleRegenerate = () => {
+  if (!previewUrl || isProcessing) return;
 
+  // Ask the global script (vsaiCustomScript) to do a true VSAI re-stage
+  triggerVsaiHandler("vsaiRegenerate");
+
+  // Just manage the local UI state (spinner, flags)
   setIsProcessing(true);
-  setStatusText("Requesting a new variation...");
+  setHasRegenerated(true);
+  setVariationSeed((prev) => prev + 1);
+  setSliderValue(55);
 
-  try {
-    const userId = getUserId();
-    const imageUrl = job.source.publicUrl;
-
-    // Pull the latest selections from the dropdowns
-    const roomSelect = document.getElementById(
-      "vsai-room-type"
-    ) as HTMLSelectElement | null;
-    const styleSelect = document.getElementById(
-      "vsai-style"
-    ) as HTMLSelectElement | null;
-
-    const room_type =
-      roomSelect?.value || (job as any).room_type || "living";
-    const style =
-      styleSelect?.value || (job as any).style || "standard";
-
-    const resp = await apiFetch("/api/vsai-variation", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        jobId: job.id, // base job to vary
-        userId,
-        imageUrl,
-        room_type,
-        style,
-        // later you can wire declutter/day_to_dusk here
-        // declutter: declutterEnabled,
-        // day_to_dusk: dayToDuskEnabled,
-      }),
-    });
-
-    if (!resp.ok) {
-      throw new Error(resp.error || "Variation request failed");
-    }
-
-    const newJobId = resp.data.jobId as string;
-
-    // Update state so polling watches the NEW job
-    setJobId(newJobId);
-    setJob((prev) =>
-      prev
-        ? {
-            ...prev,
-            status: "rendering",
-          }
-        : prev
-    );
-
-    // Reset the UI slider / variation state
-    setIsProcessed(false);
-    setHasRegenerated(true);
-    setVariationSeed((prev) => prev + 1);
-    setSliderValue(55);
-    setStatusText("Staging new variation...");
-
-    // Re-use your existing polling logic for job status
-    poll();
-  } catch (err: any) {
-    console.error("[handleRegenerateClick] error", err);
-    setStatusText(err.message || "Variation failed");
-  } finally {
+  // Let the script + polling update the image; we only handle the loader here
+  setTimeout(() => {
     setIsProcessing(false);
-  }
+    setIsProcessed(true);
+  }, 1600);
 };
-
-
   // Purchase -> Stripe Checkout
   const handlePurchaseClick = async () => {
     if (!job) {
@@ -814,7 +758,7 @@ const handleRegenerateClick = async () => {
                       <div className="flex flex-wrap items-center justify-center gap-3">
                         <button
   className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-  onClick={handleRegenerateClick}
+  onClick={handleRegenerate}
   type="button"
   disabled={isProcessing}
 >
