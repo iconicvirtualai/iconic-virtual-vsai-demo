@@ -138,8 +138,10 @@ export default function Index() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [stagedUrl, setStagedUrl] = useState<string | null>(null);
-  const [job, setJob] = useState<Job | null>(null);
+  const [job, setJob] = useState<any | null>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
   const [statusText, setStatusText] = useState("Awaiting upload");
+
 
   // VSAI options
   const [roomTypes, setRoomTypes] = useState<string[]>([]);
