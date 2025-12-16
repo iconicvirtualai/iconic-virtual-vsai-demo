@@ -15,6 +15,42 @@ import {
   Sparkles,
 } from "lucide-react";
 
+// Simple helper for calling your Next.js API routes
+type ApiResponse<T = any> = {
+  ok: boolean;
+  data?: T;
+  error?: string;
+};
+
+async function apiFetch<T = any>(
+  path: string,
+  init?: RequestInit
+): Promise<ApiResponse<T>> {
+  const res = await fetch(path, init);
+
+  let json: any = {};
+  try {
+    json = await res.json();
+  } catch {
+    json = {};
+  }
+
+  // If backend already returns { ok, data, error }, reuse that
+  if (typeof json.ok === "boolean") {
+    return json;
+  }
+
+  // Otherwise, wrap it
+  if (!res.ok) {
+    return {
+      ok: false,
+      error: json.error || `Request failed with status ${res.status}`,
+    };
+  }
+
+  return { ok: true, data: json };
+}
+
 type JobStatus =
   | "uploading"
   | "rendering"
