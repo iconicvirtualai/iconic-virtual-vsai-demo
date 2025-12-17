@@ -641,30 +641,31 @@ export default function Index() {
 
                     {/* Action buttons under the rendered image */}
                     <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                      <button
-                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-                        onClick={openRegenerateModal}
-                        type="button"
-                        disabled={isProcessing}
-                      >
-                        <RefreshCw size={16} />
-                        {settings.regenerateLabel}
-                      </button>
-                      <button
-                        className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-                        type="button"
-                        onClick={handlePurchaseClick}
-                        disabled={isProcessing}
-                      >
-                        {settings.purchaseLabel}
-                      </button>
-                      <a
-                        href="/"
-                        className="inline-flex items-center justify-center rounded-2xl border border-slate-300 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-500"
-                      >
-                        Return to main menu
-                      </a>
-                    </div>
+  <button
+    className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
+    onClick={openRegenerateModal}
+    type="button"
+    disabled={isProcessing}
+  >
+    <RefreshCw size={16} />
+    {settings.regenerateLabel}
+  </button>
+  <button
+    className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
+    type="button"
+    onClick={handlePurchaseClick}
+    disabled={isProcessing}
+  >
+    {settings.purchaseLabel}
+  </button>
+  <a
+    href="/"
+    className="w-full pt-1 text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 hover:underline"
+  >
+    Return to main menu
+  </a>
+</div>
+
                   </div>
                 ) : (
                   // Preview while processing / before processed
