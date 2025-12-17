@@ -5,7 +5,6 @@ const VSAI_BASE = "https://api.virtualstagingai.app/v1";
 const VSAI_API_KEY =
   process.env.VSAI_API_KEY || process.env.VIRTUAL_STAGING_AI_API_KEY;
 
-// Small helper to call VSAI safely
 async function callVsai(path: string, init?: RequestInit) {
   if (!VSAI_API_KEY) {
     throw new Error("VSAI_API_KEY is not configured");
@@ -25,7 +24,7 @@ async function callVsai(path: string, init?: RequestInit) {
   try {
     json = text ? JSON.parse(text) : {};
   } catch {
-    // ignore parse error, json stays {}
+    // ignore parse error
   }
 
   if (!resp.ok) {
@@ -45,20 +44,11 @@ export default async function handler(
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
-  const {
-    userId,
-    imageUrl,
-    room_type,
-    style,
-    declutter,
-    day_to_dusk,
-  } = req.body as {
+  const { userId, imageUrl, room_type, style } = req.body as {
     userId?: string;
     imageUrl?: string;
     room_type?: string;
     style?: string;
-    declutter?: boolean;
-    day_to_dusk?: boolean;
   };
 
   if (!userId || !imageUrl) {
@@ -70,38 +60,22 @@ export default async function handler(
   const rt = room_type || "living";
   const st = style || "standard";
 
-  // Make this `any` so we can safely add add_furniture / declutter, etc.
+  // Main render payload – IMPORTANT: watermark disabled here
   const payload: any = {
     image_url: imageUrl,
     room_type: rt,
     style: st,
     wait_for_completion: false,
-    add_virtually_staged_watermark: true,
+    add_virtually_staged_watermark: false, // no built-in watermark
   };
 
-  // Optional flags — VSAI will ignore unknown fields it doesn’t support
-  if (declutter) {
-    // if VSAI expects a different key, we can rename here later
-    payload.declutter = true;
-  }
-  if (day_to_dusk) {
-    payload.day_to_dusk = true;
-  }
-
-  // If you wanted to use their newer "add_furniture" style config, you can
-  // also safely attach it here without upsetting TypeScript:
-  payload.add_furniture = {
-    room_type: rt,
-    style: st,
-  };
-
-  // Demo mode (no key) – still responds so frontend doesn’t explode
+  // Demo mode if no key
   if (!VSAI_API_KEY) {
-    const fakeJobId = `demo-${Date.now()}`;
+    const fakeId = `render-${Date.now()}`;
     return res.status(200).json({
       ok: true,
       data: {
-        jobId: fakeJobId,
+        jobId: fakeId,
         status: "rendering",
       },
     });
@@ -114,7 +88,7 @@ export default async function handler(
     });
 
     const renderId =
-      json.render_id || json.id || json.renderId || `job-${Date.now()}`;
+      json.render_id || json.id || json.renderId || `render-${Date.now()}`;
     const status: string = json.status || "rendering";
 
     return res.status(200).json({
