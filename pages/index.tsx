@@ -61,9 +61,10 @@ const DEFAULT_SETTINGS = {
 };
 
 // File size logic
-const TEN_MB = 10 * 1024 * 1024; // 10 MB in bytes
-const TARGET_RESIZED_BYTES = 3 * 1024 * 1024; // 3 MB target for resized large images
-const HARD_MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB absolute cap to avoid crazy huge files
+const TEN_MB = 10 * 1024 * 1024; // 10 MB in bytes (UI limit)
+const RESIZE_THRESHOLD_BYTES = 4 * 1024 * 1024; // resize anything above ~4MB to avoid 413
+const TARGET_RESIZED_BYTES = 3 * 1024 * 1024; // target ~3MB after resize
+const HARD_MAX_FILE_SIZE = 50 * 1024 * 1024; // absolute cap at 50MB
 
 function formatLabel(value: string) {
   return value
@@ -91,7 +92,7 @@ async function resizeImageToMaxSize(
   file: File,
   maxBytes: number
 ): Promise<File> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const image = new Image();
     image.onload = () => {
       const canvas = document.createElement("canvas");
@@ -125,9 +126,13 @@ async function resizeImageToMaxSize(
             }
 
             if (blob.size <= maxBytes || quality <= 0.3) {
-              const resizedFile = new File([blob], file.name.replace(/\.\w+$/, "") + "_resized.jpg", {
-                type: "image/jpeg",
-              });
+              const resizedFile = new File(
+                [blob],
+                file.name.replace(/\.\w+$/, "") + "_resized.jpg",
+                {
+                  type: "image/jpeg",
+                }
+              );
               resolve(resizedFile);
             } else {
               quality -= 0.1;
@@ -361,9 +366,7 @@ export default function Index() {
 
   const handleNewFile = async (f: File) => {
     if (f.size > HARD_MAX_FILE_SIZE) {
-      setStatusText(
-        "File too large. Please upload an image under 50MB."
-      );
+      setStatusText("File too large. Please upload an image under 50MB.");
       return;
     }
 
@@ -373,10 +376,15 @@ export default function Index() {
       setStatusText(
         "Large file detected. Optimizing image for faster staging..."
       );
+    } else if (f.size > RESIZE_THRESHOLD_BYTES) {
+      setStatusText("Optimizing image for upload...");
+    }
+
+    // To avoid 413 from the server, resize anything over ~4MB
+    if (f.size > RESIZE_THRESHOLD_BYTES) {
       try {
         workingFile = await resizeImageToMaxSize(f, TARGET_RESIZED_BYTES);
       } catch {
-        // If resizing fails, fall back to original
         workingFile = f;
       }
     }
@@ -447,7 +455,23 @@ export default function Index() {
           fileBase64,
         }),
       });
-      const uploadJson = await uploadResp.json();
+
+      // Handle 413 explicitly so we don't try to parse HTML as JSON
+      if (uploadResp.status === 413) {
+        setIsProcessing(false);
+        setStatusText(
+          "Upload failed: image payload was too large for the server. Please try a smaller image."
+        );
+        return;
+      }
+
+      let uploadJson: any = {};
+      try {
+        uploadJson = await uploadResp.json();
+      } catch {
+        uploadJson = {};
+      }
+
       if (!uploadResp.ok || !uploadJson.ok) {
         setIsProcessing(false);
         setStatusText(uploadJson.error || "Upload failed.");
@@ -769,7 +793,7 @@ export default function Index() {
 
                         {/* WATERMARK overlay on staged side */}
                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                          <span className="select-none text-xl md:text-2xl font-semibold tracking-[0.2em] text-slate-900/70 mix-blend-multiply">
+                          <span className="select-none text-2xl md:text-3xl font-semibold tracking-[0.2em] text-slate-900/70 mix-blend-multiply">
                             ICONICVIRTUAL.AI
                           </span>
                         </div>
@@ -810,10 +834,6 @@ export default function Index() {
                       </div>
                     </div>
 
-                    <div className="text-center text-sm text-slate-600">
-                      Drag the slider to compare the original photo with the
-                      virtually staged view.
-                    </div>
                     <input
                       type="range"
                       min={10}
@@ -824,6 +844,11 @@ export default function Index() {
                       }
                       className="w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-slate-500"
                     />
+
+                    {/* New helper text BELOW the slider */}
+                    <div className="text-center text-sm text-slate-600">
+                      Use the arrows &amp; slider to explore staged variations.
+                    </div>
 
                     {/* After render: ONLY these options */}
                     <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
@@ -973,7 +998,7 @@ export default function Index() {
                   {/* Tiny hint after any regeneration */}
                   {hasRegenerated && isProcessed && (
                     <div className="text-xs uppercase tracking-[0.4em] text-slate-500">
-                      Use the arrows to explore your staged variations.
+                      Use the arrows &amp; slider to explore staged variations.
                     </div>
                   )}
                 </div>
