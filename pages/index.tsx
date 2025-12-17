@@ -102,7 +102,8 @@ const DRAG_DROP_PATTERN = `data:image/svg+xml,${encodeURIComponent(
 const DEFAULT_SETTINGS = {
   heroTitle: "Transform vacant spaces into story-rich interiors",
   heroTitleAccent: "Iconic Virtual.AI Studio",
-  heroCopy: "Upload a photo. Pick your mood. Watch the magic happen.",
+  heroCopy:
+    "Upload a room photo, pick your mood, and watch the AI stage it with thoughtful lighting, textures, and furniture.",
   processLabel: "Stage Image",
   regenerateLabel: "Regenerate Image",
   purchaseLabel: "Purchase Staged Image",
@@ -139,7 +140,7 @@ export default function Index() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [statusText, setStatusText] = useState("Awaiting upload");
 
-  // VSAI options
+  // VSAI options (from backend)
   const [roomTypes, setRoomTypes] = useState<string[]>([]);
   const [styles, setStyles] = useState<string[]>([]);
   const [roomType, setRoomType] = useState<string>("living");
@@ -169,7 +170,7 @@ export default function Index() {
     return userIdRef.current;
   };
 
-  // Fetch VSAI options from backend
+  // Fetch VSAI room/style options from backend
   useEffect(() => {
     const fetchOptions = async () => {
       try {
@@ -437,7 +438,6 @@ export default function Index() {
           style: styleValue,
           declutter,
           day_to_dusk: dayToDusk,
-          // You can also send original jobId if your backend uses it:
           originalJobId: job.id,
         }),
       });
@@ -650,6 +650,10 @@ export default function Index() {
                       </button>
                     </div>
                   </div>
+                  <div className="text-center text-sm text-slate-600">
+                    Drag the slider to compare the original photo with the
+                    virtually staged view.
+                  </div>
                   <input
                     type="range"
                     min={10}
@@ -780,7 +784,7 @@ export default function Index() {
                   ))}
                 </div>
 
-                {/* Main CTAs */}
+                {/* Main CTAs / After-CTAs */}
                 {!isProcessed && (
                   <div className="flex justify-center">
                     <button
@@ -845,6 +849,11 @@ export default function Index() {
                           {settings.purchaseLabel}
                         </button>
                       </div>
+                      <p className="mt-2 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
+                        <a className="underline" href="/">
+                          return to main menu
+                        </a>
+                      </p>
                     </div>
                   </div>
                 )}
@@ -864,7 +873,7 @@ export default function Index() {
               Key outcomes
             </p>
             <ul className="space-y-4 text-sm text-slate-700">
-              <li>Real-time before &amp; after reveal.</li>
+              <li>Real-time before &amp; after reveal with motion slider.</li>
               <li>Furnished results by room and style selectors.</li>
               <li>
                 Auto-crop, lighting, and mood adjustments with every request.
