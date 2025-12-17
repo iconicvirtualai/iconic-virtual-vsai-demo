@@ -195,24 +195,29 @@ export default function SuccessPage() {
                   </p>
                 )}
               </div>
-              <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
+              <div className="flex flex-col items-center gap-4 pt-4">
+  {/* Top row: Download + Stage More, centered */}
+  <div className="flex flex-wrap justify-center gap-3">
+    <button
+      className="inline-flex items-center gap-2 rounded-2xl border border-emerald-700 bg-emerald-600 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-emerald-700 hover:border-emerald-800"
+      onClick={handleDownload}
+      type="button"
+    >
+      <ImageIcon size={16} />
+      Download Image
+    </button>
+    <button
+      className="inline-flex items-center gap-2 rounded-2xl border border-slate-900 bg-slate-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-black hover:border-black"
+      onClick={handleStageMore}
+      type="button"
+    >
+      Stage More Images
+    </button>
+  </div>
+
+  {/* Bottom row: Log Out, centered beneath */}
   <button
-    className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-900 transition hover:border-slate-900"
-    onClick={handleDownload}
-    type="button"
-  >
-    <ImageIcon size={16} />
-    Download Image
-  </button>
-  <button
-    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-500"
-    onClick={handleStageMore}
-    type="button"
-  >
-    Stage More Images
-  </button>
-  <button
-    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-500"
+    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-500"
     onClick={handleLogout}
     type="button"
   >
