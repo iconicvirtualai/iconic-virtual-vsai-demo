@@ -2,18 +2,18 @@ import {
   ChangeEvent,
   DragEvent,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
   ImageIcon,
   RefreshCw,
   Sparkles,
 } from "lucide-react";
-
-// --- Types --------------------------------------------------------------
 
 type JobStatus =
   | "uploading"
@@ -52,7 +52,7 @@ const DRAG_DROP_PATTERN = `data:image/svg+xml,${encodeURIComponent(
 
 const DEFAULT_SETTINGS = {
   heroTitle: "Transform vacant spaces into story-rich interiors",
-  heroTitleAccent: "IconicVirtual.AI Studio",
+  heroTitleAccent: "Iconic Virtual.AI Studio",
   heroCopy: "Upload a photo. Pick your mood. Watch the magic happen.",
   processLabel: "Stage Image",
   regenerateLabel: "Regenerate Image",
@@ -81,8 +81,6 @@ async function fileToBase64(file: File): Promise<string> {
   });
 }
 
-// --- Component ----------------------------------------------------------
-
 export default function Index() {
   // Image + job state
   const [file, setFile] = useState<File | null>(null);
@@ -92,7 +90,7 @@ export default function Index() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [statusText, setStatusText] = useState("Awaiting upload");
 
-  // VSAI options (fetched from backend)
+  // VSAI options
   const [roomTypes, setRoomTypes] = useState<string[]>([]);
   const [styles, setStyles] = useState<string[]>([]);
   const [roomType, setRoomType] = useState<string>("living");
@@ -100,24 +98,24 @@ export default function Index() {
 
   // UI state
   const [isDragActive, setIsDragActive] = useState(false);
-  const [declutter] = useState(false); // kept for future, but always false now
-  const [dayToDusk] = useState(false); // kept for future, but always false now
   const [isProcessing, setIsProcessing] = useState(false);
   const [isProcessed, setIsProcessed] = useState(false);
   const [hasRegenerated, setHasRegenerated] = useState(false);
   const [sliderValue, setSliderValue] = useState(55);
 
-  // REAL variation images from VSAI (one per render / re-stage)
+  // Real variation list from VSAI (not fake filters)
   const [variationUrls, setVariationUrls] = useState<string[]>([]);
-  const [variationIndex, setVariationIndex] = useState(0);
+  const [currentVariationIndex, setCurrentVariationIndex] = useState(0);
 
-  // Regenerate modal state
+  // Regenerate modal
   const [isRegenerateModalOpen, setIsRegenerateModalOpen] = useState(false);
-  const [modalRoom, setModalRoom] = useState<string>("living");
+  const [modalRoomType, setModalRoomType] = useState<string>("living");
   const [modalStyle, setModalStyle] = useState<string>("standard");
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userIdRef = useRef<string | null>(null);
+  const originalImageUrlRef = useRef<string | null>(null); // <– KEY FIX
+
   const settings = DEFAULT_SETTINGS;
 
   // Stable per-session user id
@@ -163,8 +161,6 @@ export default function Index() {
         setStyles(finalStyles);
         setRoomType(finalRoomTypes[0]);
         setStyle(finalStyles[0]);
-        setModalRoom(finalRoomTypes[0]);
-        setModalStyle(finalStyles[0]);
       } catch (e) {
         console.error("Failed to fetch VSAI options", e);
         const fallbackRooms = [
@@ -178,9 +174,7 @@ export default function Index() {
         setRoomTypes(fallbackRooms);
         setStyles(fallbackStyles);
         setRoomType(fallbackRooms[0]);
-        setStyle(fallbackStyles[0]);
-        setModalRoom(fallbackRooms[0]);
-        setModalStyle(fallbackStyles[0]);
+        setStyle(finalStyles[0]);
       }
     };
     fetchOptions();
@@ -201,13 +195,14 @@ export default function Index() {
     }
   };
 
-  // Shared polling for initial render AND regenerations
+  // Shared polling function for initial render AND regenerations
   const startPolling = (
     jobIdToPoll: string,
     fallbackImageUrl: string,
-    appendVariation: boolean
+    options?: { resetVariations?: boolean; appendVariation?: boolean }
   ) => {
     clearPolling();
+
     pollRef.current = setInterval(async () => {
       try {
         const jobResp = await fetch(`/api/jobs/${jobIdToPoll}`);
@@ -218,7 +213,7 @@ export default function Index() {
         }
         const j: Job = jobJson.data;
 
-        // IMPORTANT: preserve original source.publicUrl if backend job object doesn't include it
+        // Merge new job data with the old one so we keep source.publicUrl
         setJob((prev) => {
           const merged: Job = {
             ...(prev || ({} as Job)),
@@ -228,35 +223,36 @@ export default function Index() {
           return merged;
         });
 
-        const jobNow: Job = {
-          ...(job || ({} as Job)),
-          ...j,
-          source: j.source || job?.source,
-        };
-
-        if (jobNow.status === "done" || jobNow.status === "paid_done") {
+        if (j.status === "done" || j.status === "paid_done") {
           clearPolling();
-
           const imgUrl =
-            jobNow.watermarked?.url ||
-            jobNow.final?.url ||
-            fallbackImageUrl;
+            j.final?.url || j.watermarked?.url || fallbackImageUrl;
 
           setStagedUrl(imgUrl);
           setIsProcessing(false);
           setIsProcessed(true);
           setStatusText("Staging complete.");
 
-          setVariationUrls((prev) =>
-            appendVariation ? [...prev, imgUrl] : [imgUrl]
-          );
-          setVariationIndex((prev) =>
-            appendVariation ? prev + 1 : 0
-          );
-        } else if (jobNow.status === "error") {
+          // Maintain list of variations for the arrows
+          setVariationUrls((prev) => {
+            let next = prev;
+
+            if (options?.resetVariations || prev.length === 0) {
+              next = [imgUrl];
+              setCurrentVariationIndex(0);
+            } else if (options?.appendVariation) {
+              if (!prev.includes(imgUrl)) {
+                next = [...prev, imgUrl];
+                setCurrentVariationIndex(next.length - 1);
+              }
+            }
+
+            return next;
+          });
+        } else if (j.status === "error") {
           clearPolling();
           setIsProcessing(false);
-          setStatusText(jobNow.error || "Render failed.");
+          setStatusText(j.error || "Render failed.");
         } else {
           setStatusText("Staging in progress...");
         }
@@ -266,11 +262,18 @@ export default function Index() {
     }, 2500);
   };
 
-  const totalVariations = variationUrls.length;
-  const currentImage =
-    totalVariations > 0
-      ? variationUrls[Math.min(variationIndex, totalVariations - 1)]
-      : stagedUrl || previewUrl;
+  // Slider "after" URL
+  const currentFinalUrl = useMemo(() => {
+    if (variationUrls.length > 0) {
+      return variationUrls[
+        Math.min(
+          variationUrls.length - 1,
+          Math.max(0, currentVariationIndex)
+        )
+      ];
+    }
+    return stagedUrl || previewUrl;
+  }, [variationUrls, currentVariationIndex, stagedUrl, previewUrl]);
 
   const handleNewFile = (f: File) => {
     setFile(f);
@@ -281,7 +284,7 @@ export default function Index() {
     setHasRegenerated(false);
     setSliderValue(55);
     setVariationUrls([]);
-    setVariationIndex(0);
+    setCurrentVariationIndex(0);
     setStatusText("Image selected.");
   };
 
@@ -338,9 +341,10 @@ export default function Index() {
       }
 
       const imageUrl: string = uploadJson.data.publicUrl;
+      originalImageUrlRef.current = imageUrl; // <– remember original upload
       setStatusText("Image uploaded. Starting AI staging...");
 
-      // 2) Create VSAI render (preview / non-watermarked)
+      // 2) Create VSAI render (preview / watermarked)
       const renderResp = await fetch("/api/vsai-create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -349,7 +353,7 @@ export default function Index() {
           imageUrl,
           room_type: roomType,
           style,
-          // declutter / day_to_dusk disabled for now
+          // declutter / day_to_dusk removed for now
         }),
       });
       const renderJson = await renderResp.json();
@@ -377,7 +381,7 @@ export default function Index() {
       setJobId(newJobId);
 
       setStatusText("Staging in progress...");
-      startPolling(newJobId, imageUrl, false);
+      startPolling(newJobId, imageUrl, { resetVariations: true });
     } catch (err) {
       console.error("startRender error", err);
       setIsProcessing(false);
@@ -390,42 +394,49 @@ export default function Index() {
     startRender();
   };
 
-  // --- Regeneration with modal + true VSAI variation --------------------
-
+  // Open regenerate modal (do NOT hit VSAI yet)
   const openRegenerateModal = () => {
-    const hasSource = job?.source?.publicUrl;
-    if (!hasSource) {
+    const baseUrl = job?.source?.publicUrl || originalImageUrlRef.current;
+    if (!baseUrl) {
       setStatusText("No original job/image to regenerate.");
       return;
     }
     if (isProcessing) return;
-    setModalRoom(roomType || job!.room_type || "living");
-    setModalStyle(style || job!.style || "standard");
+
+    setModalRoomType(roomType || job?.room_type || "living");
+    setModalStyle(style || job?.style || "standard");
     setIsRegenerateModalOpen(true);
   };
 
-  const handleRegenerateWithOptions = async (
+  const closeRegenerateModal = () => {
+    setIsRegenerateModalOpen(false);
+  };
+
+  // Actual regenerate -> calls /api/vsai-variation
+  const handleRegenerateClick = async (
     overrideRoomType?: string,
     overrideStyle?: string
   ) => {
-    if (!job || !job.source?.publicUrl) {
+    const imageUrl =
+      job?.source?.publicUrl || originalImageUrlRef.current || null;
+
+    if (!imageUrl) {
       setStatusText("No original job/image to regenerate.");
       return;
     }
     if (isProcessing) return;
 
-    setIsRegenerateModalOpen(false);
     setIsProcessing(true);
+    setIsProcessed(false);
     setStatusText("Requesting a new variation from AI...");
 
     try {
       const userId = getUserId();
-      const imageUrl = job.source.publicUrl;
 
       const roomTypeValue =
-        overrideRoomType || roomType || job.room_type || "living";
+        overrideRoomType || roomType || job?.room_type || "living";
       const styleValue =
-        overrideStyle || style || job.style || "standard";
+        overrideStyle || style || job?.style || "standard";
 
       const resp = await fetch("/api/vsai-variation", {
         method: "POST",
@@ -435,11 +446,13 @@ export default function Index() {
           imageUrl,
           room_type: roomTypeValue,
           style: styleValue,
-          jobId: job.id,
+          jobId: job?.id,
         }),
       });
 
       const json: any = await resp.json().catch(() => ({}));
+      console.log("[UI] /api/vsai-variation response", resp.status, json);
+
       if (!resp.ok || !json.ok || !json.data?.jobId) {
         setIsProcessing(false);
         setStatusText(json.error || "Variation request failed.");
@@ -449,7 +462,6 @@ export default function Index() {
       const newJobId: string = json.data.jobId;
       const newStatus: JobStatus = json.data.status || "rendering";
 
-      setJobId(newJobId);
       setJob((prev) =>
         prev
           ? {
@@ -458,6 +470,10 @@ export default function Index() {
               status: newStatus,
               room_type: roomTypeValue,
               style: styleValue,
+              source: {
+                ...(prev.source || {}),
+                publicUrl: imageUrl,
+              },
             }
           : {
               id: newJobId,
@@ -465,25 +481,29 @@ export default function Index() {
               status: newStatus,
               room_type: roomTypeValue,
               style: styleValue,
-              source: job.source,
+              source: {
+                publicUrl: imageUrl,
+              },
             }
       );
 
+      setJobId(newJobId);
       setHasRegenerated(true);
       setSliderValue(55);
-      setIsProcessed(false);
-
       setStatusText("Staging new variation...");
-      startPolling(newJobId, imageUrl, true);
+      startPolling(newJobId, imageUrl, { appendVariation: true });
     } catch (err: any) {
-      console.error("[UI] handleRegenerateWithOptions error", err);
+      console.error("[UI] handleRegenerateClick error", err);
       setIsProcessing(false);
       setStatusText(err.message || "Variation failed.");
     }
   };
 
-  const handleModalReStage = () => {
-    handleRegenerateWithOptions(modalRoom, modalStyle);
+  const handleModalReStage = async () => {
+    setRoomType(modalRoomType);
+    setStyle(modalStyle);
+    setIsRegenerateModalOpen(false);
+    await handleRegenerateClick(modalRoomType, modalStyle);
   };
 
   // Purchase -> Stripe Checkout
@@ -512,27 +532,28 @@ export default function Index() {
     }
   };
 
-  const stagedOrPreview = currentImage || previewUrl;
-
-  // Variation navigation (true VSAI variations)
-  const goToPreviousVariation = () => {
-    if (totalVariations <= 1) return;
-    setVariationIndex(
-      (prev) => (prev - 1 + totalVariations) % totalVariations
+  const handlePrevVariation = () => {
+    if (variationUrls.length <= 1) return;
+    setCurrentVariationIndex((prev) =>
+      prev === 0 ? variationUrls.length - 1 : prev - 1
     );
   };
 
-  const goToNextVariation = () => {
-    if (totalVariations <= 1) return;
-    setVariationIndex((prev) => (prev + 1) % totalVariations);
+  const handleNextVariation = () => {
+    if (variationUrls.length <= 1) return;
+    setCurrentVariationIndex((prev) =>
+      prev === variationUrls.length - 1 ? 0 : prev + 1
+    );
   };
+
+  const stagedOrPreview = currentFinalUrl || previewUrl;
 
   return (
     <>
       <main className="min-h-screen bg-white text-slate-900">
-        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 bg-transparent sm:px-6 lg:px-8">
+        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8 bg-transparent">
           {/* Hero */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
             <p className="text-sm uppercase tracking-[0.4em] text-slate-500">
               {settings.heroTitleAccent}
             </p>
@@ -559,61 +580,56 @@ export default function Index() {
 
                 {/* Drag/drop or preview */}
                 {!previewUrl ? (
-                  <div className="space-y-4">
-                    <div
-                      className={`relative flex h-full min-h-[360px] flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-300 ${
-                        isDragActive
-                          ? "border-slate-700 bg-slate-50 shadow-inner"
-                          : "border-slate-300 bg-white"
-                      }`}
-                      style={{
-                        backgroundImage: isDragActive
-                          ? `linear-gradient(rgba(248,249,250,0.95), rgba(248,249,250,0.95)), url("${DRAG_DROP_PATTERN}")`
-                          : `url("${DRAG_DROP_PATTERN}")`,
-                        backgroundSize: "70px 70px",
-                        backgroundRepeat: "repeat",
-                      }}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                    >
-                      <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-4 text-center">
-                        <ImageIcon
-                          size={32}
-                          className="text-slate-500 transition-transform duration-300 group-hover:scale-110"
-                        />
-                        <p className="text-2xl font-semibold leading-snug text-slate-900">
-                          Drag &amp; Drop
-                          <span className="block text-base text-slate-500">
-                            or upload files
-                          </span>
-                        </p>
-                        <span className="rounded-full border border-slate-400 px-5 py-2 text-sm font-medium text-slate-900 transition-colors duration-200 hover:bg-slate-100">
-                          Browse files
+                  <div
+                    className={`relative flex h-full min-h-[360px] flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-300 ${
+                      isDragActive
+                        ? "border-slate-700 bg-slate-50"
+                        : "border-slate-300 bg-white"
+                    }`}
+                    style={{
+                      backgroundImage: isDragActive
+                        ? `linear-gradient(rgba(248,249,250,0.95), rgba(248,249,250,0.95)), url("${DRAG_DROP_PATTERN}")`
+                        : `url("${DRAG_DROP_PATTERN}")`,
+                      backgroundSize: "70px 70px",
+                      backgroundRepeat: "repeat",
+                    }}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-4 text-center">
+                      <ImageIcon size={32} className="text-slate-500" />
+                      <p className="text-2xl font-semibold leading-snug text-slate-900">
+                        Drag &amp; Drop
+                        <span className="block text-base text-slate-500">
+                          or upload files
                         </span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleFileCapture}
-                        />
-                      </label>
-                    </div>
-                    {/* Return to Home link under drag & drop */}
-                    <p className="text-center text-xs uppercase tracking-[0.3em] text-slate-500">
+                      </p>
+                      <span className="rounded-full border border-slate-400 px-5 py-2 text-sm font-medium text-slate-900">
+                        Browse files
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileCapture}
+                      />
+                    </label>
+
+                    {/* Return to home under drag/drop */}
+                    <div className="absolute bottom-4 left-0 right-0 flex justify-center">
                       <a
                         href="/"
-                        className="underline hover:text-slate-700"
+                        className="text-xs font-medium uppercase tracking-[0.3em] text-slate-500 underline"
                       >
                         Return to Home
                       </a>
-                    </p>
+                    </div>
                   </div>
                 ) : isProcessed && stagedOrPreview ? (
-                  // Processed view with slider + overlay watermark
                   <div className="space-y-4">
                     <div
-                      className="relative overflow-hidden rounded-3xl border border-slate-300 bg-white shadow-inner shadow-slate-200/60"
+                      className="relative overflow-hidden rounded-3xl border border-slate-300 bg-white"
                       style={{ aspectRatio: "1024 / 683" }}
                     >
                       {/* Before */}
@@ -622,7 +638,8 @@ export default function Index() {
                         alt="Before"
                         className="h-full w-full object-cover grayscale-50 brightness-90"
                       />
-                      {/* After overlay (current variation) */}
+
+                      {/* After overlay */}
                       <div
                         className="absolute inset-0 overflow-hidden"
                         style={{
@@ -632,48 +649,46 @@ export default function Index() {
                         <img
                           src={stagedOrPreview || undefined}
                           alt="After"
-                          className="h-full w-full object-cover transition-transform duration-500 will-change-transform"
+                          className="h-full w-full object-cover"
                         />
 
-                        {/* WATERMARK OVERLAY on rendered side only */}
+                        {/* WATERMARK overlay on staged side */}
                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                          <div className="select-none w-full px-6 text-center text-sm font-semibold uppercase tracking-[0.6em] text-black/60 md:text-base">
+                          <span className="select-none text-3xl md:text-5xl font-semibold tracking-[0.4em] text-slate-900/65 mix-blend-multiply">
                             ICONICVIRTUAL.AI
-                          </div>
+                          </span>
                         </div>
                       </div>
 
-                      {/* Slider vertical line */}
+                      {/* Slider line */}
                       <div
                         className="absolute inset-y-0 -ml-0.5 hidden w-px bg-white/80 sm:block"
                         style={{ left: `${sliderValue}%` }}
                       />
-
-                      {/* Slider knob */}
                       <div
-                        className="pointer-events-none absolute -top-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-lg shadow-slate-400/40"
+                        className="pointer-events-none absolute -top-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-lg"
                         style={{ left: `calc(${sliderValue}% - 1.5rem)` }}
                       >
                         <Sparkles size={20} />
                       </div>
 
-                      {/* Variation arrows (cycle REAL variations) */}
+                      {/* Variation arrows (cycle REAL VSAI variations) */}
                       <div className="absolute inset-y-0 left-4 flex items-center">
                         <button
-                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 shadow-sm transition hover:scale-105 hover:border-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
-                          onClick={goToPreviousVariation}
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600"
+                          onClick={handlePrevVariation}
                           type="button"
-                          disabled={totalVariations <= 1}
+                          disabled={variationUrls.length <= 1}
                         >
                           <ArrowLeft size={20} />
                         </button>
                       </div>
                       <div className="absolute inset-y-0 right-4 flex items-center">
                         <button
-                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 shadow-sm transition hover:scale-105 hover:border-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
-                          onClick={goToNextVariation}
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600"
+                          onClick={handleNextVariation}
                           type="button"
-                          disabled={totalVariations <= 1}
+                          disabled={variationUrls.length <= 1}
                         >
                           <ArrowRight size={20} />
                         </button>
@@ -695,19 +710,10 @@ export default function Index() {
                       className="w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-slate-500"
                     />
 
-                    {/* Variation indicator */}
-                    <div className="mt-2 text-center text-xs uppercase tracking-[0.3em] text-slate-500">
-                      {totalVariations > 0 ? (
-                        <>Variation {variationIndex + 1} / {totalVariations}</>
-                      ) : (
-                        <>First staged result</>
-                      )}
-                    </div>
-
-                    {/* Actions under rendered image */}
-                    <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    {/* After render: ONLY these options */}
+                    <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                       <button
-                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 shadow-sm transition hover:border-slate-900 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900 disabled:opacity-50"
                         onClick={openRegenerateModal}
                         type="button"
                         disabled={isProcessing}
@@ -717,7 +723,7 @@ export default function Index() {
                       </button>
 
                       <button
-                        className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white shadow-sm transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900 disabled:opacity-50"
                         type="button"
                         onClick={handlePurchaseClick}
                         disabled={isProcessing}
@@ -726,21 +732,14 @@ export default function Index() {
                       </button>
                     </div>
 
-                    {/* Back to main menu as simple link */}
-                    <p className="mt-2 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
-                      <a href="/" className="underline hover:text-slate-700">
+                    {/* Back to main menu as a LINK (no chip) */}
+                    <p className="mt-3 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
+                      <a href="/" className="underline">
                         return to main menu
                       </a>
                     </p>
-
-                    {hasRegenerated && (
-                      <div className="pt-1 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
-                        Use the arrows to browse your staged variations.
-                      </div>
-                    )}
                   </div>
                 ) : (
-                  // Preview while processing
                   <div className="relative">
                     <div
                       className="relative rounded-3xl border border-slate-300 bg-white shadow-inner shadow-slate-300/60"
@@ -768,91 +767,101 @@ export default function Index() {
               </div>
 
               {/* Controls */}
-              {previewUrl && !isProcessed && (
+              {previewUrl && (
                 <div className="space-y-6">
-                  {/* Room + style */}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-                        Room Type
-                      </p>
-                      <select
-                        id="vsai-room-type"
-                        className="mt-3 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
-                        value={roomType}
-                        onChange={(e) => setRoomType(e.target.value)}
-                      >
-                        {roomTypes.map((rt) => (
-                          <option
-                            key={rt}
-                            value={rt}
-                            className="bg-white text-slate-900"
+                  {/* BEFORE render: show controls */}
+                  {!isProcessed && (
+                    <>
+                      {/* Room + style */}
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                            Room Type
+                          </p>
+                          <select
+                            id="vsai-room-type"
+                            className="mt-3 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
+                            value={roomType}
+                            onChange={(e) => setRoomType(e.target.value)}
                           >
-                            {formatLabel(rt)}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-                        Style Type
-                      </p>
-                      <select
-                        id="vsai-style"
-                        className="mt-3 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
-                        value={style}
-                        onChange={(e) => setStyle(e.target.value)}
-                      >
-                        {styles.map((s) => (
-                          <option
-                            key={s}
-                            value={s}
-                            className="bg-white text-slate-900"
+                            {roomTypes.map((rt) => (
+                              <option
+                                key={rt}
+                                value={rt}
+                                className="bg-white text-slate-900"
+                              >
+                                {formatLabel(rt)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                            Style Type
+                          </p>
+                          <select
+                            id="vsai-style"
+                            className="mt-3 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
+                            value={style}
+                            onChange={(e) => setStyle(e.target.value)}
                           >
-                            {formatLabel(s)}
-                          </option>
-                        ))}
-                      </select>
+                            {styles.map((s) => (
+                              <option
+                                key={s}
+                                value={s}
+                                className="bg-white text-slate-900"
+                              >
+                                {formatLabel(s)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Main CTA */}
+                      <div className="flex justify-center">
+                        <button
+                          className="w-1/2 max-w-[260px] rounded-2xl border border-slate-700 bg-slate-100 px-6 py-3 text-lg font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                          onClick={handleProcessClick}
+                          type="button"
+                          disabled={!previewUrl || isProcessing}
+                        >
+                          {isProcessing ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-transparent border-t-slate-700" />
+                              Processing...
+                            </span>
+                          ) : (
+                            settings.processLabel
+                          )}
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Tiny hint after any regeneration */}
+                  {hasRegenerated && isProcessed && (
+                    <div className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                      Use the arrows to explore your staged variations.
                     </div>
-                  </div>
-
-                  {/* Declutter / Day-to-dusk toggles removed for now */}
-
-                  {/* Main CTA */}
-                  <div className="flex justify-center">
-                    <button
-                      className="w-1/2 max-w-[260px] rounded-2xl border border-slate-700 bg-slate-100 px-6 py-3 text-lg font-semibold text-slate-900 shadow-sm transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
-                      onClick={handleProcessClick}
-                      type="button"
-                      disabled={!previewUrl || isProcessing}
-                    >
-                      {isProcessing ? (
-                        <span className="flex items-center justify-center gap-2">
-                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-transparent border-t-slate-700" />
-                          Processing...
-                        </span>
-                      ) : (
-                        settings.processLabel
-                      )}
-                    </button>
-                  </div>
+                  )}
                 </div>
               )}
             </section>
 
             {/* Right: explainer */}
-            <aside className="space-y-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
+            <aside className="space-y-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-200/60">
               <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
                 Key outcomes
               </p>
               <ul className="space-y-4 text-sm text-slate-700">
-                <li>Real-time before &amp; after reveal with motion slider.</li>
-                <li>Furnished presets tuned by room and style selectors.</li>
+                <li>Real-time before &amp; after reveal.</li>
+                <li>Furnished results by room and style selectors.</li>
                 <li>
                   Auto-crop, lighting, and mood adjustments with every request.
                 </li>
               </ul>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
                 <p className="font-semibold text-slate-900">Tips</p>
                 <p className="text-slate-600">
                   Use high-resolution interior photos with neutral lighting for
@@ -888,8 +897,8 @@ export default function Index() {
                 <select
                   id="modal-room-type"
                   className="w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
-                  value={modalRoom}
-                  onChange={(event) => setModalRoom(event.target.value)}
+                  value={modalRoomType}
+                  onChange={(event) => setModalRoomType(event.target.value)}
                 >
                   {roomTypes.map((rt) => (
                     <option
@@ -931,13 +940,13 @@ export default function Index() {
               <button
                 type="button"
                 className="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-500"
-                onClick={() => setIsRegenerateModalOpen(false)}
+                onClick={closeRegenerateModal}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:border-slate-900"
+                className="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:border-slate-900 disabled:opacity-50"
                 onClick={handleModalReStage}
                 disabled={isProcessing}
               >
