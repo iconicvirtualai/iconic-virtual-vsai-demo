@@ -114,7 +114,7 @@ export default function Index() {
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userIdRef = useRef<string | null>(null);
-  const originalImageUrlRef = useRef<string | null>(null); // <– KEY FIX
+  const originalImageUrlRef = useRef<string | null>(null); // remembers original upload URL
 
   const settings = DEFAULT_SETTINGS;
 
@@ -174,7 +174,7 @@ export default function Index() {
         setRoomTypes(fallbackRooms);
         setStyles(fallbackStyles);
         setRoomType(fallbackRooms[0]);
-        setStyle(finalStyles[0]);
+        setStyle(fallbackStyles[0]); // ✅ fixed: use fallbackStyles, not finalStyles
       }
     };
     fetchOptions();
@@ -341,7 +341,7 @@ export default function Index() {
       }
 
       const imageUrl: string = uploadJson.data.publicUrl;
-      originalImageUrlRef.current = imageUrl; // <– remember original upload
+      originalImageUrlRef.current = imageUrl; // remember original upload
       setStatusText("Image uploaded. Starting AI staging...");
 
       // 2) Create VSAI render (preview / watermarked)
@@ -353,7 +353,7 @@ export default function Index() {
           imageUrl,
           room_type: roomType,
           style,
-          // declutter / day_to_dusk removed for now
+          // declutter/day_to_dusk removed for now
         }),
       });
       const renderJson = await renderResp.json();
