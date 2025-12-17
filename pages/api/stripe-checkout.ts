@@ -42,7 +42,7 @@ export default async function handler(
       metadata: {
         jobId,
       },
-      success_url: `${
+      success_url: `${origin}/success?jobId=${jobId}`,
         process.env.NEXT_PUBLIC_SITE_URL ||
         "https://iconic-virtual-vsai-demo.vercel.app"
       }/success?session_id={CHECKOUT_SESSION_ID}`,
