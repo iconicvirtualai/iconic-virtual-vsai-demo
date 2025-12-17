@@ -50,15 +50,8 @@ const DRAG_DROP_PATTERN = `data:image/svg+xml,${encodeURIComponent(
   dragDropPatternSvg
 )}`;
 
-const DEFAULT_SETTINGS = {
-  heroTitle: "TRANSFORM VACANT PLACES INTO HOT SPACES",
-  heroTitleAccent: "IconicVirtual.AI Studio",
-  heroCopy: "UPLOAD A PHOTO. CHOOSE YOUR MOOD. WATCH THE MAGIC.",
-  processLabel: "Stage NOW",
-  regenerateLabel: "Regenerate Image",
-  purchaseLabel: "Purchase Staged Image",
-  layoutMode: "modern",
-};
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 function formatLabel(value: string) {
   return value
@@ -105,7 +98,8 @@ export default function Index() {
 
   // Real variation list from VSAI (not fake filters)
   const [variationUrls, setVariationUrls] = useState<string[]>([]);
-  const [currentVariationIndex, setCurrentVariationIndex] = useState(0);
+  const [currentVariationIndex, setCurrentVariationIndex] =
+    useState<number>(0);
 
   // Regenerate modal
   const [isRegenerateModalOpen, setIsRegenerateModalOpen] = useState(false);
@@ -174,7 +168,7 @@ export default function Index() {
         setRoomTypes(fallbackRooms);
         setStyles(fallbackStyles);
         setRoomType(fallbackRooms[0]);
-        setStyle(fallbackStyles[0]); // ✅ fixed: use fallbackStyles, not finalStyles
+        setStyle(fallbackStyles[0]);
       }
     };
     fetchOptions();
@@ -276,6 +270,11 @@ export default function Index() {
   }, [variationUrls, currentVariationIndex, stagedUrl, previewUrl]);
 
   const handleNewFile = (f: File) => {
+    if (f.size > MAX_FILE_SIZE) {
+      setStatusText("File too large. Please upload an image limited to 10MB.");
+      return;
+    }
+
     setFile(f);
     const url = URL.createObjectURL(f);
     setPreviewUrl(url);
@@ -580,52 +579,54 @@ export default function Index() {
 
                 {/* Drag/drop or preview */}
                 {!previewUrl ? (
-                  <div
-                    className={`relative flex h-full min-h-[360px] flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-300 ${
-                      isDragActive
-                        ? "border-slate-700 bg-slate-50"
-                        : "border-slate-300 bg-white"
-                    }`}
-                    style={{
-                      backgroundImage: isDragActive
-                        ? `linear-gradient(rgba(248,249,250,0.95), rgba(248,249,250,0.95)), url("${DRAG_DROP_PATTERN}")`
-                        : `url("${DRAG_DROP_PATTERN}")`,
-                      backgroundSize: "70px 70px",
-                      backgroundRepeat: "repeat",
-                    }}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                  >
-                    <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-4 text-center">
-                      <ImageIcon size={32} className="text-slate-500" />
-                      <p className="text-2xl font-semibold leading-snug text-slate-900">
-                        Drag &amp; Drop
-                        <span className="block text-base text-slate-500">
-                          or upload files
+                  <>
+                    <div
+                      className={`relative flex h-full min-h-[360px] flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-300 ${
+                        isDragActive
+                          ? "border-slate-700 bg-slate-50"
+                          : "border-slate-300 bg-white"
+                      }`}
+                      style={{
+                        backgroundImage: isDragActive
+                          ? `linear-gradient(rgba(248,249,250,0.95), rgba(248,249,250,0.95)), url("${DRAG_DROP_PATTERN}")`
+                          : `url("${DRAG_DROP_PATTERN}")`,
+                        backgroundSize: "70px 70px",
+                        backgroundRepeat: "repeat",
+                      }}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
+                      <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-4 text-center">
+                        <ImageIcon size={32} className="text-slate-500" />
+                        <p className="text-2xl font-semibold leading-snug text-slate-900">
+                          Drag &amp; Drop
+                          <span className="block text-base text-slate-500">
+                            or upload files (limited to 10MB)
+                          </span>
+                        </p>
+                        <span className="rounded-full border border-slate-400 px-5 py-2 text-sm font-medium text-slate-900">
+                          Browse files
                         </span>
-                      </p>
-                      <span className="rounded-full border border-slate-400 px-5 py-2 text-sm font-medium text-slate-900">
-                        Browse files
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFileCapture}
-                      />
-                    </label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleFileCapture}
+                        />
+                      </label>
+                    </div>
 
-                    {/* Return to home under drag/drop */}
-                    <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                    {/* Return to home link OUTSIDE the box */}
+                    <div className="mt-4 text-center">
                       <a
-                        href="/"
+                        href="https://www.iconicvirtual.ai"
                         className="text-xs font-medium uppercase tracking-[0.3em] text-slate-500 underline"
                       >
-                        Return to Home
+                        return to home
                       </a>
                     </div>
-                  </div>
+                  </>
                 ) : isProcessed && stagedOrPreview ? (
                   <div className="space-y-4">
                     <div
@@ -654,7 +655,7 @@ export default function Index() {
 
                         {/* WATERMARK overlay on staged side */}
                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                          <span className="select-none text-3xl md:text-5xl font-semibold tracking-[0.5em] text-slate-900/65 mix-blend-multiply">
+                          <span className="select-none text-3xl md:text-5xl font-semibold tracking-[0.4em] text-slate-900/65 mix-blend-multiply">
                             ICONICVIRTUAL.AI
                           </span>
                         </div>
@@ -721,6 +722,13 @@ export default function Index() {
                         <RefreshCw size={16} />
                         {settings.regenerateLabel}
                       </button>
+
+                      <a
+                        href="https://www.iconicvirtual.ai/orders"
+                        className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
+                      >
+                        Submit for Pro Staging
+                      </a>
 
                       <button
                         className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900 disabled:opacity-50"
@@ -852,10 +860,13 @@ export default function Index() {
             {/* Right: explainer */}
             <aside className="space-y-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-200/60">
               <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-                Key outcomes
+                Key Features
               </p>
-              <ul className="space-y-4 text-sm text-slate-700">
-                <li>Real-time before &amp; after reveal.</li>
+              <ul className="space-y-2 text-sm text-slate-700">
+                <li>AI staged photos in 1–3 minutes.</li>
+                <li>File size impacts render speed.</li>
+                <li>Real-time Before &amp; After Reveal.</li>
+                <li>Different Style Variations.</li>
                 <li>Furnished results by room and style selectors.</li>
                 <li>
                   Auto-crop, lighting, and mood adjustments with every request.
@@ -863,9 +874,12 @@ export default function Index() {
               </ul>
               <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
                 <p className="font-semibold text-slate-900">Tips</p>
-                <p className="text-slate-600">
-                  Use high-resolution interior photos with neutral lighting for
+                <p className="mt-1 text-slate-600">
+                  Use high-resolution photos with neutral/bright lighting for
                   best results.
+                </p>
+                <p className="mt-1 text-slate-600">
+                  For fastest results, limit file sizes to 2MB.
                 </p>
               </div>
             </aside>
