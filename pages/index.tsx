@@ -1,6 +1,21 @@
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+// pages/index.tsx
+import {
+  ChangeEvent,
+  DragEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ImageIcon,
+  RefreshCw,
+  Sparkles,
+} from "lucide-react";
 
+// ---- Types ----
 type JobStatus =
   | "uploading"
   | "rendering"
@@ -31,161 +46,848 @@ type Job = {
   error?: string;
 };
 
-export default function SuccessPage() {
-  const router = useRouter();
-  const { jobId } = router.query;
+const dragDropPatternSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" fill="none"/><path d="M14 0v28M0 14h28" stroke="%230f172a" stroke-width="0.5" opacity="0.2"/></svg>`;
+const DRAG_DROP_PATTERN = `data:image/svg+xml,${encodeURIComponent(
+  dragDropPatternSvg
+)}`;
 
+const DEFAULT_SETTINGS = {
+  heroTitle: "Transform vacant spaces into story-rich interiors",
+  heroTitleAccent: "Iconic Virtual.AI Studio",
+  heroCopy: "Upload a photo. Pick your mood. Watch the magic happen.",
+  processLabel: "Stage Image",
+  regenerateLabel: "Regenerate Image",
+  purchaseLabel: "Download Full Resolution",
+  layoutMode: "modern",
+};
+
+function formatLabel(value: string) {
+  return value
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\w\S*/g, (txt) => txt[0].toUpperCase() + txt.slice(1));
+}
+
+async function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result || "";
+      const base64 = String(result).split(",")[1] || "";
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+export default function Index() {
+  // Image + job state
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [stagedUrl, setStagedUrl] = useState<string | null>(null);
   const [job, setJob] = useState<Job | null>(null);
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [statusText, setStatusText] = useState("Finalizing your image...");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [statusText, setStatusText] = useState("Awaiting upload");
 
+  // VSAI options
+  const [roomTypes, setRoomTypes] = useState<string[]>([]);
+  const [styles, setStyles] = useState<string[]>([]);
+  const [roomType, setRoomType] = useState<string>("living");
+  const [style, setStyle] = useState<string>("standard");
+
+  // UI state
+  const [isDragActive, setIsDragActive] = useState(false);
+  const [declutter, setDeclutter] = useState(true);
+  const [dayToDusk, setDayToDusk] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessed, setIsProcessed] = useState(false);
+  const [sliderValue, setSliderValue] = useState(55);
+
+  // Regenerate modal
+  const [isRegenerateModalOpen, setIsRegenerateModalOpen] = useState(false);
+  const [modalRoomType, setModalRoomType] = useState<string>("living");
+  const [modalStyle, setModalStyle] = useState<string>("standard");
+
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const userIdRef = useRef<string | null>(null);
+  const settings = DEFAULT_SETTINGS;
+
+  // Stable per-session user id
+  const getUserId = () => {
+    if (!userIdRef.current) {
+      userIdRef.current =
+        "user-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8);
+    }
+    return userIdRef.current;
+  };
+
+  // Fetch VSAI options from backend
   useEffect(() => {
-    if (!jobId || typeof jobId !== "string") return;
-
-    const fetchJob = async () => {
+    const fetchOptions = async () => {
       try {
-        setLoading(true);
-        setError(null);
-
-        const resp = await fetch(`/api/jobs/${jobId}`);
+        const resp = await fetch("/api/vsai-options");
         const json = await resp.json();
 
-        if (!resp.ok || !json.ok) {
-          setError(json.error || "Could not load final image.");
-          setLoading(false);
-          return;
-        }
-
-        const j: Job = json.data;
-        setJob(j);
-
-        if (j.status === "paid_done" || j.status === "done") {
-          const url = j.final?.url || j.watermarked?.url || j.source?.publicUrl;
-          if (!url) {
-            setError("No image URL found on job.");
+        let data: any = null;
+        if (json && typeof json === "object") {
+          if ("ok" in json && json.ok && json.data) {
+            data = json.data;
           } else {
-            setImageUrl(url);
-            setStatusText("Your image is ready!");
+            data = json;
           }
-        } else if (j.status === "paid_rendering" || j.status === "rendering") {
-          setStatusText("We are still processing your final image...");
-        } else if (j.status === "error") {
-          setError(j.error || "Something went wrong generating your image.");
         }
 
-        setLoading(false);
-      } catch (e: any) {
-        console.error("[success] error fetching job", e);
-        setError(e.message || "Unexpected error loading job.");
-        setLoading(false);
+        const rt: string[] =
+          data?.room_types || data?.roomTypes || data?.room_types_list || [];
+        const st: string[] =
+          data?.styles || data?.style_list || data?.design_styles || [];
+
+        const finalRoomTypes =
+          rt.length > 0
+            ? rt
+            : ["living", "bed", "kitchen", "dining", "home_office"];
+        const finalStyles =
+          st.length > 0
+            ? st
+            : ["standard", "modern", "scandinavian", "luxury"];
+
+        setRoomTypes(finalRoomTypes);
+        setStyles(finalStyles);
+        setRoomType(finalRoomTypes[0]);
+        setStyle(finalStyles[0]);
+      } catch (e) {
+        console.error("Failed to fetch VSAI options", e);
+        const fallbackRooms = [
+          "living",
+          "bed",
+          "kitchen",
+          "dining",
+          "home_office",
+        ];
+        const fallbackStyles = ["standard", "modern", "scandinavian", "luxury"];
+        setRoomTypes(fallbackRooms);
+        setStyles(fallbackStyles);
+        setRoomType(fallbackRooms[0]);
+        setStyle(fallbackStyles[0]);
       }
     };
+    fetchOptions();
+  }, []);
 
-    fetchJob();
-  }, [jobId]);
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [previewUrl]);
 
-  const handleDownload = () => {
-    if (!imageUrl) return;
-    const a = document.createElement("a");
-    a.href = imageUrl;
-    a.download = "virtually-staged.jpg";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+  const clearPolling = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
   };
 
-  const handleStageMore = () => {
-    router.push("/");
+  // Shared polling function for initial render AND regenerations
+  const startPolling = (jobIdToPoll: string, fallbackImageUrl: string) => {
+    clearPolling();
+    pollRef.current = setInterval(async () => {
+      try {
+        const jobResp = await fetch(`/api/jobs/${jobIdToPoll}`);
+        const jobJson = await jobResp.json();
+        if (!jobResp.ok || !jobJson.ok) {
+          setStatusText(jobJson.error || "Status check failed.");
+          return;
+        }
+        const j: Job = jobJson.data;
+        setJob(j);
+
+        if (j.status === "done" || j.status === "paid_done") {
+          clearPolling();
+          const imgUrl = j.watermarked?.url || j.final?.url || fallbackImageUrl;
+          setStagedUrl(imgUrl);
+          setIsProcessing(false);
+          setIsProcessed(true);
+          setStatusText("Staging complete.");
+        } else if (j.status === "error") {
+          clearPolling();
+          setIsProcessing(false);
+          setStatusText(j.error || "Render failed.");
+        } else {
+          setStatusText("Staging in progress...");
+        }
+      } catch (err) {
+        console.error("Polling error", err);
+      }
+    }, 2500);
   };
 
-  // You can wire this to your actual auth logout endpoint when ready
-  const handleLogout = () => {
-    // Placeholder: send them home or to a login page
-    router.push("/");
+  const handleNewFile = (f: File) => {
+    setFile(f);
+    const url = URL.createObjectURL(f);
+    setPreviewUrl(url);
+    setStagedUrl(null);
+    setIsProcessed(false);
+    setSliderValue(55);
+    setStatusText("Image selected.");
   };
+
+  const handleFileCapture = (event: ChangeEvent<HTMLInputElement>) => {
+    const f = event.target.files?.[0];
+    if (f) handleNewFile(f);
+    event.target.value = "";
+  };
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragActive(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragActive(false);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragActive(false);
+    const f = event.dataTransfer.files?.[0];
+    if (f) handleNewFile(f);
+  };
+
+  const startRender = async () => {
+    if (!file) {
+      setStatusText("Please upload an image first.");
+      return;
+    }
+    setIsProcessing(true);
+    setIsProcessed(false);
+    setStatusText("Uploading image...");
+
+    try {
+      const userId = getUserId();
+      const fileBase64 = await fileToBase64(file);
+
+      // 1) Upload original to Firebase (orders/)
+      const uploadResp = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          fileName: file.name,
+          fileBase64,
+        }),
+      });
+      const uploadJson = await uploadResp.json();
+      if (!uploadResp.ok || !uploadJson.ok) {
+        setIsProcessing(false);
+        setStatusText(uploadJson.error || "Upload failed.");
+        return;
+      }
+
+      const imageUrl: string = uploadJson.data.publicUrl;
+      setStatusText("Image uploaded. Starting AI staging...");
+
+      // 2) Create VSAI render (preview / watermarked)
+      const renderResp = await fetch("/api/vsai-create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          imageUrl,
+          room_type: roomType,
+          style,
+          declutter,
+          day_to_dusk: dayToDusk,
+        }),
+      });
+      const renderJson = await renderResp.json();
+      if (!renderResp.ok || !renderJson.ok) {
+        setIsProcessing(false);
+        setStatusText(renderJson.error || "Render start failed.");
+        return;
+      }
+
+      const newJobId: string = renderJson.data.jobId;
+      const initialStatus: JobStatus = renderJson.data.status || "rendering";
+
+      const initialJob: Job = {
+        id: newJobId,
+        userId,
+        status: initialStatus,
+        room_type: roomType,
+        style,
+        source: {
+          fileName: file.name,
+          publicUrl: imageUrl,
+        },
+      };
+      setJob(initialJob);
+      setJobId(newJobId);
+
+      setStatusText("Staging in progress...");
+      startPolling(newJobId, imageUrl);
+    } catch (err) {
+      console.error("startRender error", err);
+      setIsProcessing(false);
+      setStatusText("Unexpected error during staging.");
+    }
+  };
+
+  const handleProcessClick = () => {
+    if (!previewUrl || isProcessing) return;
+    startRender();
+  };
+
+  // Regenerate using /api/vsai-variation WITHOUT re-uploading / burning a new credit
+  const handleRegenerateClick = async (
+    overrideRoomType?: string,
+    overrideStyle?: string
+  ) => {
+    if (!job || !job.source?.publicUrl) {
+      setStatusText("No original job/image to regenerate.");
+      return;
+    }
+    if (isProcessing) return;
+
+    const userId = getUserId();
+    const imageUrl = job.source.publicUrl;
+
+    const roomTypeValue =
+      overrideRoomType || roomType || job.room_type || "living";
+    const styleValue = overrideStyle || style || job.style || "standard";
+
+    setIsProcessing(true);
+    setIsProcessed(false);
+    setStatusText("Requesting a new variation from AI...");
+
+    try {
+      const resp = await fetch("/api/vsai-variation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          imageUrl,
+          room_type: roomTypeValue,
+          style: styleValue,
+          declutter,
+          day_to_dusk: dayToDusk,
+          originalJobId: job.id,
+        }),
+      });
+
+      const json: any = await resp.json().catch(() => ({}));
+      if (!resp.ok || !json.ok || !json.data?.jobId) {
+        setIsProcessing(false);
+        setStatusText(json.error || "Variation request failed.");
+        return;
+      }
+
+      const newJobId: string = json.data.jobId;
+      const newStatus: JobStatus = json.data.status || "rendering";
+
+      setJobId(newJobId);
+      setJob((prev) =>
+        prev
+          ? {
+              ...prev,
+              id: newJobId,
+              status: newStatus,
+              room_type: roomTypeValue,
+              style: styleValue,
+            }
+          : {
+              id: newJobId,
+              userId,
+              status: newStatus,
+              room_type: roomTypeValue,
+              style: styleValue,
+              source: job.source,
+            }
+      );
+
+      setSliderValue(55);
+      setStatusText("Staging new variation...");
+      startPolling(newJobId, imageUrl);
+    } catch (err: any) {
+      console.error("[UI] handleRegenerateClick error", err);
+      setIsProcessing(false);
+      setStatusText(err.message || "Variation failed.");
+    }
+  };
+
+  // Open modal for re-style options
+  const openRegenerateModal = () => {
+    if (!job || !stagedUrl || isProcessing) return;
+    setModalRoomType(roomType);
+    setModalStyle(style);
+    setIsRegenerateModalOpen(true);
+  };
+
+  const closeRegenerateModal = () => {
+    setIsRegenerateModalOpen(false);
+  };
+
+  const handleModalReStage = async () => {
+    setRoomType(modalRoomType);
+    setStyle(modalStyle);
+    setIsRegenerateModalOpen(false);
+    await handleRegenerateClick(modalRoomType, modalStyle);
+  };
+
+  // Purchase -> Stripe Checkout
+  const handlePurchaseClick = async () => {
+    if (!job) {
+      setStatusText("No staged image to purchase yet.");
+      return;
+    }
+
+    setStatusText("Redirecting to checkout...");
+    try {
+      const resp = await fetch("/api/stripe-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId: job.id }),
+      });
+      const json = await resp.json();
+      if (!resp.ok || !json.url) {
+        setStatusText(json.error || "Stripe checkout failed.");
+        return;
+      }
+      window.location.href = json.url as string;
+    } catch (err) {
+      console.error("handlePurchaseClick error", err);
+      setStatusText("Unexpected error during checkout.");
+    }
+  };
+
+  const stagedOrPreview = stagedUrl || previewUrl;
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
-      <div className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
-          <p className="text-sm uppercase tracking-[0.4em] text-slate-500">
-            Payment Successful
-          </p>
-          <h1 className="mt-3 text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
-            Your staged image is ready
-          </h1>
-          <p className="mt-4 text-sm uppercase tracking-[0.2em] text-slate-500">
-            {statusText}
-          </p>
-        </div>
+    <>
+      <main className="min-h-screen bg-white text-slate-900">
+        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8 bg-transparent">
+          {/* Hero */}
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
+            <p className="text-sm uppercase tracking-[0.4em] text-slate-500">
+              {settings.heroTitleAccent}
+            </p>
+            <h1 className="mt-3 text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
+              {settings.heroTitle}
+            </h1>
+            <p className="mt-4 text-lg text-slate-600">{settings.heroCopy}</p>
+          </div>
 
-        <section className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
-          {loading && (
-            <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-              <span className="h-10 w-10 animate-spin rounded-full border-2 border-transparent border-t-slate-700" />
+          {/* Main layout */}
+          <div
+            className={`grid gap-8 ${
+              settings.layoutMode === "modern"
+                ? "lg:grid-cols-[2fr_1fr]"
+                : "lg:grid-cols-[3fr_2fr]"
+            }`}
+          >
+            {/* Left: upload + preview */}
+            <section className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
+              <div className="space-y-6">
+                <p className="text-xs text-center uppercase tracking-[0.2em] text-slate-500">
+                  {statusText}
+                </p>
+
+                {/* Drag/drop or preview */}
+                {!previewUrl ? (
+                  <div
+                    className={`relative flex h-full min-h-[360px] flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-300 ${
+                      isDragActive
+                        ? "border-slate-700 bg-slate-50"
+                        : "border-slate-300 bg-white"
+                    }`}
+                    style={{
+                      backgroundImage: isDragActive
+                        ? `linear-gradient(rgba(248,249,250,0.95), rgba(248,249,250,0.95)), url("${DRAG_DROP_PATTERN}")`
+                        : `url("${DRAG_DROP_PATTERN}")`,
+                      backgroundSize: "70px 70px",
+                      backgroundRepeat: "repeat",
+                    }}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-4 text-center">
+                      <ImageIcon size={32} className="text-slate-500" />
+                      <p className="text-2xl font-semibold leading-snug text-slate-900">
+                        Drag &amp; Drop
+                        <span className="block text-base text-slate-500">
+                          or upload files
+                        </span>
+                      </p>
+                      <span className="rounded-full border border-slate-400 px-5 py-2 text-sm font-medium text-slate-900">
+                        Browse files
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileCapture}
+                      />
+                    </label>
+                  </div>
+                ) : isProcessed && stagedOrPreview ? (
+                  // Processed state: show Before/After slider + action buttons
+                  <div className="space-y-4">
+                    <div
+                      className="relative overflow-hidden rounded-3xl border border-slate-300 bg-white"
+                      style={{ aspectRatio: "1024 / 683" }}
+                    >
+                      {/* Before */}
+                      <img
+                        src={previewUrl || undefined}
+                        alt="Before"
+                        className="h-full w-full object-cover grayscale-50 brightness-90"
+                      />
+                      {/* After overlay */}
+                      <div
+                        className="absolute inset-0 overflow-hidden"
+                        style={{
+                          clipPath: `inset(0 ${100 - sliderValue}% 0 0)`,
+                        }}
+                      >
+                        <img
+                          src={stagedOrPreview || undefined}
+                          alt="After"
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      {/* Divider line */}
+                      <div
+                        className="absolute inset-y-0 -ml-0.5 hidden w-px bg-white/80 sm:block"
+                        style={{ left: `${sliderValue}%` }}
+                      />
+                      {/* Knob */}
+                      <div
+                        className="pointer-events-none absolute -top-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-lg"
+                        style={{ left: `calc(${sliderValue}% - 1.5rem)` }}
+                      >
+                        <Sparkles size={20} />
+                      </div>
+                      {/* Simple arrows just to nudge slider left/right if you want */}
+                      <div className="absolute inset-y-0 left-4 flex items-center">
+                        <button
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600"
+                          onClick={() =>
+                            setSliderValue((prev) => Math.max(10, prev - 10))
+                          }
+                          type="button"
+                        >
+                          <ArrowLeft size={20} />
+                        </button>
+                      </div>
+                      <div className="absolute inset-y-0 right-4 flex items-center">
+                        <button
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600"
+                          onClick={() =>
+                            setSliderValue((prev) => Math.min(90, prev + 10))
+                          }
+                          type="button"
+                        >
+                          <ArrowRight size={20} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-center text-sm text-slate-600">
+                      Drag the slider to compare the original photo with the
+                      virtually staged view.
+                    </div>
+                    <input
+                      type="range"
+                      min={10}
+                      max={90}
+                      value={sliderValue}
+                      onChange={(event) =>
+                        setSliderValue(Number(event.target.value))
+                      }
+                      className="w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-slate-500"
+                    />
+
+                    {/* Action buttons under the rendered image */}
+                    <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                      <button
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
+                        onClick={openRegenerateModal}
+                        type="button"
+                        disabled={isProcessing}
+                      >
+                        <RefreshCw size={16} />
+                        {settings.regenerateLabel}
+                      </button>
+                      <button
+                        className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
+                        type="button"
+                        onClick={handlePurchaseClick}
+                        disabled={isProcessing}
+                      >
+                        {settings.purchaseLabel}
+                      </button>
+                      <a
+                        href="/"
+                        className="inline-flex items-center justify-center rounded-2xl border border-slate-300 px-5 py-3 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-500"
+                      >
+                        Return to main menu
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  // Preview while processing / before processed
+                  <div className="relative">
+                    <div
+                      className="relative rounded-3xl border border-slate-300 bg-white shadow-inner shadow-slate-300/60"
+                      style={{ aspectRatio: "1024 / 683" }}
+                    >
+                      <img
+                        src={previewUrl || undefined}
+                        alt="Uploaded preview"
+                        width={1024}
+                        height={683}
+                        className="h-full w-full rounded-3xl object-cover"
+                      />
+                      <div className="absolute inset-0 rounded-3xl border border-slate-300/60" />
+                      {isProcessing && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-3xl bg-slate-50/90 text-center">
+                          <span className="h-12 w-12 animate-spin rounded-full border-2 border-transparent border-t-slate-500" />
+                          <p className="text-sm uppercase tracking-[0.4em] text-slate-500">
+                            Rendering furniture...
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Controls: only visible BEFORE the first staging is complete */}
+              {previewUrl && !isProcessed && (
+                <div className="space-y-6">
+                  {/* Room + style */}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                        Room Type
+                      </p>
+                      <select
+                        id="vsai-room-type"
+                        className="mt-3 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
+                        value={roomType}
+                        onChange={(e) => setRoomType(e.target.value)}
+                      >
+                        {roomTypes.map((rt) => (
+                          <option
+                            key={rt}
+                            value={rt}
+                            className="bg-white text-slate-900"
+                          >
+                            {formatLabel(rt)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                        Style Type
+                      </p>
+                      <select
+                        id="vsai-style"
+                        className="mt-3 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
+                        value={style}
+                        onChange={(e) => setStyle(e.target.value)}
+                      >
+                        {styles.map((s) => (
+                          <option
+                            key={s}
+                            value={s}
+                            className="bg-white text-slate-900"
+                          >
+                            {formatLabel(s)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Declutter / Day-to-dusk toggles */}
+                  <div className="flex flex-col gap-4">
+                    {[
+                      {
+                        label: "Declutter or Furniture Removal?",
+                        active: declutter,
+                        onToggle: () => setDeclutter((prev) => !prev),
+                      },
+                      {
+                        label: "Day to Dusk?",
+                        active: dayToDusk,
+                        onToggle: () => setDayToDusk((prev) => !prev),
+                      },
+                    ].map((option) => (
+                      <button
+                        key={option.label}
+                        className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+                          option.active
+                            ? "border-slate-800 bg-slate-100 text-slate-900"
+                            : "border-slate-300 bg-white text-slate-700"
+                        }`}
+                        onClick={option.onToggle}
+                        type="button"
+                      >
+                        <span
+                          className={`flex h-7 w-7 items-center justify-center rounded-2xl border ${
+                            option.active
+                              ? "border-slate-800 bg-white text-slate-900"
+                              : "border-slate-300 text-slate-500"
+                          }`}
+                        >
+                          <Check
+                            size={16}
+                            className={
+                              option.active
+                                ? "text-slate-900"
+                                : "text-slate-500"
+                            }
+                          />
+                        </span>
+                        <span>{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Main CTA */}
+                  <div className="flex justify-center">
+                    <button
+                      className="w-1/2 max-w-[260px] rounded-2xl border border-slate-700 bg-slate-100 px-6 py-3 text-lg font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={handleProcessClick}
+                      type="button"
+                      disabled={!previewUrl || isProcessing}
+                    >
+                      {isProcessing ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-transparent border-t-slate-700" />
+                          Processing...
+                        </span>
+                      ) : (
+                        settings.processLabel
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* Right: explainer */}
+            <aside className="space-y-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-200/60">
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                Key outcomes
+              </p>
+              <ul className="space-y-4 text-sm text-slate-700">
+                <li>Real-time before &amp; after reveal.</li>
+                <li>Furnished results tuned by room and style selectors.</li>
+                <li>
+                  Auto-crop, lighting, and mood adjustments with every request.
+                </li>
+              </ul>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+                <p className="font-semibold text-slate-900">Tips</p>
+                <p className="text-slate-600">
+                  Use high-resolution interior photos with neutral lighting for
+                  best results.
+                </p>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </main>
+
+      {/* Regenerate modal */}
+      {isRegenerateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+          <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl shadow-slate-900/30">
+            <div className="mb-4 space-y-3">
+              <h3 className="text-xl font-semibold text-slate-900">
+                Choose new staging options
+              </h3>
               <p className="text-sm text-slate-600">
-                Fetching your final render...
+                Adjust the room and style before re-staging to preview a
+                different setup.
               </p>
             </div>
-          )}
-
-          {!loading && error && (
             <div className="space-y-4">
-              <p className="text-sm text-red-600">{error}</p>
+              <div className="space-y-2">
+                <label
+                  className="text-xs uppercase tracking-[0.4em] text-slate-500"
+                  htmlFor="modal-room-type"
+                >
+                  Room Type
+                </label>
+                <select
+                  id="modal-room-type"
+                  className="w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
+                  value={modalRoomType}
+                  onChange={(event) => setModalRoomType(event.target.value)}
+                >
+                  {roomTypes.map((rt) => (
+                    <option
+                      key={rt}
+                      value={rt}
+                      className="bg-white text-slate-900"
+                    >
+                      {formatLabel(rt)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label
+                  className="text-xs uppercase tracking-[0.4em] text-slate-500"
+                  htmlFor="modal-style-type"
+                >
+                  Style Type
+                </label>
+                <select
+                  id="modal-style-type"
+                  className="w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
+                  value={modalStyle}
+                  onChange={(event) => setModalStyle(event.target.value)}
+                >
+                  {styles.map((s) => (
+                    <option
+                      key={s}
+                      value={s}
+                      className="bg-white text-slate-900"
+                    >
+                      {formatLabel(s)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
               <button
-                className="rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-                onClick={handleStageMore}
                 type="button"
+                className="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-500"
+                onClick={closeRegenerateModal}
               >
-                Back to Main Menu
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="rounded-2xl border border-slate-700 bg-slate-900 px-5 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:border-slate-900"
+                onClick={handleModalReStage}
+                disabled={isProcessing}
+              >
+                Re-Stage Image
               </button>
             </div>
-          )}
-
-          {!loading && !error && imageUrl && (
-            <>
-              <div
-                className="relative rounded-3xl border border-slate-300 bg-white shadow-inner shadow-slate-300/60"
-                style={{ aspectRatio: "1024 / 683" }}
-              >
-                <img
-                  src={imageUrl}
-                  alt="Final staged"
-                  className="h-full w-full rounded-3xl object-cover"
-                />
-                <div className="absolute inset-0 rounded-3xl border border-slate-300/60" />
-              </div>
-
-              {/* Final actions after payment success */}
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-                <button
-                  className="rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-                  onClick={handleDownload}
-                  type="button"
-                >
-                  Download Image
-                </button>
-                <button
-                  className="rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-                  onClick={handleStageMore}
-                  type="button"
-                >
-                  Stage More Images
-                </button>
-                <button
-                  className="rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-600 transition hover:border-slate-500"
-                  onClick={handleLogout}
-                  type="button"
-                >
-                  Log Out
-                </button>
-              </div>
-            </>
-          )}
-        </section>
-      </div>
-    </main>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
