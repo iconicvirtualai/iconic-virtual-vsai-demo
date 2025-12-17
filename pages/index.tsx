@@ -50,6 +50,15 @@ const DRAG_DROP_PATTERN = `data:image/svg+xml,${encodeURIComponent(
   dragDropPatternSvg
 )}`;
 
+const DEFAULT_SETTINGS = {
+  heroTitle: "Transform vacant spaces into story-rich interiors",
+  heroTitleAccent: "Iconic Virtual.AI Studio",
+  heroCopy: "Upload a photo. Pick your mood. Watch the magic happen.",
+  processLabel: "Stage Image",
+  regenerateLabel: "Regenerate Image",
+  purchaseLabel: "Download Full Resolution",
+  layoutMode: "modern",
+};
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
