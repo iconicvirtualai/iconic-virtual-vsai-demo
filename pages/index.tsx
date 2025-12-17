@@ -217,13 +217,31 @@ export default function Index() {
           return;
         }
         const j: Job = jobJson.data;
-        setJob(j);
 
-        if (j.status === "done" || j.status === "paid_done") {
+        // IMPORTANT: preserve original source.publicUrl if backend job object doesn't include it
+        setJob((prev) => {
+          const merged: Job = {
+            ...(prev || ({} as Job)),
+            ...j,
+            source: j.source || prev?.source,
+          };
+          return merged;
+        });
+
+        const jobNow: Job = {
+          ...(job || ({} as Job)),
+          ...j,
+          source: j.source || job?.source,
+        };
+
+        if (jobNow.status === "done" || jobNow.status === "paid_done") {
           clearPolling();
-          // Back end now doesn’t add watermark – we still read the same fields
+
           const imgUrl =
-            j.watermarked?.url || j.final?.url || fallbackImageUrl;
+            jobNow.watermarked?.url ||
+            jobNow.final?.url ||
+            fallbackImageUrl;
+
           setStagedUrl(imgUrl);
           setIsProcessing(false);
           setIsProcessed(true);
@@ -235,10 +253,10 @@ export default function Index() {
           setVariationIndex((prev) =>
             appendVariation ? prev + 1 : 0
           );
-        } else if (j.status === "error") {
+        } else if (jobNow.status === "error") {
           clearPolling();
           setIsProcessing(false);
-          setStatusText(j.error || "Render failed.");
+          setStatusText(jobNow.error || "Render failed.");
         } else {
           setStatusText("Staging in progress...");
         }
@@ -331,7 +349,7 @@ export default function Index() {
           imageUrl,
           room_type: roomType,
           style,
-          // declutter / day_to_dusk are disabled for now
+          // declutter / day_to_dusk disabled for now
         }),
       });
       const renderJson = await renderResp.json();
@@ -375,13 +393,14 @@ export default function Index() {
   // --- Regeneration with modal + true VSAI variation --------------------
 
   const openRegenerateModal = () => {
-    if (!job || !job.source?.publicUrl) {
+    const hasSource = job?.source?.publicUrl;
+    if (!hasSource) {
       setStatusText("No original job/image to regenerate.");
       return;
     }
     if (isProcessing) return;
-    setModalRoom(roomType || job.room_type || "living");
-    setModalStyle(style || job.style || "standard");
+    setModalRoom(roomType || job!.room_type || "living");
+    setModalStyle(style || job!.style || "standard");
     setIsRegenerateModalOpen(true);
   };
 
@@ -416,7 +435,6 @@ export default function Index() {
           imageUrl,
           room_type: roomTypeValue,
           style: styleValue,
-          // optional: original job id if backend uses it
           jobId: job.id,
         }),
       });
@@ -616,6 +634,13 @@ export default function Index() {
                           alt="After"
                           className="h-full w-full object-cover transition-transform duration-500 will-change-transform"
                         />
+
+                        {/* WATERMARK OVERLAY on rendered side only */}
+                        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                          <div className="select-none w-full px-6 text-center text-sm font-semibold uppercase tracking-[0.6em] text-black/60 md:text-base">
+                            ICONICVIRTUAL.AI
+                          </div>
+                        </div>
                       </div>
 
                       {/* Slider vertical line */}
@@ -632,17 +657,10 @@ export default function Index() {
                         <Sparkles size={20} />
                       </div>
 
-                      {/* WATERMARK OVERLAY (only on main preview, before payment) */}
-                      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                        <div className="select-none text-center text-3xl font-extrabold tracking-[0.5em] text-white/55 mix-blend-overlay md:text-5xl">
-                          ICONICVIRTUAL.AI
-                        </div>
-                      </div>
-
                       {/* Variation arrows (cycle REAL variations) */}
                       <div className="absolute inset-y-0 left-4 flex items-center">
                         <button
-                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 shadow-sm transition hover:scale-105 hover:border-slate-600"
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 shadow-sm transition hover:scale-105 hover:border-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
                           onClick={goToPreviousVariation}
                           type="button"
                           disabled={totalVariations <= 1}
@@ -652,7 +670,7 @@ export default function Index() {
                       </div>
                       <div className="absolute inset-y-0 right-4 flex items-center">
                         <button
-                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 shadow-sm transition hover:scale-105 hover:border-slate-600"
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 shadow-sm transition hover:scale-105 hover:border-slate-600 disabled:cursor-not-allowed disabled:opacity-40"
                           onClick={goToNextVariation}
                           type="button"
                           disabled={totalVariations <= 1}
