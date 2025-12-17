@@ -1,4 +1,3 @@
-// pages/index.tsx
 import {
   ChangeEvent,
   DragEvent,
@@ -9,13 +8,13 @@ import {
 import {
   ArrowLeft,
   ArrowRight,
-  Check,
   ImageIcon,
   RefreshCw,
   Sparkles,
 } from "lucide-react";
 
-// ---- Types ----
+// --- Types --------------------------------------------------------------
+
 type JobStatus =
   | "uploading"
   | "rendering"
@@ -53,7 +52,7 @@ const DRAG_DROP_PATTERN = `data:image/svg+xml,${encodeURIComponent(
 
 const DEFAULT_SETTINGS = {
   heroTitle: "Transform vacant spaces into story-rich interiors",
-  heroTitleAccent: "Iconic Virtual.AI Studio",
+  heroTitleAccent: "IconicVirtual.AI Studio",
   heroCopy: "Upload a photo. Pick your mood. Watch the magic happen.",
   processLabel: "Stage Image",
   regenerateLabel: "Regenerate Image",
@@ -82,6 +81,8 @@ async function fileToBase64(file: File): Promise<string> {
   });
 }
 
+// --- Component ----------------------------------------------------------
+
 export default function Index() {
   // Image + job state
   const [file, setFile] = useState<File | null>(null);
@@ -91,7 +92,7 @@ export default function Index() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [statusText, setStatusText] = useState("Awaiting upload");
 
-  // VSAI options
+  // VSAI options (fetched from backend)
   const [roomTypes, setRoomTypes] = useState<string[]>([]);
   const [styles, setStyles] = useState<string[]>([]);
   const [roomType, setRoomType] = useState<string>("living");
@@ -99,20 +100,24 @@ export default function Index() {
 
   // UI state
   const [isDragActive, setIsDragActive] = useState(false);
-  const [declutter, setDeclutter] = useState(true);
-  const [dayToDusk, setDayToDusk] = useState(false);
+  const [declutter] = useState(false); // kept for future, but always false now
+  const [dayToDusk] = useState(false); // kept for future, but always false now
   const [isProcessing, setIsProcessing] = useState(false);
   const [isProcessed, setIsProcessed] = useState(false);
+  const [hasRegenerated, setHasRegenerated] = useState(false);
   const [sliderValue, setSliderValue] = useState(55);
 
-  // Regenerate modal
+  // REAL variation images from VSAI (one per render / re-stage)
+  const [variationUrls, setVariationUrls] = useState<string[]>([]);
+  const [variationIndex, setVariationIndex] = useState(0);
+
+  // Regenerate modal state
   const [isRegenerateModalOpen, setIsRegenerateModalOpen] = useState(false);
-  const [modalRoomType, setModalRoomType] = useState<string>("living");
+  const [modalRoom, setModalRoom] = useState<string>("living");
   const [modalStyle, setModalStyle] = useState<string>("standard");
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userIdRef = useRef<string | null>(null);
-  const originalImageUrlRef = useRef<string | null>(null);
   const settings = DEFAULT_SETTINGS;
 
   // Stable per-session user id
@@ -158,6 +163,8 @@ export default function Index() {
         setStyles(finalStyles);
         setRoomType(finalRoomTypes[0]);
         setStyle(finalStyles[0]);
+        setModalRoom(finalRoomTypes[0]);
+        setModalStyle(finalStyles[0]);
       } catch (e) {
         console.error("Failed to fetch VSAI options", e);
         const fallbackRooms = [
@@ -172,6 +179,8 @@ export default function Index() {
         setStyles(fallbackStyles);
         setRoomType(fallbackRooms[0]);
         setStyle(fallbackStyles[0]);
+        setModalRoom(fallbackRooms[0]);
+        setModalStyle(fallbackStyles[0]);
       }
     };
     fetchOptions();
@@ -192,8 +201,12 @@ export default function Index() {
     }
   };
 
-  // Shared polling function for initial render AND regenerations
-  const startPolling = (jobIdToPoll: string, fallbackImageUrl: string) => {
+  // Shared polling for initial render AND regenerations
+  const startPolling = (
+    jobIdToPoll: string,
+    fallbackImageUrl: string,
+    appendVariation: boolean
+  ) => {
     clearPolling();
     pollRef.current = setInterval(async () => {
       try {
@@ -204,33 +217,24 @@ export default function Index() {
           return;
         }
         const j: Job = jobJson.data;
-
-        setJob((prev) => {
-          // preserve original source/publicUrl if backend doesn't send it
-          const preservedSource =
-            prev?.source ||
-            j.source ||
-            (originalImageUrlRef.current
-              ? {
-                  ...(prev?.source || {}),
-                  publicUrl: originalImageUrlRef.current,
-                }
-              : undefined);
-
-          return {
-            ...(prev || ({} as Job)),
-            ...j,
-            source: preservedSource,
-          };
-        });
+        setJob(j);
 
         if (j.status === "done" || j.status === "paid_done") {
           clearPolling();
-          const imgUrl = j.watermarked?.url || j.final?.url || fallbackImageUrl;
+          // Back end now doesn’t add watermark – we still read the same fields
+          const imgUrl =
+            j.watermarked?.url || j.final?.url || fallbackImageUrl;
           setStagedUrl(imgUrl);
           setIsProcessing(false);
           setIsProcessed(true);
           setStatusText("Staging complete.");
+
+          setVariationUrls((prev) =>
+            appendVariation ? [...prev, imgUrl] : [imgUrl]
+          );
+          setVariationIndex((prev) =>
+            appendVariation ? prev + 1 : 0
+          );
         } else if (j.status === "error") {
           clearPolling();
           setIsProcessing(false);
@@ -244,13 +248,22 @@ export default function Index() {
     }, 2500);
   };
 
+  const totalVariations = variationUrls.length;
+  const currentImage =
+    totalVariations > 0
+      ? variationUrls[Math.min(variationIndex, totalVariations - 1)]
+      : stagedUrl || previewUrl;
+
   const handleNewFile = (f: File) => {
     setFile(f);
     const url = URL.createObjectURL(f);
     setPreviewUrl(url);
     setStagedUrl(null);
     setIsProcessed(false);
+    setHasRegenerated(false);
     setSliderValue(55);
+    setVariationUrls([]);
+    setVariationIndex(0);
     setStatusText("Image selected.");
   };
 
@@ -307,10 +320,9 @@ export default function Index() {
       }
 
       const imageUrl: string = uploadJson.data.publicUrl;
-      originalImageUrlRef.current = imageUrl;
       setStatusText("Image uploaded. Starting AI staging...");
 
-      // 2) Create VSAI render (preview / watermarked)
+      // 2) Create VSAI render (preview / non-watermarked)
       const renderResp = await fetch("/api/vsai-create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -319,8 +331,7 @@ export default function Index() {
           imageUrl,
           room_type: roomType,
           style,
-          declutter,
-          day_to_dusk: dayToDusk,
+          // declutter / day_to_dusk are disabled for now
         }),
       });
       const renderJson = await renderResp.json();
@@ -348,7 +359,7 @@ export default function Index() {
       setJobId(newJobId);
 
       setStatusText("Staging in progress...");
-      startPolling(newJobId, imageUrl);
+      startPolling(newJobId, imageUrl, false);
     } catch (err) {
       console.error("startRender error", err);
       setIsProcessing(false);
@@ -361,35 +372,42 @@ export default function Index() {
     startRender();
   };
 
-  // Regenerate using /api/vsai-variation WITHOUT re-uploading / burning a new credit
-  const handleRegenerateClick = async (
+  // --- Regeneration with modal + true VSAI variation --------------------
+
+  const openRegenerateModal = () => {
+    if (!job || !job.source?.publicUrl) {
+      setStatusText("No original job/image to regenerate.");
+      return;
+    }
+    if (isProcessing) return;
+    setModalRoom(roomType || job.room_type || "living");
+    setModalStyle(style || job.style || "standard");
+    setIsRegenerateModalOpen(true);
+  };
+
+  const handleRegenerateWithOptions = async (
     overrideRoomType?: string,
     overrideStyle?: string
   ) => {
-    if (!job) {
-      setStatusText("No original job to regenerate.");
+    if (!job || !job.source?.publicUrl) {
+      setStatusText("No original job/image to regenerate.");
       return;
     }
     if (isProcessing) return;
 
-    const userId = getUserId();
-    const imageUrl =
-      job.source?.publicUrl || originalImageUrlRef.current || null;
-
-    if (!imageUrl) {
-      setStatusText("No original job/image URL to regenerate.");
-      return;
-    }
-
-    const roomTypeValue =
-      overrideRoomType || roomType || job.room_type || "living";
-    const styleValue = overrideStyle || style || job.style || "standard";
-
+    setIsRegenerateModalOpen(false);
     setIsProcessing(true);
-    setIsProcessed(false);
     setStatusText("Requesting a new variation from AI...");
 
     try {
+      const userId = getUserId();
+      const imageUrl = job.source.publicUrl;
+
+      const roomTypeValue =
+        overrideRoomType || roomType || job.room_type || "living";
+      const styleValue =
+        overrideStyle || style || job.style || "standard";
+
       const resp = await fetch("/api/vsai-variation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -398,9 +416,8 @@ export default function Index() {
           imageUrl,
           room_type: roomTypeValue,
           style: styleValue,
-          declutter,
-          day_to_dusk: dayToDusk,
-          originalJobId: job.id,
+          // optional: original job id if backend uses it
+          jobId: job.id,
         }),
       });
 
@@ -430,40 +447,25 @@ export default function Index() {
               status: newStatus,
               room_type: roomTypeValue,
               style: styleValue,
-              source: {
-                fileName: job.source?.fileName,
-                publicUrl: imageUrl,
-              },
+              source: job.source,
             }
       );
 
+      setHasRegenerated(true);
       setSliderValue(55);
+      setIsProcessed(false);
+
       setStatusText("Staging new variation...");
-      startPolling(newJobId, imageUrl);
+      startPolling(newJobId, imageUrl, true);
     } catch (err: any) {
-      console.error("[UI] handleRegenerateClick error", err);
+      console.error("[UI] handleRegenerateWithOptions error", err);
       setIsProcessing(false);
       setStatusText(err.message || "Variation failed.");
     }
   };
 
-  // Open modal for re-style options
-  const openRegenerateModal = () => {
-    if (!job || !stagedUrl || isProcessing) return;
-    setModalRoomType(roomType);
-    setModalStyle(style);
-    setIsRegenerateModalOpen(true);
-  };
-
-  const closeRegenerateModal = () => {
-    setIsRegenerateModalOpen(false);
-  };
-
-  const handleModalReStage = async () => {
-    setRoomType(modalRoomType);
-    setStyle(modalStyle);
-    setIsRegenerateModalOpen(false);
-    await handleRegenerateClick(modalRoomType, modalStyle);
+  const handleModalReStage = () => {
+    handleRegenerateWithOptions(modalRoom, modalStyle);
   };
 
   // Purchase -> Stripe Checkout
@@ -492,14 +494,27 @@ export default function Index() {
     }
   };
 
-  const stagedOrPreview = stagedUrl || previewUrl;
+  const stagedOrPreview = currentImage || previewUrl;
+
+  // Variation navigation (true VSAI variations)
+  const goToPreviousVariation = () => {
+    if (totalVariations <= 1) return;
+    setVariationIndex(
+      (prev) => (prev - 1 + totalVariations) % totalVariations
+    );
+  };
+
+  const goToNextVariation = () => {
+    if (totalVariations <= 1) return;
+    setVariationIndex((prev) => (prev + 1) % totalVariations);
+  };
 
   return (
     <>
       <main className="min-h-screen bg-white text-slate-900">
-        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8 bg-transparent">
+        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 bg-transparent sm:px-6 lg:px-8">
           {/* Hero */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
             <p className="text-sm uppercase tracking-[0.4em] text-slate-500">
               {settings.heroTitleAccent}
             </p>
@@ -526,47 +541,61 @@ export default function Index() {
 
                 {/* Drag/drop or preview */}
                 {!previewUrl ? (
-                  <div
-                    className={`relative flex h-full min-h-[360px] flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-300 ${
-                      isDragActive
-                        ? "border-slate-700 bg-slate-50"
-                        : "border-slate-300 bg-white"
-                    }`}
-                    style={{
-                      backgroundImage: isDragActive
-                        ? `linear-gradient(rgba(248,249,250,0.95), rgba(248,249,250,0.95)), url("${DRAG_DROP_PATTERN}")`
-                        : `url("${DRAG_DROP_PATTERN}")`,
-                      backgroundSize: "70px 70px",
-                      backgroundRepeat: "repeat",
-                    }}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                  >
-                    <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-4 text-center">
-                      <ImageIcon size={32} className="text-slate-500" />
-                      <p className="text-2xl font-semibold leading-snug text-slate-900">
-                        Drag &amp; Drop
-                        <span className="block text-base text-slate-500">
-                          or upload files
-                        </span>
-                      </p>
-                      <span className="rounded-full border border-slate-400 px-5 py-2 text-sm font-medium text-slate-900">
-                        Browse files
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFileCapture}
-                      />
-                    </label>
-                  </div>
-                ) : isProcessed && stagedOrPreview ? (
-                  // Processed state: show Before/After slider + action buttons
                   <div className="space-y-4">
                     <div
-                      className="relative overflow-hidden rounded-3xl border border-slate-300 bg-white"
+                      className={`relative flex h-full min-h-[360px] flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-300 ${
+                        isDragActive
+                          ? "border-slate-700 bg-slate-50 shadow-inner"
+                          : "border-slate-300 bg-white"
+                      }`}
+                      style={{
+                        backgroundImage: isDragActive
+                          ? `linear-gradient(rgba(248,249,250,0.95), rgba(248,249,250,0.95)), url("${DRAG_DROP_PATTERN}")`
+                          : `url("${DRAG_DROP_PATTERN}")`,
+                        backgroundSize: "70px 70px",
+                        backgroundRepeat: "repeat",
+                      }}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
+                      <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-4 text-center">
+                        <ImageIcon
+                          size={32}
+                          className="text-slate-500 transition-transform duration-300 group-hover:scale-110"
+                        />
+                        <p className="text-2xl font-semibold leading-snug text-slate-900">
+                          Drag &amp; Drop
+                          <span className="block text-base text-slate-500">
+                            or upload files
+                          </span>
+                        </p>
+                        <span className="rounded-full border border-slate-400 px-5 py-2 text-sm font-medium text-slate-900 transition-colors duration-200 hover:bg-slate-100">
+                          Browse files
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleFileCapture}
+                        />
+                      </label>
+                    </div>
+                    {/* Return to Home link under drag & drop */}
+                    <p className="text-center text-xs uppercase tracking-[0.3em] text-slate-500">
+                      <a
+                        href="/"
+                        className="underline hover:text-slate-700"
+                      >
+                        Return to Home
+                      </a>
+                    </p>
+                  </div>
+                ) : isProcessed && stagedOrPreview ? (
+                  // Processed view with slider + overlay watermark
+                  <div className="space-y-4">
+                    <div
+                      className="relative overflow-hidden rounded-3xl border border-slate-300 bg-white shadow-inner shadow-slate-200/60"
                       style={{ aspectRatio: "1024 / 683" }}
                     >
                       {/* Before */}
@@ -575,7 +604,7 @@ export default function Index() {
                         alt="Before"
                         className="h-full w-full object-cover grayscale-50 brightness-90"
                       />
-                      {/* After overlay */}
+                      {/* After overlay (current variation) */}
                       <div
                         className="absolute inset-0 overflow-hidden"
                         style={{
@@ -585,45 +614,54 @@ export default function Index() {
                         <img
                           src={stagedOrPreview || undefined}
                           alt="After"
-                          className="h-full w-full object-cover"
+                          className="h-full w-full object-cover transition-transform duration-500 will-change-transform"
                         />
                       </div>
-                      {/* Divider line */}
+
+                      {/* Slider vertical line */}
                       <div
                         className="absolute inset-y-0 -ml-0.5 hidden w-px bg-white/80 sm:block"
                         style={{ left: `${sliderValue}%` }}
                       />
-                      {/* Knob */}
+
+                      {/* Slider knob */}
                       <div
-                        className="pointer-events-none absolute -top-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-lg"
+                        className="pointer-events-none absolute -top-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-slate-900 shadow-lg shadow-slate-400/40"
                         style={{ left: `calc(${sliderValue}% - 1.5rem)` }}
                       >
                         <Sparkles size={20} />
                       </div>
-                      {/* Simple arrows to nudge slider left/right */}
+
+                      {/* WATERMARK OVERLAY (only on main preview, before payment) */}
+                      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                        <div className="select-none text-center text-3xl font-extrabold tracking-[0.5em] text-white/55 mix-blend-overlay md:text-5xl">
+                          ICONICVIRTUAL.AI
+                        </div>
+                      </div>
+
+                      {/* Variation arrows (cycle REAL variations) */}
                       <div className="absolute inset-y-0 left-4 flex items-center">
                         <button
-                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600"
-                          onClick={() =>
-                            setSliderValue((prev) => Math.max(10, prev - 10))
-                          }
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 shadow-sm transition hover:scale-105 hover:border-slate-600"
+                          onClick={goToPreviousVariation}
                           type="button"
+                          disabled={totalVariations <= 1}
                         >
                           <ArrowLeft size={20} />
                         </button>
                       </div>
                       <div className="absolute inset-y-0 right-4 flex items-center">
                         <button
-                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600"
-                          onClick={() =>
-                            setSliderValue((prev) => Math.min(90, prev + 10))
-                          }
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 shadow-sm transition hover:scale-105 hover:border-slate-600"
+                          onClick={goToNextVariation}
                           type="button"
+                          disabled={totalVariations <= 1}
                         >
                           <ArrowRight size={20} />
                         </button>
                       </div>
                     </div>
+
                     <div className="text-center text-sm text-slate-600">
                       Drag the slider to compare the original photo with the
                       virtually staged view.
@@ -639,36 +677,52 @@ export default function Index() {
                       className="w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-slate-500"
                     />
 
-                    {/* Action buttons under the rendered image */}
-                    <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-  <button
-    className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-    onClick={openRegenerateModal}
-    type="button"
-    disabled={isProcessing}
-  >
-    <RefreshCw size={16} />
-    {settings.regenerateLabel}
-  </button>
-  <button
-    className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-    type="button"
-    onClick={handlePurchaseClick}
-    disabled={isProcessing}
-  >
-    {settings.purchaseLabel}
-  </button>
-  <a
-    href="/"
-    className="w-full pt-1 text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 hover:underline"
-  >
-    Return to main menu
-  </a>
-</div>
+                    {/* Variation indicator */}
+                    <div className="mt-2 text-center text-xs uppercase tracking-[0.3em] text-slate-500">
+                      {totalVariations > 0 ? (
+                        <>Variation {variationIndex + 1} / {totalVariations}</>
+                      ) : (
+                        <>First staged result</>
+                      )}
+                    </div>
 
+                    {/* Actions under rendered image */}
+                    <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                      <button
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 shadow-sm transition hover:border-slate-900 hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={openRegenerateModal}
+                        type="button"
+                        disabled={isProcessing}
+                      >
+                        <RefreshCw size={16} />
+                        {settings.regenerateLabel}
+                      </button>
+
+                      <button
+                        className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white shadow-sm transition hover:bg-black disabled:cursor-not-allowed disabled:opacity-50"
+                        type="button"
+                        onClick={handlePurchaseClick}
+                        disabled={isProcessing}
+                      >
+                        {settings.purchaseLabel}
+                      </button>
+                    </div>
+
+                    {/* Back to main menu as simple link */}
+                    <p className="mt-2 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
+                      <a href="/" className="underline hover:text-slate-700">
+                        return to main menu
+                      </a>
+                    </p>
+
+                    {hasRegenerated && (
+                      <div className="pt-1 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
+                        Use the arrows to browse your staged variations.
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  // Preview while processing / before processed
+                  // Preview while processing
                   <div className="relative">
                     <div
                       className="relative rounded-3xl border border-slate-300 bg-white shadow-inner shadow-slate-300/60"
@@ -695,12 +749,12 @@ export default function Index() {
                 )}
               </div>
 
-              {/* Controls: only visible BEFORE the first staging is complete */}
+              {/* Controls */}
               {previewUrl && !isProcessed && (
                 <div className="space-y-6">
                   {/* Room + style */}
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                       <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
                         Room Type
                       </p>
@@ -721,7 +775,7 @@ export default function Index() {
                         ))}
                       </select>
                     </div>
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                       <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
                         Style Type
                       </p>
@@ -744,55 +798,12 @@ export default function Index() {
                     </div>
                   </div>
 
-                  {/* Declutter / Day-to-dusk toggles */}
-                  <div className="flex flex-col gap-4">
-                    {[
-                      {
-                        label: "Declutter or Furniture Removal?",
-                        active: declutter,
-                        onToggle: () => setDeclutter((prev) => !prev),
-                      },
-                      {
-                        label: "Day to Dusk?",
-                        active: dayToDusk,
-                        onToggle: () => setDayToDusk((prev) => !prev),
-                      },
-                    ].map((option) => (
-                      <button
-                        key={option.label}
-                        className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-medium transition ${
-                          option.active
-                            ? "border-slate-800 bg-slate-100 text-slate-900"
-                            : "border-slate-300 bg-white text-slate-700"
-                        }`}
-                        onClick={option.onToggle}
-                        type="button"
-                      >
-                        <span
-                          className={`flex h-7 w-7 items-center justify-center rounded-2xl border ${
-                            option.active
-                              ? "border-slate-800 bg-white text-slate-900"
-                              : "border-slate-300 text-slate-500"
-                          }`}
-                        >
-                          <Check
-                            size={16}
-                            className={
-                              option.active
-                                ? "text-slate-900"
-                                : "text-slate-500"
-                            }
-                          />
-                        </span>
-                        <span>{option.label}</span>
-                      </button>
-                    ))}
-                  </div>
+                  {/* Declutter / Day-to-dusk toggles removed for now */}
 
                   {/* Main CTA */}
                   <div className="flex justify-center">
                     <button
-                      className="w-1/2 max-w-[260px] rounded-2xl border border-slate-700 bg-slate-100 px-6 py-3 text-lg font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="w-1/2 max-w-[260px] rounded-2xl border border-slate-700 bg-slate-100 px-6 py-3 text-lg font-semibold text-slate-900 shadow-sm transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
                       onClick={handleProcessClick}
                       type="button"
                       disabled={!previewUrl || isProcessing}
@@ -812,18 +823,18 @@ export default function Index() {
             </section>
 
             {/* Right: explainer */}
-            <aside className="space-y-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-200/60">
+            <aside className="space-y-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-200/60 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl">
               <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
                 Key outcomes
               </p>
               <ul className="space-y-4 text-sm text-slate-700">
-                <li>Real-time before &amp; after reveal.</li>
-                <li>Furnished results tuned by room and style selectors.</li>
+                <li>Real-time before &amp; after reveal with motion slider.</li>
+                <li>Furnished presets tuned by room and style selectors.</li>
                 <li>
                   Auto-crop, lighting, and mood adjustments with every request.
                 </li>
               </ul>
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm">
                 <p className="font-semibold text-slate-900">Tips</p>
                 <p className="text-slate-600">
                   Use high-resolution interior photos with neutral lighting for
@@ -859,8 +870,8 @@ export default function Index() {
                 <select
                   id="modal-room-type"
                   className="w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
-                  value={modalRoomType}
-                  onChange={(event) => setModalRoomType(event.target.value)}
+                  value={modalRoom}
+                  onChange={(event) => setModalRoom(event.target.value)}
                 >
                   {roomTypes.map((rt) => (
                     <option
@@ -902,7 +913,7 @@ export default function Index() {
               <button
                 type="button"
                 className="rounded-2xl border border-slate-300 px-4 py-2 text-sm font-semibold uppercase tracking-[0.2em] text-slate-600 transition hover:border-slate-500"
-                onClick={closeRegenerateModal}
+                onClick={() => setIsRegenerateModalOpen(false)}
               >
                 Cancel
               </button>
