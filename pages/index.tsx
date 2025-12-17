@@ -112,6 +112,7 @@ export default function Index() {
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userIdRef = useRef<string | null>(null);
+  const originalImageUrlRef = useRef<string | null>(null);
   const settings = DEFAULT_SETTINGS;
 
   // Stable per-session user id
@@ -203,7 +204,25 @@ export default function Index() {
           return;
         }
         const j: Job = jobJson.data;
-        setJob(j);
+
+        setJob((prev) => {
+          // preserve original source/publicUrl if backend doesn't send it
+          const preservedSource =
+            prev?.source ||
+            j.source ||
+            (originalImageUrlRef.current
+              ? {
+                  ...(prev?.source || {}),
+                  publicUrl: originalImageUrlRef.current,
+                }
+              : undefined);
+
+          return {
+            ...(prev || ({} as Job)),
+            ...j,
+            source: preservedSource,
+          };
+        });
 
         if (j.status === "done" || j.status === "paid_done") {
           clearPolling();
@@ -288,6 +307,7 @@ export default function Index() {
       }
 
       const imageUrl: string = uploadJson.data.publicUrl;
+      originalImageUrlRef.current = imageUrl;
       setStatusText("Image uploaded. Starting AI staging...");
 
       // 2) Create VSAI render (preview / watermarked)
@@ -346,14 +366,20 @@ export default function Index() {
     overrideRoomType?: string,
     overrideStyle?: string
   ) => {
-    if (!job || !job.source?.publicUrl) {
-      setStatusText("No original job/image to regenerate.");
+    if (!job) {
+      setStatusText("No original job to regenerate.");
       return;
     }
     if (isProcessing) return;
 
     const userId = getUserId();
-    const imageUrl = job.source.publicUrl;
+    const imageUrl =
+      job.source?.publicUrl || originalImageUrlRef.current || null;
+
+    if (!imageUrl) {
+      setStatusText("No original job/image URL to regenerate.");
+      return;
+    }
 
     const roomTypeValue =
       overrideRoomType || roomType || job.room_type || "living";
@@ -404,7 +430,10 @@ export default function Index() {
               status: newStatus,
               room_type: roomTypeValue,
               style: styleValue,
-              source: job.source,
+              source: {
+                fileName: job.source?.fileName,
+                publicUrl: imageUrl,
+              },
             }
       );
 
@@ -571,7 +600,7 @@ export default function Index() {
                       >
                         <Sparkles size={20} />
                       </div>
-                      {/* Simple arrows just to nudge slider left/right if you want */}
+                      {/* Simple arrows to nudge slider left/right */}
                       <div className="absolute inset-y-0 left-4 flex items-center">
                         <button
                           className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600"
