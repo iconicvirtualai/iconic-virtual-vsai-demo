@@ -5,7 +5,6 @@ const VSAI_BASE = "https://api.virtualstagingai.app/v1";
 const VSAI_API_KEY =
   process.env.VSAI_API_KEY || process.env.VIRTUAL_STAGING_AI_API_KEY;
 
-// Helper to call the VSAI API
 async function callVsai(path: string, init?: RequestInit) {
   if (!VSAI_API_KEY) {
     throw new Error("VSAI_API_KEY is not configured");
@@ -25,7 +24,7 @@ async function callVsai(path: string, init?: RequestInit) {
   try {
     json = text ? JSON.parse(text) : {};
   } catch {
-    // ignore parse error; json stays {}
+    // ignore parse error
   }
 
   if (!resp.ok) {
@@ -45,87 +44,58 @@ export default async function handler(
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
-  // Log what we got so you can see it in Vercel logs
-  console.log("[vsai-variation] incoming body:", req.body);
-
   const {
     jobId,
-    originalJobId,
     userId,
     imageUrl,
     room_type,
     style,
-    declutter,
-    day_to_dusk,
   } = req.body as {
     jobId?: string;
-    originalJobId?: string;
     userId?: string;
     imageUrl?: string;
     room_type?: string;
     style?: string;
-    declutter?: boolean;
-    day_to_dusk?: boolean;
   };
 
-  // We really just need the image URL and some config for VSAI
-  if (!imageUrl) {
+  if (!userId || !imageUrl) {
     return res
       .status(400)
-      .json({ ok: false, error: "Missing imageUrl for variation" });
+      .json({ ok: false, error: "Missing userId or imageUrl" });
   }
 
-  // Normalize room/style
-  const rt = (room_type || "living").trim();
-  const st = (style || "standard").trim();
+  const rt = room_type || "living";
+  const st = style || "standard";
 
-  // Parent job (used for free variations if VSAI supports it)
-  const parentId = originalJobId || jobId || null;
-
-  // Build VSAI payload
   const payload: any = {
     image_url: imageUrl,
     room_type: rt,
     style: st,
     wait_for_completion: false,
-    add_virtually_staged_watermark: true,
+    add_virtually_staged_watermark: false, // again: no real watermark
   };
 
-  // Optional modifiers
-  if (declutter === true) payload.declutter = true;
-  if (day_to_dusk === true) payload.day_to_dusk = true;
-
-  // If VSAI supports referencing an earlier render, pass it along
-  if (parentId) {
-    // NOTE: Adjust this key if VSAI docs specify a different name
-    payload.parent_render_id = parentId;
+  if (jobId) {
+    payload.parent_render_id = jobId;
   }
 
-  // Demo mode: no API key configured – just fake a job id so the UI doesn't break
   if (!VSAI_API_KEY) {
     const fakeId = `variation-${Date.now()}`;
-    console.log(
-      "[vsai-variation] no VSAI_API_KEY, returning demo job id:",
-      fakeId
-    );
     return res.status(200).json({
       ok: true,
       data: {
         jobId: fakeId,
         status: "rendering",
-        basedOnJobId: parentId,
+        basedOnJobId: jobId || null,
       },
     });
   }
 
   try {
-    // Call the real VSAI API
     const json = await callVsai("/render/create", {
       method: "POST",
       body: JSON.stringify(payload),
     });
-
-    console.log("[vsai-variation] VSAI /render/create response:", json);
 
     const renderId =
       json.render_id || json.id || json.renderId || `variation-${Date.now()}`;
@@ -136,7 +106,7 @@ export default async function handler(
       data: {
         jobId: renderId,
         status,
-        basedOnJobId: parentId,
+        basedOnJobId: jobId || null,
       },
     });
   } catch (err: any) {
