@@ -1,7 +1,7 @@
 // pages/success.tsx
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { Check, ImageIcon, LogOut, RefreshCw } from "lucide-react";
+import { Check, ImageIcon, LogOut } from "lucide-react";
 
 type JobStatus =
   | "uploading"
@@ -75,7 +75,7 @@ export default function SuccessPage() {
           }
           setIsLoading(false);
         } else if (j.status === "error") {
-          setStatusText(j.error || "We couldn&apos;t complete this render.");
+          setStatusText(j.error || "We couldn't complete this render.");
           setIsLoading(false);
         } else {
           setStatusText("Finishing your high-resolution image...");
@@ -96,15 +96,24 @@ export default function SuccessPage() {
     };
   }, [router.isReady, jobId]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!finalUrl) return;
     try {
+      const response = await fetch(finalUrl);
+      if (!response.ok) {
+        console.error("[success] download fetch error", response.status);
+        return;
+      }
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
       const link = document.createElement("a");
-      link.href = finalUrl;
+      link.href = blobUrl;
       link.download = "iconic-virtual-staged.jpg";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
     } catch (err) {
       console.error("[success] download error:", err);
     }
@@ -115,7 +124,7 @@ export default function SuccessPage() {
   };
 
   const handleLogout = () => {
-    // If you add auth later, clear tokens/session here.
+    // If you add auth later, clear tokens/session here
     router.push("/");
   };
 
@@ -179,7 +188,10 @@ export default function SuccessPage() {
                 </p>
                 {job?.source?.fileName && (
                   <p className="text-xs text-slate-500">
-                    Original file: <span className="font-medium">{job.source.fileName}</span>
+                    Original file:{" "}
+                    <span className="font-medium">
+                      {job.source.fileName}
+                    </span>
                   </p>
                 )}
               </div>
