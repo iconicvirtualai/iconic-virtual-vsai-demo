@@ -51,12 +51,12 @@ const DRAG_DROP_PATTERN = `data:image/svg+xml,${encodeURIComponent(
 )}`;
 
 const DEFAULT_SETTINGS = {
-  heroTitle: "Transform vacant spaces into story-rich interiors",
-  heroTitleAccent: "Iconic Virtual.AI Studio",
-  heroCopy: "Upload a photo. Pick your mood. Watch the magic happen.",
-  processLabel: "Stage Image",
+  heroTitle: "TRANSFORM VACANT PLACES INTO HOT SPACES",
+  heroTitleAccent: "IconicVirtual.AI Studio",
+  heroCopy: "UPLOAD A PHOTO. CHOOSE YOUR MOOD. WATCH THE MAGIC.",
+  processLabel: "Stage NOW",
   regenerateLabel: "Regenerate Image",
-  purchaseLabel: "Download Full Resolution",
+  purchaseLabel: "Purchase Staged Image",
   layoutMode: "modern",
 };
 
@@ -654,7 +654,7 @@ export default function Index() {
 
                         {/* WATERMARK overlay on staged side */}
                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                          <span className="select-none text-3xl md:text-5xl font-semibold tracking-[0.4em] text-slate-900/65 mix-blend-multiply">
+                          <span className="select-none text-3xl md:text-5xl font-semibold tracking-[0.5em] text-slate-900/65 mix-blend-multiply">
                             ICONICVIRTUAL.AI
                           </span>
                         </div>
