@@ -60,7 +60,10 @@ const DEFAULT_SETTINGS = {
   layoutMode: "modern",
 };
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+// File size logic
+const TEN_MB = 10 * 1024 * 1024; // 10 MB in bytes
+const TARGET_RESIZED_BYTES = 3 * 1024 * 1024; // 3 MB target for resized large images
+const HARD_MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB absolute cap to avoid crazy huge files
 
 function formatLabel(value: string) {
   return value
@@ -80,6 +83,67 @@ async function fileToBase64(file: File): Promise<string> {
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
+  });
+}
+
+// Resize an image file client-side to be under `maxBytes` (approx), returning a new File
+async function resizeImageToMaxSize(
+  file: File,
+  maxBytes: number
+): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+
+      // Basic scaling: keep aspect ratio, max width 2400px
+      const maxWidth = 2400;
+      let { width, height } = image;
+      if (width > maxWidth) {
+        const scale = maxWidth / width;
+        width = maxWidth;
+        height = height * scale;
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(image, 0, 0, width, height);
+
+      let quality = 0.9;
+
+      const attemptBlob = () => {
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(file);
+              return;
+            }
+
+            if (blob.size <= maxBytes || quality <= 0.3) {
+              const resizedFile = new File([blob], file.name.replace(/\.\w+$/, "") + "_resized.jpg", {
+                type: "image/jpeg",
+              });
+              resolve(resizedFile);
+            } else {
+              quality -= 0.1;
+              attemptBlob();
+            }
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+
+      attemptBlob();
+    };
+
+    image.onerror = () => resolve(file); // fallback to original if something breaks
+    image.src = URL.createObjectURL(file);
   });
 }
 
@@ -105,7 +169,7 @@ export default function Index() {
   const [hasRegenerated, setHasRegenerated] = useState(false);
   const [sliderValue, setSliderValue] = useState(55);
 
-  // Real variation list from VSAI (not fake filters)
+  // Real variation URLs from VSAI
   const [variationUrls, setVariationUrls] = useState<string[]>([]);
   const [currentVariationIndex, setCurrentVariationIndex] =
     useState<number>(0);
@@ -278,14 +342,52 @@ export default function Index() {
     return stagedUrl || previewUrl;
   }, [variationUrls, currentVariationIndex, stagedUrl, previewUrl]);
 
-  const handleNewFile = (f: File) => {
-    if (f.size > MAX_FILE_SIZE) {
-      setStatusText("File too large. Please upload an image limited to 10MB.");
+  // Reset everything to allow uploading a different file
+  const handleResetFile = () => {
+    if (previewUrl && previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setFile(null);
+    setPreviewUrl(null);
+    setStagedUrl(null);
+    setJob(null);
+    setJobId(null);
+    setVariationUrls([]);
+    setCurrentVariationIndex(0);
+    setIsProcessed(false);
+    setHasRegenerated(false);
+    setStatusText("Awaiting upload");
+  };
+
+  const handleNewFile = async (f: File) => {
+    if (f.size > HARD_MAX_FILE_SIZE) {
+      setStatusText(
+        "File too large. Please upload an image under 50MB."
+      );
       return;
     }
 
-    setFile(f);
-    const url = URL.createObjectURL(f);
+    let workingFile = f;
+
+    if (f.size > TEN_MB) {
+      setStatusText(
+        "Large file detected. Optimizing image for faster staging..."
+      );
+      try {
+        workingFile = await resizeImageToMaxSize(f, TARGET_RESIZED_BYTES);
+      } catch {
+        // If resizing fails, fall back to original
+        workingFile = f;
+      }
+    }
+
+    setFile(workingFile);
+
+    if (previewUrl && previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    const url = URL.createObjectURL(workingFile);
     setPreviewUrl(url);
     setStagedUrl(null);
     setIsProcessed(false);
@@ -298,7 +400,9 @@ export default function Index() {
 
   const handleFileCapture = (event: ChangeEvent<HTMLInputElement>) => {
     const f = event.target.files?.[0];
-    if (f) handleNewFile(f);
+    if (f) {
+      void handleNewFile(f);
+    }
     event.target.value = "";
   };
 
@@ -315,7 +419,9 @@ export default function Index() {
     event.preventDefault();
     setIsDragActive(false);
     const f = event.dataTransfer.files?.[0];
-    if (f) handleNewFile(f);
+    if (f) {
+      void handleNewFile(f);
+    }
   };
 
   const startRender = async () => {
@@ -361,7 +467,6 @@ export default function Index() {
           imageUrl,
           room_type: roomType,
           style,
-          // declutter/day_to_dusk removed for now
         }),
       });
       const renderJson = await renderResp.json();
@@ -399,7 +504,7 @@ export default function Index() {
 
   const handleProcessClick = () => {
     if (!previewUrl || isProcessing) return;
-    startRender();
+    void startRender();
   };
 
   // Open regenerate modal (do NOT hit VSAI yet)
@@ -664,7 +769,7 @@ export default function Index() {
 
                         {/* WATERMARK overlay on staged side */}
                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                          <span className="select-none text-3xl md:text-5xl font-semibold tracking-[0.4em] text-slate-900/65 mix-blend-multiply">
+                          <span className="select-none text-xl md:text-2xl font-semibold tracking-[0.2em] text-slate-900/70 mix-blend-multiply">
                             ICONICVIRTUAL.AI
                           </span>
                         </div>
@@ -685,7 +790,7 @@ export default function Index() {
                       {/* Variation arrows (cycle REAL VSAI variations) */}
                       <div className="absolute inset-y-0 left-4 flex items-center">
                         <button
-                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600"
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600 disabled:opacity-50"
                           onClick={handlePrevVariation}
                           type="button"
                           disabled={variationUrls.length <= 1}
@@ -695,7 +800,7 @@ export default function Index() {
                       </div>
                       <div className="absolute inset-y-0 right-4 flex items-center">
                         <button
-                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600"
+                          className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600 disabled:opacity-50"
                           onClick={handleNextVariation}
                           type="button"
                           disabled={variationUrls.length <= 1}
@@ -835,8 +940,8 @@ export default function Index() {
                         </div>
                       </div>
 
-                      {/* Main CTA */}
-                      <div className="flex justify-center">
+                      {/* Main CTA + "upload different file" */}
+                      <div className="flex flex-col items-center gap-3">
                         <button
                           className="w-1/2 max-w-[260px] rounded-2xl border border-slate-700 bg-slate-100 px-6 py-3 text-lg font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
                           onClick={handleProcessClick}
@@ -851,6 +956,15 @@ export default function Index() {
                           ) : (
                             settings.processLabel
                           )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={handleResetFile}
+                          className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500 underline"
+                          disabled={isProcessing}
+                        >
+                          upload a different file
                         </button>
                       </div>
                     </>
@@ -872,13 +986,38 @@ export default function Index() {
                 Key Features
               </p>
               <ul className="space-y-2 text-sm text-slate-700">
-                <li>AI staged photos in 1–3 minutes.</li>
-                <li>File size impacts render speed.</li>
-                <li>Real-time Before &amp; After Reveal.</li>
-                <li>Different Style Variations.</li>
-                <li>Furnished results by room and style selectors.</li>
-                <li>
-                  Auto-crop, lighting, and mood adjustments with every request.
+                <li className="flex items-start gap-2">
+                  <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
+                  <span>AI staged photos in 1–3 minutes.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
+                  <span>
+                    File size impacts render speed{" "}
+                    <span className="text-slate-500">
+                      (file sizes over 10MB will be automatically resized for
+                      optimal use).
+                    </span>
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
+                  <span>Real-time Before &amp; After Reveal.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
+                  <span>Different Style Variations.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
+                  <span>Furnished results by room and style selectors.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
+                  <span>
+                    Auto-crop, lighting, and mood adjustments with every
+                    request.
+                  </span>
                 </li>
               </ul>
               <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
@@ -888,7 +1027,7 @@ export default function Index() {
                   best results.
                 </p>
                 <p className="mt-1 text-slate-600">
-                  For fastest results, limit file sizes to 2MB.
+                  For fastest results, limit file sizes to 10MB.
                 </p>
               </div>
             </aside>
