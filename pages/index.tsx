@@ -35,12 +35,10 @@ async function apiFetch<T = any>(
     json = {};
   }
 
-  // If backend already returns { ok, data, error }, reuse that
   if (typeof json.ok === "boolean") {
     return json;
   }
 
-  // Otherwise, wrap it
   if (!res.ok) {
     return {
       ok: false,
@@ -411,10 +409,16 @@ export default function Index() {
 
   // Regenerate using /api/vsai-variation WITHOUT re-uploading / burning a new credit
   const handleRegenerateClick = async () => {
-    if (!job || !job.source?.publicUrl || isProcessing) return;
+    console.log("[UI] Regenerate clicked. Current job:", job);
+
+    if (!job || !job.source?.publicUrl) {
+      setStatusText("No original job/image to regenerate.");
+      return;
+    }
+    if (isProcessing) return;
 
     setIsProcessing(true);
-    setStatusText("Requesting a new variation...");
+    setStatusText("Requesting a new variation from AI...");
 
     try {
       const userId = getUserId();
@@ -423,31 +427,32 @@ export default function Index() {
       const roomTypeValue = roomType || job.room_type || "living";
       const styleValue = style || job.style || "standard";
 
-      const resp = await apiFetch<{ jobId: string; status?: JobStatus }>(
-        "/api/vsai-variation",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId,
-            jobId: job.id, // let backend know this is a variation of the original job
-            imageUrl,
-            room_type: roomTypeValue,
-            style: styleValue,
-            declutter,
-            day_to_dusk: dayToDusk,
-          }),
-        }
-      );
+      const resp = await fetch("/api/vsai-variation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          imageUrl,
+          room_type: roomTypeValue,
+          style: styleValue,
+          declutter,
+          day_to_dusk: dayToDusk,
+          // You can also send original jobId if your backend uses it:
+          originalJobId: job.id,
+        }),
+      });
 
-      if (!resp.ok || !resp.data) {
+      const json: any = await resp.json().catch(() => ({}));
+      console.log("[UI] /api/vsai-variation response", resp.status, json);
+
+      if (!resp.ok || !json.ok || !json.data?.jobId) {
         setIsProcessing(false);
-        setStatusText(resp.error || "Variation request failed.");
+        setStatusText(json.error || "Variation request failed.");
         return;
       }
 
-      const newJobId = resp.data.jobId;
-      const newStatus: JobStatus = resp.data.status || "rendering";
+      const newJobId: string = json.data.jobId;
+      const newStatus: JobStatus = json.data.status || "rendering";
 
       // Update state so polling watches the NEW job
       setJobId(newJobId);
@@ -478,7 +483,7 @@ export default function Index() {
       setStatusText("Staging new variation...");
       startPolling(newJobId, imageUrl);
     } catch (err: any) {
-      console.error("[handleRegenerateClick] error", err);
+      console.error("[UI] handleRegenerateClick error", err);
       setIsProcessing(false);
       setStatusText(err.message || "Variation failed.");
     }
