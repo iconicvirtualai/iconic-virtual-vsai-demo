@@ -67,8 +67,11 @@ export default async function handler(
           },
         },
       ],
-      success_url: `${origin}/success?jobId=${encodeURIComponent(jobId)}`,
-      cancel_url: `${origin}/?checkout=cancelled`,
+      success_url: `${origin}/success?jobId=${encodeURIComponent(
+  jobId
+)}&session_id={CHECKOUT_SESSION_ID}`,
+cancel_url: `${origin}/?checkout=cancelled`,
+
       metadata: {
         jobId,
       },
