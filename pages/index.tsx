@@ -662,7 +662,22 @@ export default function Index() {
         setStatusText(json.error || "Stripe checkout failed.");
         return;
       }
-      window.location.href = json.url as string;
+const url = json.url as string;
+
+// If embedded (Wix iframe), Stripe Checkout must open top-level (not inside the iframe)
+try {
+  if (window.top && window.top !== window.self) {
+    // Prefer redirecting the top window
+    window.top.location.href = url;
+  } else {
+    // Normal (not embedded)
+    window.location.href = url;
+  }
+} catch (e) {
+  // If sandbox blocks top navigation, open in a new tab
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
     } catch (err) {
       console.error("handlePurchaseClick error", err);
       setStatusText("Unexpected error during checkout.");
