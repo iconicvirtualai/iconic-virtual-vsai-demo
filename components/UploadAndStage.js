@@ -1,103 +1,156 @@
-// pages/api/vsai-variation.js
+import { useState } from "react";
 
-import fetch from "node-fetch";
+export default function UploadAndStage() {
+  const [renderId, setRenderId] = useState("");
+  const [roomType, setRoomType] = useState("living");
+  const [style, setStyle] = useState("standard");
+  const [removeExistingFurniture, setRemoveExistingFurniture] = useState(false);
+  const [addFurniture, setAddFurniture] = useState(true);
 
-const VSAI_API_KEY = process.env.VSAI_API_KEY;
+  const [resultImageUrl, setResultImageUrl] = useState("");
+  const [variationId, setVariationId] = useState("");
 
-if (!VSAI_API_KEY) {
-  throw new Error("VSAI_API_KEY is not set in environment variables");
-}
+  const [buyerEmail, setBuyerEmail] = useState("");
+  const [statusText, setStatusText] = useState("");
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  try {
-    const {
-      renderId,
-      roomType,
-      style,
-      removeExistingFurniture,
-      addFurniture,
-      baseVariationId, // optional; can be used to branch off a specific variation
-    } = req.body;
-
-    if (!renderId) {
-      return res.status(400).json({ error: "renderId is required" });
-    }
-
-    // Build config for variation
-    const config = {
-      type: "staging",
-      output_resolution: "default",
-      add_virtually_staged_watermark: true,
-    };
-
-    if (addFurniture) {
-      config.add_furniture = {
-        style: style || "standard",
-        room_type: roomType || "living",
-      };
-
-      // optional: branch from a specific base variation
-      if (baseVariationId) {
-        config.add_furniture.base_variation_id = baseVariationId;
-      }
-    }
-
-    if (removeExistingFurniture) {
-      config.remove_furniture = {
-        mode: "on",
-      };
-    }
-
-    const body = {
-      config,
-      variation_count: 1,
-      wait_for_completion: true, // wait until variation is done and result URL is ready
-    };
-
-    const vsaiRes = await fetch(
-      `https://api.virtualstagingai.app/v2/renders/${encodeURIComponent(
-        renderId
-      )}/variations`,
-      {
+  async function handleCreateVariation() {
+    setStatusText("Creating variation...");
+    try {
+      const resp = await fetch("/api/vsai-variation", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Api-Key ${VSAI_API_KEY}`,
-        },
-        body: JSON.stringify(body),
-      }
-    );
-
-    const data = await vsaiRes.json();
-
-    if (!vsaiRes.ok) {
-      console.error("VSAI variation error:", data);
-      return res.status(vsaiRes.status).json({
-        error: data?.message || "Failed to create variation",
-        raw: data,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          renderId,
+          roomType,
+          style,
+          removeExistingFurniture,
+          addFurniture,
+        }),
       });
+
+      const json = await resp.json();
+      if (!resp.ok) throw new Error(json?.error || "Failed to create variation");
+
+      setVariationId(json.variationId || "");
+      setResultImageUrl(json.resultImageUrl || "");
+      setStatusText("Variation ready.");
+    } catch (err) {
+      console.error("handleCreateVariation error", err);
+      setStatusText("Unexpected error during variation.");
     }
-
-    // Response example shows { variations: [ { result: { url } } ] }
-    // https://docs.virtualstagingai.app/v2-api/endpoints  :contentReference[oaicite:2]{index=2}
-    const variationsArray = data.variations?.items || data.variations || [];
-    const variation = variationsArray[0] || null;
-
-    const resultImageUrl = variation?.result?.url || null;
-    const variationId = variation?.id || null;
-
-    return res.status(200).json({
-      renderId,
-      variationId,
-      resultImageUrl,
-      raw: data,
-    });
-  } catch (err) {
-    console.error("VSAI variation handler error:", err);
-    return res.status(500).json({ error: "Internal server error" });
   }
+
+  async function handlePurchaseClick() {
+    setStatusText("Starting checkout...");
+    try {
+      if (!buyerEmail) {
+        setStatusText("Please enter your email.");
+        return;
+      }
+      if (!resultImageUrl) {
+        setStatusText("No result image yet. Generate a variation first.");
+        return;
+      }
+
+      // Your stripe-checkout expects a jobId. We'll use variationId if available.
+      const jobId = variationId || renderId;
+
+      const resp = await fetch("/api/stripe-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId,
+          email: buyerEmail,
+          downloadUrl: resultImageUrl,   // <-- this is the key value
+          previewUrl: resultImageUrl,    // optional
+          amountCents: 500               // set your price
+        }),
+      });
+
+      const json = await resp.json();
+      if (!resp.ok || !json.ok || !json.url) {
+        throw new Error(json?.error || "Checkout failed");
+      }
+
+      const url = json.url;
+
+      // ✅ Stripe Checkout can't load inside Wix iframe.
+      // Try top-window navigation; if blocked, open a new tab.
+      try {
+        if (window.top && window.top !== window.self) {
+          window.top.location.href = url;
+        } else {
+          window.location.href = url;
+        }
+      } catch (e) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
+    } catch (err) {
+      console.error("handlePurchaseClick error", err);
+      setStatusText("Unexpected error during checkout.");
+    }
+  }
+
+  return (
+    <div style={{ maxWidth: 720, margin: "0 auto", padding: 16 }}>
+      <h2 style={{ fontSize: 22, fontWeight: 700 }}>VSAI Demo</h2>
+
+      <div style={{ marginTop: 12 }}>
+        <label>Render ID</label>
+        <input
+          style={{ width: "100%", padding: 10, marginTop: 6 }}
+          value={renderId}
+          onChange={(e) => setRenderId(e.target.value)}
+          placeholder="Paste your renderId here"
+        />
+      </div>
+
+      <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+        <input style={{ flex: 1, padding: 10 }} value={roomType} onChange={(e) => setRoomType(e.target.value)} placeholder="roomType" />
+        <input style={{ flex: 1, padding: 10 }} value={style} onChange={(e) => setStyle(e.target.value)} placeholder="style" />
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <label style={{ display: "block" }}>
+          <input type="checkbox" checked={removeExistingFurniture} onChange={(e) => setRemoveExistingFurniture(e.target.checked)} /> Remove furniture
+        </label>
+        <label style={{ display: "block" }}>
+          <input type="checkbox" checked={addFurniture} onChange={(e) => setAddFurniture(e.target.checked)} /> Add furniture
+        </label>
+      </div>
+
+      <button
+        onClick={handleCreateVariation}
+        style={{ marginTop: 12, padding: 12, borderRadius: 10, background: "#111", color: "#fff" }}
+      >
+        Create Variation
+      </button>
+
+      {resultImageUrl ? (
+        <div style={{ marginTop: 14 }}>
+          <img src={resultImageUrl} alt="Result" style={{ width: "100%", borderRadius: 12 }} />
+        </div>
+      ) : null}
+
+      <div style={{ marginTop: 16, borderTop: "1px solid #eee", paddingTop: 16 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 700 }}>Pay & Download</h3>
+
+        <input
+          style={{ width: "100%", padding: 10, marginTop: 8 }}
+          value={buyerEmail}
+          onChange={(e) => setBuyerEmail(e.target.value)}
+          placeholder="Email (required)"
+        />
+
+        <button
+          onClick={handlePurchaseClick}
+          style={{ marginTop: 10, padding: 12, borderRadius: 10, background: "#111", color: "#fff" }}
+        >
+          Pay
+        </button>
+      </div>
+
+      {statusText ? <p style={{ marginTop: 12 }}>{statusText}</p> : null}
+    </div>
+  );
 }
