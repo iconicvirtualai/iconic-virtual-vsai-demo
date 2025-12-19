@@ -1,119 +1,103 @@
-// pages/api/vsai-variation.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 
-const VSAI_BASE = "https://api.virtualstagingai.app/v1";
-const VSAI_API_KEY =
-  process.env.VSAI_API_KEY || process.env.VIRTUAL_STAGING_AI_API_KEY;
+const VSAI_API_KEY = process.env.VSAI_API_KEY;
 
-async function callVsai(path: string, init?: RequestInit) {
-  if (!VSAI_API_KEY) {
-    throw new Error("VSAI_API_KEY is not configured");
-  }
-
-  const resp = await fetch(`${VSAI_BASE}${path}`, {
-    ...init,
-    headers: {
-      Authorization: `Api-key ${VSAI_API_KEY}`,
-      "Content-Type": "application/json",
-      ...(init?.headers || {}),
-    },
-  });
-
-  const text = await resp.text();
-  let json: any = {};
-  try {
-    json = text ? JSON.parse(text) : {};
-  } catch {
-    // ignore parse error
-  }
-
-  if (!resp.ok) {
-    const message =
-      json.error || json.message || `VSAI error ${resp.status}`;
-    throw new Error(message);
-  }
-
-  return json;
+if (!VSAI_API_KEY) {
+  throw new Error("VSAI_API_KEY is not set in environment variables");
 }
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+type VariationRequestBody = {
+  renderId?: string;
+  roomType?: string;
+  style?: string;
+  removeExistingFurniture?: boolean;
+  addFurniture?: boolean;
+  baseVariationId?: string;
+};
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
-  }
-
-  const {
-    jobId,
-    userId,
-    imageUrl,
-    room_type,
-    style,
-  } = req.body as {
-    jobId?: string;
-    userId?: string;
-    imageUrl?: string;
-    room_type?: string;
-    style?: string;
-  };
-
-  if (!userId || !imageUrl) {
-    return res
-      .status(400)
-      .json({ ok: false, error: "Missing userId or imageUrl" });
-  }
-
-  const rt = room_type || "living";
-  const st = style || "standard";
-
-  const payload: any = {
-    image_url: imageUrl,
-    room_type: rt,
-    style: st,
-    wait_for_completion: false,
-    add_virtually_staged_watermark: false, // again: no real watermark
-  };
-
-  if (jobId) {
-    payload.parent_render_id = jobId;
-  }
-
-  if (!VSAI_API_KEY) {
-    const fakeId = `variation-${Date.now()}`;
-    return res.status(200).json({
-      ok: true,
-      data: {
-        jobId: fakeId,
-        status: "rendering",
-        basedOnJobId: jobId || null,
-      },
-    });
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const json = await callVsai("/render/create", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+    const {
+      renderId,
+      roomType,
+      style,
+      removeExistingFurniture,
+      addFurniture,
+      baseVariationId,
+    } = (req.body || {}) as VariationRequestBody;
 
-    const renderId =
-      json.render_id || json.id || json.renderId || `variation-${Date.now()}`;
-    const status: string = json.status || "rendering";
+    if (!renderId) {
+      return res.status(400).json({ error: "renderId is required" });
+    }
+
+    // Build config for variation
+    const config: any = {
+      type: "staging",
+      output_resolution: "default",
+      add_virtually_staged_watermark: true,
+    };
+
+    if (addFurniture) {
+      config.add_furniture = {
+        style: style || "standard",
+        room_type: roomType || "living",
+      };
+
+      if (baseVariationId) {
+        config.add_furniture.base_variation_id = baseVariationId;
+      }
+    }
+
+    if (removeExistingFurniture) {
+      config.remove_furniture = { mode: "on" };
+    }
+
+    const body = {
+      config,
+      variation_count: 1,
+      wait_for_completion: true,
+    };
+
+    const vsaiRes = await fetch(
+      `https://api.virtualstagingai.app/v2/renders/${encodeURIComponent(renderId)}/variations`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Api-Key ${VSAI_API_KEY}`,
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    const data: any = await vsaiRes.json();
+
+    if (!vsaiRes.ok) {
+      console.error("VSAI variation error:", data);
+      return res.status(vsaiRes.status).json({
+        error: data?.message || "Failed to create variation",
+        raw: data,
+      });
+    }
+
+    const variationsArray = data.variations?.items || data.variations || [];
+    const variation = variationsArray[0] || null;
+
+    const resultImageUrl = variation?.result?.url || null;
+    const variationId = variation?.id || null;
 
     return res.status(200).json({
-      ok: true,
-      data: {
-        jobId: renderId,
-        status,
-        basedOnJobId: jobId || null,
-      },
+      renderId,
+      variationId,
+      resultImageUrl,
+      raw: data,
     });
-  } catch (err: any) {
-    console.error("[vsai-variation] error:", err);
-    return res.status(500).json({
-      ok: false,
-      error: err.message || "Failed to request variation",
-    });
+  } catch (err) {
+    console.error("VSAI variation handler error:", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
