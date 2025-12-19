@@ -44,14 +44,11 @@ export default async function handler(
   }
 
   try {
-    // Figure out base site URL for success/cancel redirects
-    const originHeader = req.headers.origin;
-    const fallbackOrigin =
-      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+      // Always return to YOUR app domain after Stripe (don't use Wix iframe origin)
     const origin =
-      typeof originHeader === "string" && originHeader.length > 0
-        ? originHeader
-        : fallbackOrigin;
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      "https://iconic-virtual-vsai-demo.vercel.app";
+
 
     // Simple flat price for now. You can later vary this by room type, etc.
     const session = await stripe.checkout.sessions.create({
