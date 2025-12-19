@@ -160,6 +160,7 @@ export default function Index() {
   const [job, setJob] = useState<Job | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [statusText, setStatusText] = useState("Awaiting upload");
+const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   // VSAI options
   const [roomTypes, setRoomTypes] = useState<string[]>([]);
@@ -643,46 +644,67 @@ export default function Index() {
     await handleRegenerateClick(modalRoomType, modalStyle);
   };
 
-  // Purchase -> Stripe Checkout
+    // Purchase -> Stripe Checkout (Wix iframe-safe with pre-opened tab)
   const handlePurchaseClick = async () => {
     if (!job) {
       setStatusText("No staged image to purchase yet.");
       return;
     }
 
+    setCheckoutUrl(null);
     setStatusText("Redirecting to checkout...");
+
+    // Detect if we're embedded in an iframe (Wix)
+    const inIframe =
+      typeof window !== "undefined" && window.top && window.top !== window.self;
+
+    // ✅ Pre-open a tab synchronously so popup blockers don't kill it after async fetch
+    let popup: Window | null = null;
+    if (inIframe) {
+      popup = window.open("about:blank", "_blank", "noopener,noreferrer");
+    }
+
     try {
       const resp = await fetch("/api/stripe-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobId: job.id }),
       });
-      const json = await resp.json();
+
+      const json: any = await resp.json().catch(() => ({}));
+
       if (!resp.ok || !json.url) {
+        if (popup && !popup.closed) popup.close();
         setStatusText(json.error || "Stripe checkout failed.");
         return;
       }
-const url = json.url as string;
 
-// If embedded (Wix iframe), Stripe Checkout must open top-level (not inside the iframe)
-try {
-  if (window.top && window.top !== window.self) {
-    // Prefer redirecting the top window
-    window.top.location.href = url;
-  } else {
-    // Normal (not embedded)
-    window.location.href = url;
-  }
-} catch (e) {
-  // If sandbox blocks top navigation, open in a new tab
-  window.open(url, "_blank", "noopener,noreferrer");
-}
+      const url = json.url as string;
+      setCheckoutUrl(url);
 
+      // 1) Best for Wix: send pre-opened tab to Stripe
+      if (popup && !popup.closed) {
+        popup.location.href = url;
+        return;
+      }
+
+      // 2) Otherwise try to escape iframe
+      try {
+        if (inIframe && window.top) {
+          window.top.location.href = url;
+          return;
+        }
+      } catch {}
+
+      // 3) Fallback
+      window.location.href = url;
     } catch (err) {
       console.error("handlePurchaseClick error", err);
+      if (popup && !popup.closed) popup.close();
       setStatusText("Unexpected error during checkout.");
     }
   };
+
 
   const handlePrevVariation = () => {
     if (variationUrls.length <= 1) return;
