@@ -33,7 +33,7 @@ type Job = {
 
 export default function SuccessPage() {
   const router = useRouter();
-  const { jobId } = router.query;
+const { jobId, session_id } = router.query;
 
   const [job, setJob] = useState<Job | null>(null);
   const [finalUrl, setFinalUrl] = useState<string | null>(null);
@@ -41,60 +41,116 @@ export default function SuccessPage() {
     "Thank you for your payment. Fetching your final staged image..."
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [isPaid, setIsPaid] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (!router.isReady) return;
-    if (!jobId || typeof jobId !== "string") {
-      setStatusText("Missing job ID in the URL.");
-      setIsLoading(false);
-      return;
-    }
+useEffect(() => {
+  if (!router.isReady) return;
 
-    let poll: ReturnType<typeof setInterval> | null = null;
+  if (!jobId || typeof jobId !== "string") {
+    setStatusText("Missing job ID in the URL.");
+    setIsLoading(false);
+    return;
+  }
 
-    const fetchJob = async () => {
-      try {
-        const resp = await fetch(`/api/jobs/${jobId}`);
-        const json = await resp.json();
-        if (!resp.ok || !json.ok) {
-          setStatusText(json.error || "Unable to load job details.");
-          setIsLoading(false);
-          return;
-        }
+  const sid =
+    typeof session_id === "string"
+      ? session_id
+      : Array.isArray(session_id)
+      ? session_id[0]
+      : null;
 
-        const j: Job = json.data;
-        setJob(j);
+  if (!sid) {
+    setStatusText(
+      "Missing Stripe session ID. Please return to your receipt email or contact support."
+    );
+    setIsLoading(false);
+    return;
+  }
 
-        if (j.status === "done" || j.status === "paid_done") {
-          const url = j.final?.url || j.watermarked?.url || null;
-          if (url) {
-            setFinalUrl(url);
-            setStatusText("Your staged image is ready.");
-          } else {
-            setStatusText("Finished, but no final image URL was found.");
-          }
-          setIsLoading(false);
-        } else if (j.status === "error") {
-          setStatusText(j.error || "We couldn't complete this render.");
-          setIsLoading(false);
-        } else {
-          setStatusText("Finishing your high-resolution image...");
-          setIsLoading(true);
-        }
-      } catch (err) {
-        console.error("[success] fetchJob error:", err);
-        setStatusText("Unexpected error while fetching your image.");
+  let poll: ReturnType<typeof setInterval> | null = null;
+
+  const verifyThenFetch = async () => {
+    try {
+      // 1) Verify payment with Stripe (server-side)
+      const verifyResp = await fetch(
+        `/api/stripe-verify?session_id=${encodeURIComponent(sid)}`
+      );
+      const verifyJson: any = await verifyResp.json().catch(() => ({}));
+
+      if (!verifyResp.ok || !verifyJson.ok) {
+        setStatusText(verifyJson.error || "Unable to verify payment.");
         setIsLoading(false);
+        return;
       }
-    };
 
-    fetchJob();
-    poll = setInterval(fetchJob, 2500);
+      if (!verifyJson.paid) {
+        setIsPaid(false);
+        setStatusText(
+          "Payment not confirmed yet. If you just paid, refresh in a moment."
+        );
+        setIsLoading(false);
+        return;
+      }
 
-    return () => {
-      if (poll) clearInterval(poll);
-    };
-  }, [router.isReady, jobId]);
+      setIsPaid(true);
+      if (verifyJson.receiptUrl) setReceiptUrl(verifyJson.receiptUrl);
+
+      // 2) Poll job until final image is ready
+      const fetchJob = async () => {
+        try {
+          const resp = await fetch(`/api/jobs/${jobId}`);
+          const json = await resp.json();
+          if (!resp.ok || !json.ok) {
+            setStatusText(json.error || "Unable to load job details.");
+            setIsLoading(false);
+            return;
+          }
+
+          const j: Job = json.data;
+          setJob(j);
+
+          if (j.status === "done" || j.status === "paid_done") {
+            const url = j.final?.url || j.watermarked?.url || null;
+            if (url) {
+              setFinalUrl(url);
+              setStatusText("Your staged image is ready.");
+            } else {
+              setStatusText("Finished, but no final image URL was found.");
+            }
+            setIsLoading(false);
+            if (poll) clearInterval(poll);
+          } else if (j.status === "error") {
+            setStatusText(j.error || "We couldn't complete this render.");
+            setIsLoading(false);
+            if (poll) clearInterval(poll);
+          } else {
+            setStatusText("Finishing your high-resolution image...");
+            setIsLoading(true);
+          }
+        } catch (err) {
+          console.error("[success] fetchJob error:", err);
+          setStatusText("Unexpected error while fetching your image.");
+          setIsLoading(false);
+        }
+      };
+
+      await fetchJob();
+      poll = setInterval(fetchJob, 2500);
+    } catch (err) {
+      console.error("[success] verifyThenFetch error:", err);
+      setStatusText("Unexpected error while verifying payment.");
+      setIsLoading(false);
+    }
+  };
+
+  verifyThenFetch();
+
+  return () => {
+    if (poll) clearInterval(poll);
+  };
+}, [router.isReady, jobId, session_id]);
+
 
   const handleDownload = async () => {
     if (!finalUrl) return;
