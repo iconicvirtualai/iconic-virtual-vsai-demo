@@ -914,6 +914,17 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
                       >
                         {settings.purchaseLabel}
                       </button>
+                      {checkoutUrl && (
+  <a
+    href={checkoutUrl}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="inline-flex items-center justify-center rounded-2xl border border-slate-900 bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:bg-slate-800"
+  >
+    Continue to Checkout
+  </a>
+)}
+
                     </div>
 
                     {/* Back to main menu as a LINK (no chip) */}
