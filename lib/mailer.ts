@@ -1,17 +1,17 @@
 import nodemailer from "nodemailer";
 
-const user = process.env.GMAIL_SMTP_USER as string;
-const pass = process.env.GMAIL_SMTP_APP_PASSWORD as string;
+export function getMailer() {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
 
-if (!user || !pass) {
-  console.warn("[mailer] Missing GMAIL_SMTP_USER or GMAIL_SMTP_APP_PASSWORD");
+  if (!user || !pass) {
+    throw new Error("GMAIL_USER or GMAIL_APP_PASSWORD missing");
+  }
+
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: { user, pass },
+  });
 }
-
-export const mailer = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: { user, pass },
-});
-
-export const FROM_EMAIL = process.env.FROM_EMAIL || user || "info@iconicvirtual.ai";
