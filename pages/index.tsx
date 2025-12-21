@@ -289,11 +289,11 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
         // Merge new job data with the old one so we keep source.publicUrl
         setJob((prev) => {
-          const merged: Job = {
-            ...(prev || ({} as Job)),
-            ...j,
-            source: j.source || prev?.source,
-  renderId: (j as any).renderId || (prev as any)?.renderId, 
+   const merged: Job = {
+  ...(prev || ({} as Job)),
+  ...j,
+  renderId: (j as any).renderId || (prev as any)?.renderId,
+  source: j.source || prev?.source,
 };
           return merged;
         });
@@ -558,94 +558,75 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
     setIsRegenerateModalOpen(false);
   };
 
-  // Actual regenerate -> calls /api/vsai-variation
-  const handleRegenerateClick = async (
-    overrideRoomType?: string,
-    overrideStyle?: string
-  ) => {
-    const imageUrl =
-      job?.source?.publicUrl || originalImageUrlRef.current || null;
+ // Actual regenerate -> calls /api/vsai-variation
+const handleRegenerateClick = async (
+  overrideRoomType?: string,
+  overrideStyle?: string
+) => {
+  if (!job) {
+    setStatusText("No job found to regenerate.");
+    return;
+  }
 
-    if (!imageUrl) {
-      setStatusText("No original job/image to regenerate.");
+  const renderId = (job as any).renderId as string | undefined;
+  if (!renderId) {
+    setStatusText(
+      "Missing renderId. (Your jobs endpoint must return renderId from VSAI.)"
+    );
+    return;
+  }
+
+  if (isProcessing) return;
+
+  setIsProcessing(true);
+  setIsProcessed(false);
+  setStatusText("Requesting a new variation from AI...");
+
+  try {
+    const roomTypeValue =
+      overrideRoomType || roomType || job.room_type || "living";
+    const styleValue = overrideStyle || style || job.style || "standard";
+
+    const resp = await fetch("/api/vsai-variation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        renderId,
+        room_type: roomTypeValue,
+        style: styleValue,
+        addFurniture: true,
+      }),
+    });
+
+    const json: any = await resp.json().catch(() => ({}));
+
+    if (!resp.ok || !json.ok || !json.data?.resultImageUrl) {
+      setIsProcessing(false);
+      setStatusText(json.error || "Variation request failed.");
       return;
     }
-    if (isProcessing) return;
 
-    setIsProcessing(true);
-    setIsProcessed(false);
-    setStatusText("Requesting a new variation from AI...");
+    const newUrl: string = json.data.resultImageUrl;
 
-    try {
-      const userId = getUserId();
+    // Show immediately (no polling, no new jobs)
+    setStagedUrl(newUrl);
+    setIsProcessing(false);
+    setIsProcessed(true);
+    setHasRegenerated(true);
+    setStatusText("Staging complete.");
 
-      const roomTypeValue =
-        overrideRoomType || roomType || job?.room_type || "living";
-      const styleValue =
-        overrideStyle || style || job?.style || "standard";
-
-      const resp = await fetch("/api/vsai-variation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-  userId,
-  imageUrl,
-  room_type: roomTypeValue,
-  style: styleValue,
-  jobId: job?.id,
-  renderId: (job as any)?.renderId || null, // ✅ ADD THIS
-}),
-
-      });
-
-      const json: any = await resp.json().catch(() => ({}));
-      console.log("[UI] /api/vsai-variation response", resp.status, json);
-
-      if (!resp.ok || !json.ok || !json.data?.jobId) {
-        setIsProcessing(false);
-        setStatusText(json.error || "Variation request failed.");
-        return;
-      }
-
-      const newJobId: string = json.data.jobId;
-      const newStatus: JobStatus = json.data.status || "rendering";
-
-      setJob((prev) =>
-        prev
-          ? {
-              ...prev,
-              id: newJobId,
-              status: newStatus,
-              room_type: roomTypeValue,
-              style: styleValue,
-              source: {
-                ...(prev.source || {}),
-                publicUrl: imageUrl,
-              },
-            }
-          : {
-              id: newJobId,
-              userId,
-              status: newStatus,
-              room_type: roomTypeValue,
-              style: styleValue,
-              source: {
-                publicUrl: imageUrl,
-              },
-            }
-      );
-
-      setJobId(newJobId);
-      setHasRegenerated(true);
-      setSliderValue(55);
-      setStatusText("Staging new variation...");
-      startPolling(newJobId, imageUrl, { appendVariation: true });
-    } catch (err: any) {
-      console.error("[UI] handleRegenerateClick error", err);
-      setIsProcessing(false);
-      setStatusText(err.message || "Variation failed.");
-    }
-  };
+    // Append to carousel + jump to it
+    setVariationUrls((prev) => {
+      const next = prev.includes(newUrl) ? prev : [...prev, newUrl];
+      setCurrentVariationIndex(next.indexOf(newUrl));
+      return next;
+    });
+  } catch (err: any) {
+    console.error("[UI] handleRegenerateClick error", err);
+    setIsProcessing(false);
+    setStatusText(err?.message || "Variation failed.");
+  }
+};
 
   const handleModalReStage = async () => {
     setRoomType(modalRoomType);
