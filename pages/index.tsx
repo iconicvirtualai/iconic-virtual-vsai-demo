@@ -1,3 +1,4 @@
+// pages/index.tsx
 import {
   ChangeEvent,
   DragEvent,
@@ -9,7 +10,6 @@ import {
 import {
   ArrowLeft,
   ArrowRight,
-  Check,
   ImageIcon,
   RefreshCw,
   Sparkles,
@@ -29,7 +29,11 @@ type Job = {
   status: JobStatus;
   room_type: string;
   style: string;
+
+  // ✅ IMPORTANT: We persist renderId so regenerate can work
+  // In your current backend, jobId === renderId, so we set renderId = id
   renderId?: string;
+
   source?: {
     fileName?: string;
     storagePath?: string;
@@ -75,6 +79,10 @@ function formatLabel(value: string) {
     .replace(/\w\S*/g, (txt) => txt[0].toUpperCase() + txt.slice(1));
 }
 
+function makeVariationKey(roomType: string, style: string) {
+  return `${roomType || "living"}::${style || "standard"}`;
+}
+
 async function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -89,10 +97,7 @@ async function fileToBase64(file: File): Promise<string> {
 }
 
 // Resize an image file client-side to be under `maxBytes` (approx), returning a new File
-async function resizeImageToMaxSize(
-  file: File,
-  maxBytes: number
-): Promise<File> {
+async function resizeImageToMaxSize(file: File, maxBytes: number): Promise<File> {
   return new Promise((resolve) => {
     const image = new Image();
     image.onload = () => {
@@ -130,9 +135,7 @@ async function resizeImageToMaxSize(
               const resizedFile = new File(
                 [blob],
                 file.name.replace(/\.\w+$/, "") + "_resized.jpg",
-                {
-                  type: "image/jpeg",
-                }
+                { type: "image/jpeg" }
               );
               resolve(resizedFile);
             } else {
@@ -148,7 +151,7 @@ async function resizeImageToMaxSize(
       attemptBlob();
     };
 
-    image.onerror = () => resolve(file); // fallback to original if something breaks
+    image.onerror = () => resolve(file);
     image.src = URL.createObjectURL(file);
   });
 }
@@ -158,10 +161,10 @@ export default function Index() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [stagedUrl, setStagedUrl] = useState<string | null>(null);
+
   const [job, setJob] = useState<Job | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [statusText, setStatusText] = useState("Awaiting upload");
-const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   // VSAI options
   const [roomTypes, setRoomTypes] = useState<string[]>([]);
@@ -176,10 +179,13 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [hasRegenerated, setHasRegenerated] = useState(false);
   const [sliderValue, setSliderValue] = useState(55);
 
-  // Real variation URLs from VSAI
+  // Variation URLs displayed in carousel
   const [variationUrls, setVariationUrls] = useState<string[]>([]);
-  const [currentVariationIndex, setCurrentVariationIndex] =
-    useState<number>(0);
+  const [currentVariationIndex, setCurrentVariationIndex] = useState<number>(0);
+
+  // ✅ Cache variations per (roomType+style) so we don't keep paying for the same “regenerate”
+  const variationCacheRef = useRef<Map<string, string[]>>(new Map());
+  const activeVariationKeyRef = useRef<string>(makeVariationKey("living", "standard"));
 
   // Regenerate modal
   const [isRegenerateModalOpen, setIsRegenerateModalOpen] = useState(false);
@@ -188,7 +194,7 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userIdRef = useRef<string | null>(null);
-  const originalImageUrlRef = useRef<string | null>(null); // remembers original upload URL
+  const originalImageUrlRef = useRef<string | null>(null);
 
   const settings = DEFAULT_SETTINGS;
 
@@ -201,7 +207,7 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
     return userIdRef.current;
   };
 
-  // Fetch VSAI options from backend
+  // Fetch VSAI options
   useEffect(() => {
     const fetchOptions = async () => {
       try {
@@ -210,11 +216,8 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
         let data: any = null;
         if (json && typeof json === "object") {
-          if ("ok" in json && json.ok && json.data) {
-            data = json.data;
-          } else {
-            data = json;
-          }
+          if ("ok" in json && json.ok && json.data) data = json.data;
+          else data = json;
         }
 
         const rt: string[] =
@@ -223,32 +226,26 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
           data?.styles || data?.style_list || data?.design_styles || [];
 
         const finalRoomTypes =
-          rt.length > 0
-            ? rt
-            : ["living", "bed", "kitchen", "dining", "home_office"];
+          rt.length > 0 ? rt : ["living", "bed", "kitchen", "dining", "home_office"];
         const finalStyles =
-          st.length > 0
-            ? st
-            : ["standard", "modern", "scandinavian", "luxury"];
+          st.length > 0 ? st : ["standard", "modern", "scandinavian", "luxury"];
 
         setRoomTypes(finalRoomTypes);
         setStyles(finalStyles);
         setRoomType(finalRoomTypes[0]);
         setStyle(finalStyles[0]);
+
+        activeVariationKeyRef.current = makeVariationKey(finalRoomTypes[0], finalStyles[0]);
       } catch (e) {
         console.error("Failed to fetch VSAI options", e);
-        const fallbackRooms = [
-          "living",
-          "bed",
-          "kitchen",
-          "dining",
-          "home_office",
-        ];
+        const fallbackRooms = ["living", "bed", "kitchen", "dining", "home_office"];
         const fallbackStyles = ["standard", "modern", "scandinavian", "luxury"];
         setRoomTypes(fallbackRooms);
         setStyles(fallbackStyles);
         setRoomType(fallbackRooms[0]);
         setStyle(fallbackStyles[0]);
+
+        activeVariationKeyRef.current = makeVariationKey(fallbackRooms[0], fallbackStyles[0]);
       }
     };
     fetchOptions();
@@ -269,11 +266,22 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
     }
   };
 
-  // Shared polling function for initial render AND regenerations
+  const setActiveVariations = (key: string, urls: string[]) => {
+    variationCacheRef.current.set(key, urls);
+    activeVariationKeyRef.current = key;
+
+    setVariationUrls(urls);
+    setCurrentVariationIndex(0);
+
+    // keep stagedUrl in sync with first item (or current)
+    setStagedUrl(urls[0] || null);
+  };
+
+  // Poll job status (for initial render and any server-side job)
   const startPolling = (
     jobIdToPoll: string,
     fallbackImageUrl: string,
-    options?: { resetVariations?: boolean; appendVariation?: boolean }
+    options?: { resetVariations?: boolean; appendVariation?: boolean; cacheKey?: string }
   ) => {
     clearPolling();
 
@@ -285,45 +293,58 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
           setStatusText(jobJson.error || "Status check failed.");
           return;
         }
+
         const j: Job = jobJson.data;
 
-        // Merge new job data with the old one so we keep source.publicUrl
+        // ✅ merge + preserve renderId so regenerate never loses it
         setJob((prev) => {
-   const merged: Job = {
-  ...(prev || ({} as Job)),
-  ...j,
-  renderId: (j as any).renderId || (prev as any)?.renderId,
-  source: j.source || prev?.source,
-};
-          return merged;
+          const prevRenderId = (prev as any)?.renderId;
+          const next: Job = {
+            ...(prev || ({} as Job)),
+            ...j,
+            renderId: prevRenderId || (j as any)?.renderId || j.id, // ✅ keep it
+            source: j.source || prev?.source,
+          };
+          return next;
         });
 
         if (j.status === "done" || j.status === "paid_done") {
           clearPolling();
-          const imgUrl =
-            j.final?.url || j.watermarked?.url || fallbackImageUrl;
 
-          setStagedUrl(imgUrl);
+          const imgUrl = j.final?.url || j.watermarked?.url || fallbackImageUrl;
+
           setIsProcessing(false);
           setIsProcessed(true);
           setStatusText("Staging complete.");
 
-          // Maintain list of variations for the arrows
-          setVariationUrls((prev) => {
-            let next = prev;
+          const key =
+            options?.cacheKey ||
+            activeVariationKeyRef.current ||
+            makeVariationKey(j.room_type || roomType, j.style || style);
 
-            if (options?.resetVariations || prev.length === 0) {
-              next = [imgUrl];
-              setCurrentVariationIndex(0);
-            } else if (options?.appendVariation) {
-              if (!prev.includes(imgUrl)) {
-                next = [...prev, imgUrl];
-                setCurrentVariationIndex(next.length - 1);
-              }
+          if (options?.resetVariations) {
+            setActiveVariations(key, [imgUrl]);
+            return;
+          }
+
+          if (options?.appendVariation) {
+            const existing = variationCacheRef.current.get(key) || [];
+            if (!existing.includes(imgUrl)) {
+              const next = [...existing, imgUrl];
+              setActiveVariations(key, next);
+              setCurrentVariationIndex(next.length - 1);
+              setStagedUrl(imgUrl);
+            } else {
+              setActiveVariations(key, existing);
+              setStagedUrl(existing[0] || imgUrl);
             }
+            return;
+          }
 
-            return next;
-          });
+          // default: ensure at least 1 in cache
+          if (!variationCacheRef.current.get(key)?.length) {
+            setActiveVariations(key, [imgUrl]);
+          }
         } else if (j.status === "error") {
           clearPolling();
           setIsProcessing(false);
@@ -341,27 +362,27 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const currentFinalUrl = useMemo(() => {
     if (variationUrls.length > 0) {
       return variationUrls[
-        Math.min(
-          variationUrls.length - 1,
-          Math.max(0, currentVariationIndex)
-        )
+        Math.min(variationUrls.length - 1, Math.max(0, currentVariationIndex))
       ];
     }
     return stagedUrl || previewUrl;
   }, [variationUrls, currentVariationIndex, stagedUrl, previewUrl]);
 
-  // Reset everything to allow uploading a different file
+  // Reset everything
   const handleResetFile = () => {
-    if (previewUrl && previewUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    if (previewUrl && previewUrl.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
+
     setFile(null);
     setPreviewUrl(null);
     setStagedUrl(null);
     setJob(null);
     setJobId(null);
+
     setVariationUrls([]);
     setCurrentVariationIndex(0);
+
+    variationCacheRef.current.clear();
+
     setIsProcessed(false);
     setHasRegenerated(false);
     setStatusText("Awaiting upload");
@@ -376,14 +397,11 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
     let workingFile = f;
 
     if (f.size > TEN_MB) {
-      setStatusText(
-        "Large file detected. Optimizing image for faster staging..."
-      );
+      setStatusText("Large file detected. Optimizing image for faster staging...");
     } else if (f.size > RESIZE_THRESHOLD_BYTES) {
       setStatusText("Optimizing image for upload...");
     }
 
-    // To avoid 413 from the server, resize anything over ~4MB
     if (f.size > RESIZE_THRESHOLD_BYTES) {
       try {
         workingFile = await resizeImageToMaxSize(f, TARGET_RESIZED_BYTES);
@@ -394,26 +412,26 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
     setFile(workingFile);
 
-    if (previewUrl && previewUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    if (previewUrl && previewUrl.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
 
     const url = URL.createObjectURL(workingFile);
     setPreviewUrl(url);
+
     setStagedUrl(null);
     setIsProcessed(false);
     setHasRegenerated(false);
     setSliderValue(55);
+
     setVariationUrls([]);
     setCurrentVariationIndex(0);
+    variationCacheRef.current.clear();
+
     setStatusText("Image selected.");
   };
 
   const handleFileCapture = (event: ChangeEvent<HTMLInputElement>) => {
     const f = event.target.files?.[0];
-    if (f) {
-      void handleNewFile(f);
-    }
+    if (f) void handleNewFile(f);
     event.target.value = "";
   };
 
@@ -422,17 +440,13 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
     setIsDragActive(true);
   };
 
-  const handleDragLeave = () => {
-    setIsDragActive(false);
-  };
+  const handleDragLeave = () => setIsDragActive(false);
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setIsDragActive(false);
     const f = event.dataTransfer.files?.[0];
-    if (f) {
-      void handleNewFile(f);
-    }
+    if (f) void handleNewFile(f);
   };
 
   const startRender = async () => {
@@ -440,6 +454,7 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
       setStatusText("Please upload an image first.");
       return;
     }
+
     setIsProcessing(true);
     setIsProcessed(false);
     setStatusText("Uploading image...");
@@ -448,18 +463,13 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
       const userId = getUserId();
       const fileBase64 = await fileToBase64(file);
 
-      // 1) Upload original to Firebase (orders/)
+      // 1) Upload original
       const uploadResp = await fetch("/api/upload", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          fileName: file.name,
-          fileBase64,
-        }),
+        body: JSON.stringify({ userId, fileName: file.name, fileBase64 }),
       });
 
-      // Handle 413 explicitly so we don't try to parse HTML as JSON
       if (uploadResp.status === 413) {
         setIsProcessing(false);
         setStatusText(
@@ -468,13 +478,7 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
         return;
       }
 
-      let uploadJson: any = {};
-      try {
-        uploadJson = await uploadResp.json();
-      } catch {
-        uploadJson = {};
-      }
-
+      const uploadJson: any = await uploadResp.json().catch(() => ({}));
       if (!uploadResp.ok || !uploadJson.ok) {
         setIsProcessing(false);
         setStatusText(uploadJson.error || "Upload failed.");
@@ -482,21 +486,18 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
       }
 
       const imageUrl: string = uploadJson.data.publicUrl;
-      originalImageUrlRef.current = imageUrl; // remember original upload
+      originalImageUrlRef.current = imageUrl;
+
       setStatusText("Image uploaded. Starting AI staging...");
 
-      // 2) Create VSAI render (preview / watermarked)
+      // 2) Create VSAI render
       const renderResp = await fetch("/api/vsai-create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          imageUrl,
-          room_type: roomType,
-          style,
-        }),
+        body: JSON.stringify({ userId, imageUrl, room_type: roomType, style }),
       });
-      const renderJson = await renderResp.json();
+
+      const renderJson: any = await renderResp.json().catch(() => ({}));
       if (!renderResp.ok || !renderJson.ok) {
         setIsProcessing(false);
         setStatusText(renderJson.error || "Render start failed.");
@@ -504,30 +505,31 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
       }
 
       const newJobId: string = renderJson.data.jobId;
-      const renderIdFromCreate: string | null =
-  renderJson.data.renderId ||
-  renderJson.data.render_id ||
-  renderJson.data.vsaiRenderId ||
-  null;
       const initialStatus: JobStatus = renderJson.data.status || "rendering";
 
+      // ✅ In your backend: jobId === renderId, so set both
       const initialJob: Job = {
         id: newJobId,
+        renderId: newJobId, // ✅ critical
         userId,
         status: initialStatus,
         room_type: roomType,
         style,
-        renderId: renderIdFromCreate || undefined,
-        source: {
-          fileName: file.name,
-          publicUrl: imageUrl,
-        },
+        source: { fileName: file.name, publicUrl: imageUrl },
       };
+
       setJob(initialJob);
       setJobId(newJobId);
 
+      // cache key for this combo
+      const key = makeVariationKey(roomType, style);
+      activeVariationKeyRef.current = key;
+
+      // reset active variations for this combo
+      setActiveVariations(key, []);
+
       setStatusText("Staging in progress...");
-      startPolling(newJobId, imageUrl, { resetVariations: true });
+      startPolling(newJobId, imageUrl, { resetVariations: true, cacheKey: key });
     } catch (err) {
       console.error("startRender error", err);
       setIsProcessing(false);
@@ -540,7 +542,7 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
     void startRender();
   };
 
-  // Open regenerate modal (do NOT hit VSAI yet)
+  // ✅ Open regenerate modal (no API call yet)
   const openRegenerateModal = () => {
     const baseUrl = job?.source?.publicUrl || originalImageUrlRef.current;
     if (!baseUrl) {
@@ -554,79 +556,138 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
     setIsRegenerateModalOpen(true);
   };
 
-  const closeRegenerateModal = () => {
-    setIsRegenerateModalOpen(false);
-  };
+  const closeRegenerateModal = () => setIsRegenerateModalOpen(false);
 
- // Actual regenerate -> calls /api/vsai-variation
-const handleRegenerateClick = async (
-  overrideRoomType?: string,
-  overrideStyle?: string
-) => {
-  if (!job) {
-    setStatusText("No job found to regenerate.");
-    return;
-  }
+  // ✅ Regenerate logic:
+  // - If we already generated for that room/style combo, reuse cached variations (NO new cost)
+  // - Only call API if that combo has never been generated yet
+  const handleRegenerateClick = async (overrideRoomType?: string, overrideStyle?: string) => {
+    const imageUrl = job?.source?.publicUrl || originalImageUrlRef.current || null;
+    if (!imageUrl) {
+      setStatusText("No original job/image to regenerate.");
+      return;
+    }
+    if (!job) {
+      setStatusText("No job found to regenerate.");
+      return;
+    }
+    if (isProcessing) return;
 
-  const renderId = (job as any).renderId as string | undefined;
-  if (!renderId) {
-    setStatusText(
-      "Missing renderId. (Your jobs endpoint must return renderId from VSAI.)"
-    );
-    return;
-  }
-
-  if (isProcessing) return;
-
-  setIsProcessing(true);
-  setIsProcessed(false);
-  setStatusText("Requesting a new variation from AI...");
-
-  try {
-    const roomTypeValue =
-      overrideRoomType || roomType || job.room_type || "living";
+    const roomTypeValue = overrideRoomType || roomType || job.room_type || "living";
     const styleValue = overrideStyle || style || job.style || "standard";
 
-    const resp = await fetch("/api/vsai-variation", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        renderId,
-        room_type: roomTypeValue,
-        style: styleValue,
-        addFurniture: true,
-      }),
-    });
+    const key = makeVariationKey(roomTypeValue, styleValue);
+    const cached = variationCacheRef.current.get(key);
 
-    const json: any = await resp.json().catch(() => ({}));
-
-    if (!resp.ok || !json.ok || !json.data?.resultImageUrl) {
-      setIsProcessing(false);
-      setStatusText(json.error || "Variation request failed.");
+    // ✅ If we already have variations for this combo, use them immediately (no new API call)
+    if (cached && cached.length > 0) {
+      activeVariationKeyRef.current = key;
+      setVariationUrls(cached);
+      setCurrentVariationIndex(0);
+      setStagedUrl(cached[0] || null);
+      setIsProcessed(true);
+      setHasRegenerated(true);
+      setStatusText("Loaded saved variation (no new render needed).");
       return;
     }
 
-    const newUrl: string = json.data.resultImageUrl;
+    // Otherwise: we need to generate ONCE for this combo
+    setIsProcessing(true);
+    setIsProcessed(false);
+    setStatusText("Requesting a new variation from AI...");
 
-    // Show immediately (no polling, no new jobs)
-    setStagedUrl(newUrl);
-    setIsProcessing(false);
-    setIsProcessed(true);
-    setHasRegenerated(true);
-    setStatusText("Staging complete.");
+    try {
+      const userId = getUserId();
 
-    // Append to carousel + jump to it
-    setVariationUrls((prev) => {
-      const next = prev.includes(newUrl) ? prev : [...prev, newUrl];
-      setCurrentVariationIndex(next.indexOf(newUrl));
-      return next;
-    });
-  } catch (err: any) {
-    console.error("[UI] handleRegenerateClick error", err);
-    setIsProcessing(false);
-    setStatusText(err?.message || "Variation failed.");
-  }
-};
+      const renderId = ((job as any).renderId || job.id) as string;
+
+      const resp = await fetch("/api/vsai-variation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          imageUrl,
+          room_type: roomTypeValue,
+          style: styleValue,
+          jobId: job.id,
+          renderId, // ✅ critical
+        }),
+      });
+
+      const json: any = await resp.json().catch(() => ({}));
+
+      // Support 2 possible server behaviors:
+      // A) returns direct image url (best)
+      // B) returns jobId and we poll
+      const directUrl: string | null =
+        json?.data?.resultImageUrl || json?.data?.finalUrl || json?.data?.url || null;
+
+      if (resp.ok && json.ok && directUrl) {
+        const next = [directUrl];
+        variationCacheRef.current.set(key, next);
+        activeVariationKeyRef.current = key;
+
+        setVariationUrls(next);
+        setCurrentVariationIndex(0);
+        setStagedUrl(directUrl);
+
+        setIsProcessing(false);
+        setIsProcessed(true);
+        setHasRegenerated(true);
+        setSliderValue(55);
+        setStatusText("Staging complete.");
+        return;
+      }
+
+      if (!resp.ok || !json.ok || !json.data?.jobId) {
+        setIsProcessing(false);
+        setStatusText(json.error || "Variation request failed.");
+        return;
+      }
+
+      const newJobId: string = json.data.jobId;
+      const newStatus: JobStatus = json.data.status || "rendering";
+
+      // ✅ IMPORTANT: We are NOT changing renderId here.
+      // If your API created a new job doc, we can poll it, but keep renderId stable.
+      setJob((prev) =>
+        prev
+          ? {
+              ...prev,
+              id: newJobId,
+              status: newStatus,
+              room_type: roomTypeValue,
+              style: styleValue,
+              renderId: (prev as any)?.renderId || renderId,
+              source: { ...(prev.source || {}), publicUrl: imageUrl },
+            }
+          : {
+              id: newJobId,
+              userId,
+              status: newStatus,
+              room_type: roomTypeValue,
+              style: styleValue,
+              renderId,
+              source: { publicUrl: imageUrl },
+            }
+      );
+
+      setJobId(newJobId);
+      setHasRegenerated(true);
+      setSliderValue(55);
+
+      // Set this combo as active (even before polling completes)
+      activeVariationKeyRef.current = key;
+
+      // When done, append into this combo’s cache
+      setStatusText("Staging new variation...");
+      startPolling(newJobId, imageUrl, { appendVariation: true, cacheKey: key });
+    } catch (err: any) {
+      console.error("[UI] handleRegenerateClick error", err);
+      setIsProcessing(false);
+      setStatusText(err.message || "Variation failed.");
+    }
+  };
 
   const handleModalReStage = async () => {
     setRoomType(modalRoomType);
@@ -635,54 +696,51 @@ const handleRegenerateClick = async (
     await handleRegenerateClick(modalRoomType, modalStyle);
   };
 
-    // Purchase -> Stripe Checkout (Wix-safe; no about:blank popup)
-const handlePurchaseClick = async () => {
-  if (!job) {
-    setStatusText("No staged image to purchase yet.");
-    return;
-  }
-
-  setStatusText("Redirecting to checkout...");
-
-  try {
-    const resp = await fetch("/api/stripe-checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jobId: job.id }),
-    });
-
-    const json: any = await resp.json().catch(() => ({}));
-
-    if (!resp.ok || !json.url) {
-      setStatusText(json.error || "Stripe checkout failed.");
+  // ✅ Stripe Checkout (Wix-safe, no popup / no about:blank)
+  const handlePurchaseClick = async () => {
+    if (!job) {
+      setStatusText("No staged image to purchase yet.");
       return;
     }
 
-    const url = json.url as string;
+    setStatusText("Redirecting to checkout...");
 
-    // If embedded (Wix iframe), attempt to redirect top-level
     try {
-      if (window.top && window.top !== window.self) {
-        window.top.location.href = url;
+      const resp = await fetch("/api/stripe-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jobId: job.id }),
+      });
+
+      const json: any = await resp.json().catch(() => ({}));
+
+      if (!resp.ok || !json.url) {
+        setStatusText(json.error || "Stripe checkout failed.");
         return;
       }
-    } catch (e) {
-      // Ignore and fall back
-    }
 
-    // Normal redirect
-    window.location.href = url;
-  } catch (err) {
-    console.error("handlePurchaseClick error", err);
-    setStatusText("Unexpected error during checkout.");
-  }
-};
+      const url = json.url as string;
+
+      // Try to escape iframe (Wix)
+      try {
+        if (window.top && window.top !== window.self) {
+          window.top.location.href = url;
+          return;
+        }
+      } catch {
+        // ignore and fall back
+      }
+
+      window.location.href = url;
+    } catch (err) {
+      console.error("handlePurchaseClick error", err);
+      setStatusText("Unexpected error during checkout.");
+    }
+  };
 
   const handlePrevVariation = () => {
     if (variationUrls.length <= 1) return;
-    setCurrentVariationIndex((prev) =>
-      prev === 0 ? variationUrls.length - 1 : prev - 1
-    );
+    setCurrentVariationIndex((prev) => (prev === 0 ? variationUrls.length - 1 : prev - 1));
   };
 
   const handleNextVariation = () => {
@@ -729,9 +787,7 @@ const handlePurchaseClick = async () => {
                   <>
                     <div
                       className={`relative flex h-full min-h-[360px] flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-300 ${
-                        isDragActive
-                          ? "border-slate-700 bg-slate-50"
-                          : "border-slate-300 bg-white"
+                        isDragActive ? "border-slate-700 bg-slate-50" : "border-slate-300 bg-white"
                       }`}
                       style={{
                         backgroundImage: isDragActive
@@ -755,12 +811,7 @@ const handlePurchaseClick = async () => {
                         <span className="rounded-full border border-slate-400 px-5 py-2 text-sm font-medium text-slate-900">
                           Browse files
                         </span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={handleFileCapture}
-                        />
+                        <input type="file" accept="image/*" className="hidden" onChange={handleFileCapture} />
                       </label>
                     </div>
 
@@ -790,9 +841,7 @@ const handlePurchaseClick = async () => {
                       {/* After overlay */}
                       <div
                         className="absolute inset-0 overflow-hidden"
-                        style={{
-                          clipPath: `inset(0 ${100 - sliderValue}% 0 0)`,
-                        }}
+                        style={{ clipPath: `inset(0 ${100 - sliderValue}% 0 0)` }}
                       >
                         <img
                           src={stagedOrPreview || undefined}
@@ -820,7 +869,7 @@ const handlePurchaseClick = async () => {
                         <Sparkles size={20} />
                       </div>
 
-                      {/* Variation arrows (cycle REAL VSAI variations) */}
+                      {/* Variation arrows */}
                       <div className="absolute inset-y-0 left-4 flex items-center">
                         <button
                           className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-400 bg-slate-100 text-slate-900 transition hover:border-slate-600 disabled:opacity-50"
@@ -848,18 +897,14 @@ const handlePurchaseClick = async () => {
                       min={10}
                       max={90}
                       value={sliderValue}
-                      onChange={(event) =>
-                        setSliderValue(Number(event.target.value))
-                      }
+                      onChange={(event) => setSliderValue(Number(event.target.value))}
                       className="w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-slate-500"
                     />
 
-                    {/* New helper text BELOW the slider */}
                     <div className="text-center text-sm text-slate-600">
                       Use the arrows &amp; slider to explore staged variations.
                     </div>
 
-                    {/* After render: ONLY these options */}
                     <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                       <button
                         className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900 disabled:opacity-50"
@@ -886,20 +931,8 @@ const handlePurchaseClick = async () => {
                       >
                         {settings.purchaseLabel}
                       </button>
-                      {checkoutUrl && (
-  <a
-    href={checkoutUrl}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="inline-flex items-center justify-center rounded-2xl border border-slate-900 bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:bg-slate-800"
-  >
-    Continue to Checkout
-  </a>
-)}
-
                     </div>
 
-                    {/* Back to main menu as a LINK (no chip) */}
                     <p className="mt-3 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
                       <a href="/" className="underline">
                         return to main menu
@@ -936,10 +969,8 @@ const handlePurchaseClick = async () => {
               {/* Controls */}
               {previewUrl && (
                 <div className="space-y-6">
-                  {/* BEFORE render: show controls */}
                   {!isProcessed && (
                     <>
-                      {/* Room + style */}
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="rounded-2xl border border-slate-200 bg-white p-4">
                           <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
@@ -952,16 +983,13 @@ const handlePurchaseClick = async () => {
                             onChange={(e) => setRoomType(e.target.value)}
                           >
                             {roomTypes.map((rt) => (
-                              <option
-                                key={rt}
-                                value={rt}
-                                className="bg-white text-slate-900"
-                              >
+                              <option key={rt} value={rt} className="bg-white text-slate-900">
                                 {formatLabel(rt)}
                               </option>
                             ))}
                           </select>
                         </div>
+
                         <div className="rounded-2xl border border-slate-200 bg-white p-4">
                           <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
                             Style Type
@@ -973,11 +1001,7 @@ const handlePurchaseClick = async () => {
                             onChange={(e) => setStyle(e.target.value)}
                           >
                             {styles.map((s) => (
-                              <option
-                                key={s}
-                                value={s}
-                                className="bg-white text-slate-900"
-                              >
+                              <option key={s} value={s} className="bg-white text-slate-900">
                                 {formatLabel(s)}
                               </option>
                             ))}
@@ -985,7 +1009,6 @@ const handlePurchaseClick = async () => {
                         </div>
                       </div>
 
-                      {/* Main CTA + "upload different file" */}
                       <div className="flex flex-col items-center gap-3">
                         <button
                           className="w-1/2 max-w-[260px] rounded-2xl border border-slate-700 bg-slate-100 px-6 py-3 text-lg font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
@@ -1015,7 +1038,6 @@ const handlePurchaseClick = async () => {
                     </>
                   )}
 
-                  {/* Tiny hint after any regeneration */}
                   {hasRegenerated && isProcessed && (
                     <div className="text-xs uppercase tracking-[0.4em] text-slate-500">
                       Use the arrows &amp; slider to explore staged variations.
@@ -1040,8 +1062,7 @@ const handlePurchaseClick = async () => {
                   <span>
                     File size impacts render speed{" "}
                     <span className="text-slate-500">
-                      (file sizes over 10MB will be automatically resized for
-                      optimal use).
+                      (file sizes over 10MB will be automatically resized for optimal use).
                     </span>
                   </span>
                 </li>
@@ -1053,27 +1074,13 @@ const handlePurchaseClick = async () => {
                   <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
                   <span>Different Style Variations.</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
-                  <span>Furnished results by room and style selectors.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
-                  <span>
-                    Auto-crop, lighting, and mood adjustments with every
-                    request.
-                  </span>
-                </li>
               </ul>
               <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
                 <p className="font-semibold text-slate-900">Tips</p>
                 <p className="mt-1 text-slate-600">
-                  Use high-resolution photos with neutral/bright lighting for
-                  best results.
+                  Use high-resolution photos with neutral/bright lighting for best results.
                 </p>
-                <p className="mt-1 text-slate-600">
-                  For fastest results, limit file sizes to 10MB.
-                </p>
+                <p className="mt-1 text-slate-600">For fastest results, limit file sizes to 10MB.</p>
               </div>
             </aside>
           </div>
@@ -1089,10 +1096,10 @@ const handlePurchaseClick = async () => {
                 Choose new staging options
               </h3>
               <p className="text-sm text-slate-600">
-                Adjust the room and style before re-staging to preview a
-                different setup.
+                If you already generated this combo, we reuse it (no extra cost).
               </p>
             </div>
+
             <div className="space-y-4">
               <div className="space-y-2">
                 <label
@@ -1108,16 +1115,13 @@ const handlePurchaseClick = async () => {
                   onChange={(event) => setModalRoomType(event.target.value)}
                 >
                   {roomTypes.map((rt) => (
-                    <option
-                      key={rt}
-                      value={rt}
-                      className="bg-white text-slate-900"
-                    >
+                    <option key={rt} value={rt} className="bg-white text-slate-900">
                       {formatLabel(rt)}
                     </option>
                   ))}
                 </select>
               </div>
+
               <div className="space-y-2">
                 <label
                   className="text-xs uppercase tracking-[0.4em] text-slate-500"
@@ -1132,17 +1136,14 @@ const handlePurchaseClick = async () => {
                   onChange={(event) => setModalStyle(event.target.value)}
                 >
                   {styles.map((s) => (
-                    <option
-                      key={s}
-                      value={s}
-                      className="bg-white text-slate-900"
-                    >
+                    <option key={s} value={s} className="bg-white text-slate-900">
                       {formatLabel(s)}
                     </option>
                   ))}
                 </select>
               </div>
             </div>
+
             <div className="mt-6 flex justify-end gap-3">
               <button
                 type="button"
