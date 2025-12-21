@@ -683,30 +683,39 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
       const json: any = await resp.json().catch(() => ({}));
 
-     if (popup && !popup.closed) {
-  try {
-    popup.location.href = url;
-    return;
-  } catch (e) {
-    // If Wix sandbox prevents navigating the popup, close it so "about:blank" doesn't linger
-    try { popup.close(); } catch {}
-  }
-}
-
+      if (!resp.ok || !json?.url) {
+        if (popup && !popup.closed) popup.close();
+        setStatusText(json?.error || "Stripe checkout failed.");
+        return;
+      }
 
       const url = json.url as string;
       setCheckoutUrl(url);
 
-      // 1) Best for Wix: send pre-opened tab to Stripe
+      // 1) Best for Wix: send pre-opened tab to Stripe (prevents popup blockers)
       if (popup && !popup.closed) {
-        popup.location.href = url;
-        return;
+        try {
+          popup.location.href = url;
+          return;
+        } catch (e) {
+          // If Wix sandbox prevents navigating the popup, close it so "about:blank" doesn't linger
+          try {
+            popup.close();
+          } catch {}
+        }
       }
 
       // 2) Otherwise try to escape iframe
       try {
-        if (inIframe && window.top) {
+        if (inIframe && window.top && window.top !== window.self) {
           window.top.location.href = url;
+          return;
+        }
+      } catch {}
+
+      // 3) Fallback (same tab)
+      window.location.href = url;
+
           return;
         }
       } catch {}
