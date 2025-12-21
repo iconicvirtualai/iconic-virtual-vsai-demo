@@ -1,24 +1,54 @@
+// pages/api/post-checkout.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
-import Twilio from "twilio";
-import { getMailerOrNull } from "../../lib/mailer";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-
 const stripe = STRIPE_SECRET_KEY
   ? new Stripe(STRIPE_SECRET_KEY, {
       apiVersion: "2024-06-20" as Stripe.LatestApiVersion,
     })
   : null;
 
+const VSAI_BASE = "https://api.virtualstagingai.app/v1";
+const VSAI_API_KEY =
+  process.env.VSAI_API_KEY || process.env.VIRTUAL_STAGING_AI_API_KEY;
+
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const TWILIO_FROM = process.env.TWILIO_FROM; // must be your Twilio number
+
 type Resp =
-  | { ok: true; data: { sent: boolean; reason?: string } }
+  | { ok: true; data: { finalUrl: string; receiptUrl: string | null } }
   | { ok: false; error: string };
 
-function firstNameFrom(fullName: string | null) {
-  if (!fullName) return "there";
-  const parts = fullName.trim().split(/\s+/);
-  return parts[0] || "there";
+async function sendSms(to: string, body: string) {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM) return;
+
+  const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString(
+    "base64"
+  );
+
+  const form = new URLSearchParams();
+  form.set("To", to);
+  form.set("From", TWILIO_FROM);
+  form.set("Body", body);
+
+  const resp = await fetch(
+    `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: form.toString(),
+    }
+  );
+
+  const json = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    console.error("[twilio] send failed:", resp.status, json);
+  }
 }
 
 export default async function handler(
@@ -28,188 +58,111 @@ export default async function handler(
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
-
   if (!stripe) {
-    return res.status(500).json({ ok: false, error: "Stripe not configured" });
+    return res
+      .status(500)
+      .json({ ok: false, error: "Stripe is not configured on the server." });
+  }
+  if (!VSAI_API_KEY) {
+    return res
+      .status(500)
+      .json({ ok: false, error: "VSAI_API_KEY is not set on the server." });
   }
 
   const { session_id } = req.body as { session_id?: string };
-
   if (!session_id) {
-    return res.status(400).json({ ok: false, error: "Missing session_id" });
+    return res.status(400).json({ ok: false, error: "session_id is required" });
   }
 
   try {
     const session = await stripe.checkout.sessions.retrieve(session_id);
 
-    if (session.payment_status !== "paid") {
-      return res.status(400).json({
-        ok: false,
-        error: "Session not paid yet (no delivery sent).",
-      });
+    const jobId = session.metadata?.jobId || null;
+    const selectedIndex = Number(session.metadata?.selectedIndex || "0");
+
+    if (!jobId) {
+      return res
+        .status(400)
+        .json({ ok: false, error: "Missing jobId in Stripe metadata." });
     }
 
-    const metadata = (session.metadata || {}) as Record<string, string>;
-    if (metadata.deliverySent === "1") {
-      return res.status(200).json({
-        ok: true,
-        data: { sent: false, reason: "Already sent (deliverySent=1)" },
-      });
-    }
-
-    const jobId = metadata.jobId || "";
-    const renderId = metadata.renderId || "";
-    const variationId = metadata.variationId || "";
-
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-
-    const downloadPageUrl = `${baseUrl}/success?jobId=${encodeURIComponent(
-      jobId
-    )}&session_id=${encodeURIComponent(session.id)}`;
-
-    // optional direct image url (nice for SMS)
-    let directImageUrl: string | null = null;
-    if (renderId && variationId) {
-      try {
-        const resp = await fetch(
-          `${baseUrl}/api/vsai-variation-result?renderId=${encodeURIComponent(
-            renderId
-          )}&variationId=${encodeURIComponent(variationId)}`
-        );
-        const json: any = await resp.json().catch(() => ({}));
-        if (resp.ok && json?.ok) directImageUrl = json?.data?.url || null;
-      } catch {}
-    }
-
-    // Receipt URL (FIX: use latest_charge expanded)
+    // Receipt URL (modern Stripe types)
     let receiptUrl: string | null = null;
-    if (session.payment_intent && typeof session.payment_intent === "string") {
-      const pi = await stripe.paymentIntents.retrieve(session.payment_intent, {
-        expand: ["latest_charge"],
+    if (session.payment_intent) {
+      const piId =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : session.payment_intent.id;
+
+      const pi = await stripe.paymentIntents.retrieve(piId);
+
+      const chargeId =
+        typeof pi.latest_charge === "string"
+          ? pi.latest_charge
+          : pi.latest_charge?.id;
+
+      if (chargeId) {
+        const ch = await stripe.charges.retrieve(chargeId);
+        receiptUrl = (ch.receipt_url as string) || null;
+      }
+    }
+
+    // Get render outputs so we can return the *correct* image
+    const vsaiRes = await fetch(
+      `${VSAI_BASE}/render?render_id=${encodeURIComponent(jobId)}`,
+      {
+        method: "GET",
+        headers: { Authorization: `Api-Key ${VSAI_API_KEY}` },
+      }
+    );
+
+    const render: any = await vsaiRes.json().catch(() => ({}));
+    if (!vsaiRes.ok) {
+      return res.status(vsaiRes.status).json({
+        ok: false,
+        error: render?.error || render?.message || "Failed to fetch render",
       });
-
-      const latest = pi.latest_charge;
-      if (latest && typeof latest !== "string") {
-        receiptUrl = latest.receipt_url || null;
-      } else if (latest && typeof latest === "string") {
-        const ch = await stripe.charges.retrieve(latest);
-        receiptUrl = ch.receipt_url || null;
-      }
     }
 
-    const toEmail = session.customer_details?.email || null;
+    const outputsRaw = Array.isArray(render?.outputs) ? render.outputs : [];
+    const outputs = outputsRaw.filter(
+      (u: any, i: number) => typeof u === "string" && outputsRaw.indexOf(u) === i
+    );
+
+    const safeIndex =
+      Number.isFinite(selectedIndex) && selectedIndex >= 0
+        ? Math.min(selectedIndex, Math.max(0, outputs.length - 1))
+        : Math.max(0, outputs.length - 1);
+
+    const finalUrl = outputs[safeIndex] || outputs[outputs.length - 1];
+
+    if (!finalUrl) {
+      return res.status(500).json({
+        ok: false,
+        error: "No output image found for this render yet.",
+      });
+    }
+
     const toPhone = session.customer_details?.phone || null;
-    const fullName = session.customer_details?.name || null;
-    const firstName = firstNameFrom(fullName);
 
-    // ----- EMAIL (optional) -----
-    // If Gmail env vars aren't set yet, this just skips email.
-    if (toEmail) {
-      const mailer = getMailerOrNull();
-      if (mailer) {
-        const imageLink = directImageUrl || downloadPageUrl;
-
-        const html = `
-          <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #0f172a;">
-            <h2>Delivery Notification: IconicVirtual.AI</h2>
-            <p>Hi ${firstName}!</p>
-
-            <p>
-              Thank you so much for choosing IconicVirtual.AI to enhance your images and online rep.
-              We're so excited to be in business with you! Now - a few things.
-            </p>
-
-            <ol>
-              <li>
-                <strong>Your staged image can be downloaded here:</strong><br/>
-                <a href="${imageLink}" style="display:inline-block; margin-top:8px; padding:10px 16px; background:#0f172a; color:#fff; text-decoration:none; border-radius:12px;">
-                  Download Your Staged Image
-                </a>
-              </li>
-              <li style="margin-top:12px;">
-                <strong>Your payment receipt can be downloaded here:</strong><br/>
-                ${
-                  receiptUrl
-                    ? `<a href="${receiptUrl}" style="display:inline-block; margin-top:8px; padding:10px 16px; background:#16a34a; color:#fff; text-decoration:none; border-radius:12px;">
-                         Download Receipt
-                       </a>`
-                    : `<span style="color:#64748b;">Receipt link not available yet.</span>`
-                }
-              </li>
-              <li style="margin-top:12px;">
-                Place your next order with our design team or virtually stage your own images with our AI and enjoy
-                <strong>10% off</strong> with code: <strong>#IconicAI</strong> (expires 12/31/2025)
-              </li>
-            </ol>
-
-            <p>Best of luck and we'll see ya next round!</p>
-
-            <p>
-              <strong>The IconicVirtual.AI Team</strong><br/>
-              info@iconicvirtual.ai<br/>
-              www.iconicvirtual.ai
-            </p>
-
-            <p style="font-size:12px; color:#64748b;">
-              website | IG | FB | TikTok | Pinterest | YouTube<br/>
-              @IconicVirtual.AI (2025) is affiliated with @Iconicimagestx (2016)
-            </p>
-          </div>
-        `;
-
-        try {
-          await mailer.sendMail({
-            from: `IconicVirtual.AI <${process.env.GMAIL_USER}>`,
-            to: toEmail,
-            subject: "Delivery Notification: IconicVirtual.AI",
-            html,
-          });
-        } catch (e) {
-          console.error("[post-checkout] email send failed:", e);
-          // do NOT fail the whole request if email fails
-        }
-      } else {
-        console.log("[post-checkout] Gmail not configured. Skipping email.");
-      }
+    // Send SMS if possible (Twilio trial requires verified To numbers)
+    if (toPhone) {
+      await sendSms(
+        toPhone,
+        `Your IconicVirtual.AI staged image is ready: ${finalUrl}`
+      );
+    } else {
+      console.warn("[post-checkout] No phone found on session.customer_details");
     }
 
-    // ----- SMS (Twilio, optional) -----
-    const sid = process.env.TWILIO_ACCOUNT_SID;
-    const token = process.env.TWILIO_AUTH_TOKEN;
-    const from = process.env.TWILIO_FROM_NUMBER;
-
-    if (toPhone && sid && token && from) {
-      const twilio = Twilio(sid, token);
-
-      const smsBody =
-        `Hi ${firstName}! Thank you for your order. ` +
-        `We have sent an email with details on your order to ${toEmail || "your email"}. ` +
-        `Here is your staged image: ${directImageUrl || downloadPageUrl} ` +
-        `Talk soon - IVAI`;
-
-      try {
-        await twilio.messages.create({
-          from,
-          to: toPhone,
-          body: smsBody,
-        });
-      } catch (e) {
-        console.error("[post-checkout] sms failed:", e);
-      }
-    }
-
-    // Mark sent (idempotent)
-    await stripe.checkout.sessions.update(session.id, {
-      metadata: {
-        ...metadata,
-        deliverySent: "1",
-      },
+    return res.status(200).json({
+      ok: true,
+      data: { finalUrl, receiptUrl },
     });
-
-    return res.status(200).json({ ok: true, data: { sent: true } });
   } catch (err: any) {
     console.error("[post-checkout] error:", err);
-    return res.status(500).json({ ok: false, error: err.message || "Error" });
+    return res
+      .status(500)
+      .json({ ok: false, error: err.message || "Post-checkout failed." });
   }
 }
