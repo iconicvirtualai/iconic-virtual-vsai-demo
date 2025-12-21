@@ -706,20 +706,17 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
       }
 
       // 2) Otherwise try to escape iframe
-      try {
-        if (inIframe && window.top && window.top !== window.self) {
-          window.top.location.href = url;
-          return;
+      if (inIframe) {
+        try {
+          const topWin = window.top;
+          if (topWin && topWin !== window.self) {
+            topWin.location.href = url;
+            return;
+          }
+        } catch (e) {
+          // ignore iframe navigation errors
         }
-      } catch (e) {}
-
-      // 3) Fallback (same tab)
-      window.location.href = url;
-
-          return;
-        }
-} catch (e) {}
-
+      }
       // 3) Fallback
       window.location.href = url;
     } catch (err) {
