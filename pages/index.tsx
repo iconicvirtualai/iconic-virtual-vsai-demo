@@ -279,85 +279,55 @@ const [variationIds, setVariationIds] = useState<string[]>([]);
   };
 
   // Poll job status (for initial render and any server-side job)
-  const startPolling = (
-    jobIdToPoll: string,
-    fallbackImageUrl: string,
-    options?: { resetVariations?: boolean; appendVariation?: boolean; cacheKey?: string }
-  ) => {
-    clearPolling();
+ const startPolling = (renderIdToPoll: string) => {
+  clearPolling();
 
-    pollRef.current = setInterval(async () => {
-      try {
-        const jobResp = await fetch(`/api/jobs/${jobIdToPoll}`);
-        const jobJson = await jobResp.json();
-        if (!jobResp.ok || !jobJson.ok) {
-          setStatusText(jobJson.error || "Status check failed.");
-          return;
-        }
+  pollRef.current = setInterval(async () => {
+    try {
+      const jobResp = await fetch(
+        `/api/vsai-render?renderId=${encodeURIComponent(renderIdToPoll)}`
+      );
+      const jobJson: any = await jobResp.json().catch(() => ({}));
 
-        const j: Job = jobJson.data;
-
-        // ✅ merge + preserve renderId so regenerate never loses it
-        setJob((prev) => {
-          const prevRenderId = (prev as any)?.renderId;
-          const next: Job = {
-            ...(prev || ({} as Job)),
-            ...j,
-            renderId: prevRenderId || (j as any)?.renderId || j.id, // ✅ keep it
-            source: j.source || prev?.source,
-          };
-          return next;
-        });
-
-        if (j.status === "done" || j.status === "paid_done") {
-          clearPolling();
-
-          const imgUrl = j.final?.url || j.watermarked?.url || fallbackImageUrl;
-
-          setIsProcessing(false);
-          setIsProcessed(true);
-          setStatusText("Staging complete.");
-
-          const key =
-            options?.cacheKey ||
-            activeVariationKeyRef.current ||
-            makeVariationKey(j.room_type || roomType, j.style || style);
-
-          if (options?.resetVariations) {
-            setActiveVariations(key, [imgUrl]);
-            return;
-          }
-
-          if (options?.appendVariation) {
-            const existing = variationCacheRef.current.get(key) || [];
-            if (!existing.includes(imgUrl)) {
-              const next = [...existing, imgUrl];
-              setActiveVariations(key, next);
-              setCurrentVariationIndex(next.length - 1);
-              setStagedUrl(imgUrl);
-            } else {
-              setActiveVariations(key, existing);
-              setStagedUrl(existing[0] || imgUrl);
-            }
-            return;
-          }
-
-          // default: ensure at least 1 in cache
-          if (!variationCacheRef.current.get(key)?.length) {
-            setActiveVariations(key, [imgUrl]);
-          }
-        } else if (j.status === "error") {
-          clearPolling();
-          setIsProcessing(false);
-          setStatusText(j.error || "Render failed.");
-        } else {
-          setStatusText("Staging in progress...");
-        }
-      } catch (err) {
-        console.error("Polling error", err);
+      if (!jobResp.ok || !jobJson.ok) {
+        setStatusText(jobJson.error || "Status check failed.");
+        return;
       }
-    }, 2500);
-  };
+
+      const status = jobJson.data.status as string;
+      const outputs = Array.isArray(jobJson.data.outputs)
+        ? (jobJson.data.outputs as string[])
+        : [];
+
+      // Always show the truth from VSAI: outputs[0] = original, last = newest variation
+      setVariationUrls(outputs);
+      if (outputs.length > 0) {
+        setCurrentVariationIndex(outputs.length - 1);
+        setStagedUrl(outputs[outputs.length - 1]);
+      }
+
+      if (status === "done") {
+        clearPolling();
+        setIsProcessing(false);
+        setIsProcessed(true);
+        setStatusText("Staging complete.");
+        return;
+      }
+
+      if (status === "error") {
+        clearPolling();
+        setIsProcessing(false);
+        setStatusText("Render failed.");
+        return;
+      }
+
+      setStatusText("Staging in progress...");
+    } catch (err) {
+      console.error("Polling error", err);
+    }
+  }, 2500);
+};
+
 
   // Slider "after" URL
   const currentFinalUrl = useMemo(() => {
@@ -509,16 +479,15 @@ const [variationIds, setVariationIds] = useState<string[]>([]);
       const initialStatus: JobStatus = renderJson.data.status || "rendering";
 
       // ✅ In your backend: jobId === renderId, so set both
-      const initialJob: Job = {
-        id: newJobId,
-        renderId: newJobId, // ✅ critical
-        userId,
-        status: initialStatus,
-        room_type: roomType,
-        style,
-        source: { fileName: file.name, publicUrl: imageUrl },
-      };
-
+    const initialJob: Job = {
+  id: newJobId,
+  renderId: newJobId,
+  userId,
+  status: initialStatus,
+  room_type: roomType,
+  style,
+  source: { ... },
+};
       setJob(initialJob);
       setJobId(newJobId);
 
@@ -566,22 +535,23 @@ const handleRegenerateClick = async (
   overrideRoomType?: string,
   overrideStyle?: string
 ) => {
-  if (!job) {
-    setStatusText("No job to regenerate.");
+  const renderId = (job as any)?.renderId || job?.id || null;
+
+  if (!renderId) {
+    setStatusText("No renderId available to regenerate.");
     return;
   }
   if (isProcessing) return;
 
-  const renderId = (job as any)?.renderId || job.id; // <- THIS is the key fix
-  const roomTypeValue =
-    overrideRoomType || roomType || job?.room_type || "living";
-  const styleValue = overrideStyle || style || job?.style || "standard";
-
   setIsProcessing(true);
   setIsProcessed(false);
-  setStatusText("Creating new variations...");
+  setStatusText("Requesting a new variation from AI...");
 
   try {
+    const roomTypeValue =
+      overrideRoomType || roomType || job?.room_type || "living";
+    const styleValue = overrideStyle || style || job?.style || "standard";
+
     const resp = await fetch("/api/vsai-variation", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -589,50 +559,28 @@ const handleRegenerateClick = async (
         renderId,
         room_type: roomTypeValue,
         style: styleValue,
-        variation_count: 4,
       }),
     });
 
     const json: any = await resp.json().catch(() => ({}));
-
     if (!resp.ok || !json.ok) {
       setIsProcessing(false);
       setStatusText(json.error || "Variation request failed.");
       return;
     }
 
-    const vars = json.data?.variations || [];
-    const urls = vars.map((v: any) => v.url).filter(Boolean);
-    const ids = vars.map((v: any) => v.id).filter(Boolean);
-
-    if (urls.length === 0) {
-      setIsProcessing(false);
-      setStatusText("No variation URLs returned.");
-      return;
-    }
-
-    setRoomType(roomTypeValue);
-    setStyle(styleValue);
-
-    // Replace carousel with the batch of variations
-    setVariationUrls(urls);
-    setVariationIds(ids);
-    setCurrentVariationIndex(0);
-
-    setStagedUrl(urls[0]);
     setHasRegenerated(true);
     setSliderValue(55);
+    setStatusText("Staging new variation...");
 
-    setIsProcessing(false);
-    setIsProcessed(true);
-    setStatusText("Variations ready. Use the arrows to explore.");
+    // Poll the same renderId; outputs[] will grow by ONE
+    startPolling(renderId);
   } catch (err: any) {
     console.error("[UI] handleRegenerateClick error", err);
     setIsProcessing(false);
     setStatusText(err.message || "Variation failed.");
   }
 };
-
 const handleModalReStage = async () => {
   setIsRegenerateModalOpen(false);
   await handleRegenerateClick(modalRoomType, modalStyle);
@@ -645,25 +593,22 @@ const handlePurchaseClick = async () => {
     return;
   }
 
+  const selectedIndex =
+    typeof currentVariationIndex === "number" ? currentVariationIndex : 0;
+
   setStatusText("Redirecting to checkout...");
 
   try {
-    const renderId = (job as any)?.renderId || job.id;
-    const selectedVariationId =
-      variationIds[currentVariationIndex] || "";
-
     const resp = await fetch("/api/stripe-checkout", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        jobId: job.id,
-        renderId,
-        variationId: selectedVariationId,
+        jobId: job.id, // renderId in your app
+        selectedIndex,
       }),
     });
 
     const json: any = await resp.json().catch(() => ({}));
-
     if (!resp.ok || !json.url) {
       setStatusText(json.error || "Stripe checkout failed.");
       return;
@@ -671,7 +616,6 @@ const handlePurchaseClick = async () => {
 
     const url = json.url as string;
 
-    // Wix iframe-safe: try to redirect top-level; otherwise normal redirect
     try {
       if (window.top && window.top !== window.self) {
         window.top.location.href = url;
@@ -685,7 +629,6 @@ const handlePurchaseClick = async () => {
     setStatusText("Unexpected error during checkout.");
   }
 };
-
 
   const handlePrevVariation = () => {
     if (variationUrls.length <= 1) return;
