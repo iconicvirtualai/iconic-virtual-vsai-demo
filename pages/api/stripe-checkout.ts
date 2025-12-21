@@ -1,18 +1,10 @@
-// pages/api/stripe-checkout.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 
-if (!STRIPE_SECRET_KEY) {
-  console.warn(
-    "[stripe-checkout] STRIPE_SECRET_KEY is not set. Checkout will not work."
-  );
-}
-
 const stripe = STRIPE_SECRET_KEY
   ? new Stripe(STRIPE_SECRET_KEY, {
-      // Use whatever version you're pinned to in package.json if different
       apiVersion: "2024-06-20" as Stripe.LatestApiVersion,
     })
   : null;
@@ -35,7 +27,11 @@ export default async function handler(
       .json({ ok: false, error: "Stripe is not configured on the server." });
   }
 
-  const { jobId } = req.body as { jobId?: string };
+  const { jobId, renderId, variationId } = req.body as {
+    jobId?: string;
+    renderId?: string;
+    variationId?: string | null;
+  };
 
   if (!jobId) {
     return res
@@ -43,37 +39,44 @@ export default async function handler(
       .json({ ok: false, error: "Missing jobId in request body." });
   }
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (typeof req.headers.origin === "string" ? req.headers.origin : "") ||
+    "http://localhost:3000";
+
   try {
-      // Always return to YOUR app domain after Stripe (don't use Wix iframe origin)
-    const origin =
-      process.env.NEXT_PUBLIC_SITE_URL ||
-      "https://iconic-virtual-vsai-demo.vercel.app";
-
-
-    // Simple flat price for now. You can later vary this by room type, etc.
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
+
+      // Stripe will collect email automatically, and we ENABLE phone collection for SMS.
+      phone_number_collection: { enabled: true },
+
       line_items: [
         {
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: 500, // $5.00 – adjust as needed
+            unit_amount: 500, // $5.00
             product_data: {
-              name: "Virtual Staging Render",
-              description: "High-resolution virtually staged interior image",
+              name: "Virtual Staging Download",
+              description: "High-resolution staged image download",
             },
           },
         },
       ],
-      success_url: `${origin}/success?jobId=${encodeURIComponent(
-  jobId
-)}&session_id={CHECKOUT_SESSION_ID}`,
-cancel_url: `${origin}/?checkout=cancelled`,
+
+      // Important: include session_id in the redirect so the success page can verify & send delivery
+      success_url: `${baseUrl}/success?jobId=${encodeURIComponent(
+        jobId
+      )}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/?checkout=cancelled`,
 
       metadata: {
         jobId,
+        renderId: renderId || "",
+        variationId: variationId || "",
+        deliverySent: "0",
       },
     });
 
