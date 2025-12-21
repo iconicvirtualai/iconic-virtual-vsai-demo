@@ -182,6 +182,7 @@ export default function Index() {
   // Variation URLs displayed in carousel
   const [variationUrls, setVariationUrls] = useState<string[]>([]);
   const [currentVariationIndex, setCurrentVariationIndex] = useState<number>(0);
+const [variationIds, setVariationIds] = useState<string[]>([]);
 
   // ✅ Cache variations per (roomType+style) so we don't keep paying for the same “regenerate”
   const variationCacheRef = useRef<Map<string, string[]>>(new Map());
@@ -542,201 +543,149 @@ export default function Index() {
     void startRender();
   };
 
-  // ✅ Open regenerate modal (no API call yet)
-  const openRegenerateModal = () => {
-    const baseUrl = job?.source?.publicUrl || originalImageUrlRef.current;
-    if (!baseUrl) {
-      setStatusText("No original job/image to regenerate.");
-      return;
-    }
-    if (isProcessing) return;
+// Open regenerate modal (do NOT hit VSAI yet)
+const openRegenerateModal = () => {
+  const baseUrl = job?.source?.publicUrl || originalImageUrlRef.current;
+  if (!baseUrl) {
+    setStatusText("No original job/image to regenerate.");
+    return;
+  }
+  if (isProcessing) return;
 
-    setModalRoomType(roomType || job?.room_type || "living");
-    setModalStyle(style || job?.style || "standard");
-    setIsRegenerateModalOpen(true);
-  };
+  setModalRoomType(roomType || job?.room_type || "living");
+  setModalStyle(style || job?.style || "standard");
+  setIsRegenerateModalOpen(true);
+};
 
-  const closeRegenerateModal = () => setIsRegenerateModalOpen(false);
+const closeRegenerateModal = () => {
+  setIsRegenerateModalOpen(false);
+};
 
-  // ✅ Regenerate logic:
-  // - If we already generated for that room/style combo, reuse cached variations (NO new cost)
-  // - Only call API if that combo has never been generated yet
-  const handleRegenerateClick = async (overrideRoomType?: string, overrideStyle?: string) => {
-    const imageUrl = job?.source?.publicUrl || originalImageUrlRef.current || null;
-    if (!imageUrl) {
-      setStatusText("No original job/image to regenerate.");
-      return;
-    }
-    if (!job) {
-      setStatusText("No job found to regenerate.");
-      return;
-    }
-    if (isProcessing) return;
+// Regenerate: create a BATCH of variations on the SAME renderId (so arrows work)
+const handleRegenerateClick = async (
+  overrideRoomType?: string,
+  overrideStyle?: string
+) => {
+  if (!job) {
+    setStatusText("No job to regenerate.");
+    return;
+  }
+  if (isProcessing) return;
 
-    const roomTypeValue = overrideRoomType || roomType || job.room_type || "living";
-    const styleValue = overrideStyle || style || job.style || "standard";
+  const renderId = (job as any)?.renderId || job.id; // <- THIS is the key fix
+  const roomTypeValue =
+    overrideRoomType || roomType || job?.room_type || "living";
+  const styleValue = overrideStyle || style || job?.style || "standard";
 
-    const key = makeVariationKey(roomTypeValue, styleValue);
-    const cached = variationCacheRef.current.get(key);
+  setIsProcessing(true);
+  setIsProcessed(false);
+  setStatusText("Creating new variations...");
 
-    // ✅ If we already have variations for this combo, use them immediately (no new API call)
-    if (cached && cached.length > 0) {
-      activeVariationKeyRef.current = key;
-      setVariationUrls(cached);
-      setCurrentVariationIndex(0);
-      setStagedUrl(cached[0] || null);
-      setIsProcessed(true);
-      setHasRegenerated(true);
-      setStatusText("Loaded saved variation (no new render needed).");
-      return;
-    }
+  try {
+    const resp = await fetch("/api/vsai-variation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        renderId,
+        room_type: roomTypeValue,
+        style: styleValue,
+        variation_count: 4,
+      }),
+    });
 
-    // Otherwise: we need to generate ONCE for this combo
-    setIsProcessing(true);
-    setIsProcessed(false);
-    setStatusText("Requesting a new variation from AI...");
+    const json: any = await resp.json().catch(() => ({}));
 
-    try {
-      const userId = getUserId();
-
-      const renderId = ((job as any).renderId || job.id) as string;
-
-      const resp = await fetch("/api/vsai-variation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          imageUrl,
-          room_type: roomTypeValue,
-          style: styleValue,
-          jobId: job.id,
-          renderId, // ✅ critical
-        }),
-      });
-
-      const json: any = await resp.json().catch(() => ({}));
-
-      // Support 2 possible server behaviors:
-      // A) returns direct image url (best)
-      // B) returns jobId and we poll
-      const directUrl: string | null =
-        json?.data?.resultImageUrl || json?.data?.finalUrl || json?.data?.url || null;
-
-      if (resp.ok && json.ok && directUrl) {
-        const next = [directUrl];
-        variationCacheRef.current.set(key, next);
-        activeVariationKeyRef.current = key;
-
-        setVariationUrls(next);
-        setCurrentVariationIndex(0);
-        setStagedUrl(directUrl);
-
-        setIsProcessing(false);
-        setIsProcessed(true);
-        setHasRegenerated(true);
-        setSliderValue(55);
-        setStatusText("Staging complete.");
-        return;
-      }
-
-      if (!resp.ok || !json.ok || !json.data?.jobId) {
-        setIsProcessing(false);
-        setStatusText(json.error || "Variation request failed.");
-        return;
-      }
-
-      const newJobId: string = json.data.jobId;
-      const newStatus: JobStatus = json.data.status || "rendering";
-
-      // ✅ IMPORTANT: We are NOT changing renderId here.
-      // If your API created a new job doc, we can poll it, but keep renderId stable.
-      setJob((prev) =>
-        prev
-          ? {
-              ...prev,
-              id: newJobId,
-              status: newStatus,
-              room_type: roomTypeValue,
-              style: styleValue,
-              renderId: (prev as any)?.renderId || renderId,
-              source: { ...(prev.source || {}), publicUrl: imageUrl },
-            }
-          : {
-              id: newJobId,
-              userId,
-              status: newStatus,
-              room_type: roomTypeValue,
-              style: styleValue,
-              renderId,
-              source: { publicUrl: imageUrl },
-            }
-      );
-
-      setJobId(newJobId);
-      setHasRegenerated(true);
-      setSliderValue(55);
-
-      // Set this combo as active (even before polling completes)
-      activeVariationKeyRef.current = key;
-
-      // When done, append into this combo’s cache
-      setStatusText("Staging new variation...");
-      startPolling(newJobId, imageUrl, { appendVariation: true, cacheKey: key });
-    } catch (err: any) {
-      console.error("[UI] handleRegenerateClick error", err);
+    if (!resp.ok || !json.ok) {
       setIsProcessing(false);
-      setStatusText(err.message || "Variation failed.");
-    }
-  };
-
-  const handleModalReStage = async () => {
-    setRoomType(modalRoomType);
-    setStyle(modalStyle);
-    setIsRegenerateModalOpen(false);
-    await handleRegenerateClick(modalRoomType, modalStyle);
-  };
-
-  // ✅ Stripe Checkout (Wix-safe, no popup / no about:blank)
-  const handlePurchaseClick = async () => {
-    if (!job) {
-      setStatusText("No staged image to purchase yet.");
+      setStatusText(json.error || "Variation request failed.");
       return;
     }
 
-    setStatusText("Redirecting to checkout...");
+    const vars = json.data?.variations || [];
+    const urls = vars.map((v: any) => v.url).filter(Boolean);
+    const ids = vars.map((v: any) => v.id).filter(Boolean);
 
+    if (urls.length === 0) {
+      setIsProcessing(false);
+      setStatusText("No variation URLs returned.");
+      return;
+    }
+
+    setRoomType(roomTypeValue);
+    setStyle(styleValue);
+
+    // Replace carousel with the batch of variations
+    setVariationUrls(urls);
+    setVariationIds(ids);
+    setCurrentVariationIndex(0);
+
+    setStagedUrl(urls[0]);
+    setHasRegenerated(true);
+    setSliderValue(55);
+
+    setIsProcessing(false);
+    setIsProcessed(true);
+    setStatusText("Variations ready. Use the arrows to explore.");
+  } catch (err: any) {
+    console.error("[UI] handleRegenerateClick error", err);
+    setIsProcessing(false);
+    setStatusText(err.message || "Variation failed.");
+  }
+};
+
+const handleModalReStage = async () => {
+  setIsRegenerateModalOpen(false);
+  await handleRegenerateClick(modalRoomType, modalStyle);
+};
+
+// Purchase -> Stripe Checkout (NO popups, avoids about:blank)
+const handlePurchaseClick = async () => {
+  if (!job) {
+    setStatusText("No staged image to purchase yet.");
+    return;
+  }
+
+  setStatusText("Redirecting to checkout...");
+
+  try {
+    const renderId = (job as any)?.renderId || job.id;
+    const selectedVariationId =
+      variationIds[currentVariationIndex] || "";
+
+    const resp = await fetch("/api/stripe-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jobId: job.id,
+        renderId,
+        variationId: selectedVariationId,
+      }),
+    });
+
+    const json: any = await resp.json().catch(() => ({}));
+
+    if (!resp.ok || !json.url) {
+      setStatusText(json.error || "Stripe checkout failed.");
+      return;
+    }
+
+    const url = json.url as string;
+
+    // Wix iframe-safe: try to redirect top-level; otherwise normal redirect
     try {
-      const resp = await fetch("/api/stripe-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId: job.id }),
-      });
-
-      const json: any = await resp.json().catch(() => ({}));
-
-      if (!resp.ok || !json.url) {
-        setStatusText(json.error || "Stripe checkout failed.");
+      if (window.top && window.top !== window.self) {
+        window.top.location.href = url;
         return;
       }
+    } catch {}
 
-      const url = json.url as string;
+    window.location.href = url;
+  } catch (err) {
+    console.error("handlePurchaseClick error", err);
+    setStatusText("Unexpected error during checkout.");
+  }
+};
 
-      // Try to escape iframe (Wix)
-      try {
-        if (window.top && window.top !== window.self) {
-          window.top.location.href = url;
-          return;
-        }
-      } catch {
-        // ignore and fall back
-      }
-
-      window.location.href = url;
-    } catch (err) {
-      console.error("handlePurchaseClick error", err);
-      setStatusText("Unexpected error during checkout.");
-    }
-  };
 
   const handlePrevVariation = () => {
     if (variationUrls.length <= 1) return;
