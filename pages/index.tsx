@@ -279,45 +279,70 @@ const [variationIds, setVariationIds] = useState<string[]>([]);
   };
 
   // Poll job status (for initial render and any server-side job)
- const startPolling = (renderIdToPoll: string) => {
+const startPolling = (
+  jobIdToPoll: string,
+  fallbackImageUrl: string,
+  options?: { resetVariations?: boolean; appendVariation?: boolean; cacheKey?: string }
+) => {
   clearPolling();
 
   pollRef.current = setInterval(async () => {
     try {
-      const jobResp = await fetch(
-        `/api/vsai-render?renderId=${encodeURIComponent(renderIdToPoll)}`
-      );
-      const jobJson: any = await jobResp.json().catch(() => ({}));
+      const jobResp = await fetch(`/api/jobs/${jobIdToPoll}`);
+      const jobJson = await jobResp.json();
 
       if (!jobResp.ok || !jobJson.ok) {
         setStatusText(jobJson.error || "Status check failed.");
         return;
       }
 
-      const status = jobJson.data.status as string;
-      const outputs = Array.isArray(jobJson.data.outputs)
-        ? (jobJson.data.outputs as string[])
-        : [];
+      const j: Job = jobJson.data;
 
-      // Always show the truth from VSAI: outputs[0] = original, last = newest variation
-      setVariationUrls(outputs);
-      if (outputs.length > 0) {
-        setCurrentVariationIndex(outputs.length - 1);
-        setStagedUrl(outputs[outputs.length - 1]);
-      }
+      // Keep job state updated
+      setJob((prev) => {
+        const merged: Job = {
+          ...(prev || ({} as Job)),
+          ...j,
+          source: j.source || prev?.source,
+        };
+        return merged;
+      });
 
-      if (status === "done") {
+      if (j.status === "done" || j.status === "paid_done") {
         clearPolling();
+
+        const imgUrl = j.final?.url || j.watermarked?.url || fallbackImageUrl;
+
+        setStagedUrl(imgUrl);
         setIsProcessing(false);
         setIsProcessed(true);
         setStatusText("Staging complete.");
+
+        // Variation carousel behavior
+        setVariationUrls((prev) => {
+          if (options?.resetVariations || prev.length === 0) {
+            setCurrentVariationIndex(0);
+            return [imgUrl];
+          }
+
+          if (options?.appendVariation) {
+            if (!prev.includes(imgUrl)) {
+              const next = [...prev, imgUrl];
+              setCurrentVariationIndex(next.length - 1);
+              return next;
+            }
+          }
+
+          return prev;
+        });
+
         return;
       }
 
-      if (status === "error") {
+      if (j.status === "error") {
         clearPolling();
         setIsProcessing(false);
-        setStatusText("Render failed.");
+        setStatusText(j.error || "Render failed.");
         return;
       }
 
@@ -327,7 +352,6 @@ const [variationIds, setVariationIds] = useState<string[]>([]);
     }
   }, 2500);
 };
-
 
   // Slider "after" URL
   const currentFinalUrl = useMemo(() => {
@@ -502,7 +526,7 @@ const [variationIds, setVariationIds] = useState<string[]>([]);
       setActiveVariations(key, []);
 
       setStatusText("Staging in progress...");
-      startPolling(newJobId, imageUrl, { resetVariations: true, cacheKey: key });
+startPolling(newJobId, imageUrl, { resetVariations: true });
     } catch (err) {
       console.error("startRender error", err);
       setIsProcessing(false);
