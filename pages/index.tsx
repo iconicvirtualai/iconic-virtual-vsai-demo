@@ -654,78 +654,48 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
     await handleRegenerateClick(modalRoomType, modalStyle);
   };
 
-    // Purchase -> Stripe Checkout (Wix iframe-safe with pre-opened tab)
-  const handlePurchaseClick = async () => {
-    if (!job) {
-      setStatusText("No staged image to purchase yet.");
+    // Purchase -> Stripe Checkout (Wix-safe; no about:blank popup)
+const handlePurchaseClick = async () => {
+  if (!job) {
+    setStatusText("No staged image to purchase yet.");
+    return;
+  }
+
+  setStatusText("Redirecting to checkout...");
+
+  try {
+    const resp = await fetch("/api/stripe-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ jobId: job.id }),
+    });
+
+    const json: any = await resp.json().catch(() => ({}));
+
+    if (!resp.ok || !json.url) {
+      setStatusText(json.error || "Stripe checkout failed.");
       return;
     }
 
-    setCheckoutUrl(null);
-    setStatusText("Redirecting to checkout...");
+    const url = json.url as string;
 
-    // Detect if we're embedded in an iframe (Wix)
-    const inIframe =
-      typeof window !== "undefined" && window.top && window.top !== window.self;
-
-    // ✅ Pre-open a tab synchronously so popup blockers don't kill it after async fetch
-    let popup: Window | null = null;
-    if (inIframe) {
-      popup = window.open("about:blank", "_blank", "noopener,noreferrer");
-    }
-
+    // If embedded (Wix iframe), attempt to redirect top-level
     try {
-      const resp = await fetch("/api/stripe-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobId: job.id }),
-      });
-
-      const json: any = await resp.json().catch(() => ({}));
-
-      if (!resp.ok || !json?.url) {
-        if (popup && !popup.closed) popup.close();
-        setStatusText(json?.error || "Stripe checkout failed.");
+      if (window.top && window.top !== window.self) {
+        window.top.location.href = url;
         return;
       }
-
-      const url = json.url as string;
-      setCheckoutUrl(url);
-
-      // 1) Best for Wix: send pre-opened tab to Stripe (prevents popup blockers)
-      if (popup && !popup.closed) {
-        try {
-          popup.location.href = url;
-          return;
-        } catch (e) {
-          // If Wix sandbox prevents navigating the popup, close it so "about:blank" doesn't linger
-          try {
-            popup.close();
-          } catch (e) {}
-        }
-      }
-
-      // 2) Otherwise try to escape iframe
-      if (inIframe) {
-        try {
-          const topWin = window.top;
-          if (topWin && topWin !== window.self) {
-            topWin.location.href = url;
-            return;
-          }
-        } catch (e) {
-          // ignore iframe navigation errors
-        }
-      }
-      // 3) Fallback
-      window.location.href = url;
-    } catch (err) {
-      console.error("handlePurchaseClick error", err);
-      if (popup && !popup.closed) popup.close();
-      setStatusText("Unexpected error during checkout.");
+    } catch (e) {
+      // Ignore and fall back
     }
-  };
 
+    // Normal redirect
+    window.location.href = url;
+  } catch (err) {
+    console.error("handlePurchaseClick error", err);
+    setStatusText("Unexpected error during checkout.");
+  }
+};
 
   const handlePrevVariation = () => {
     if (variationUrls.length <= 1) return;
