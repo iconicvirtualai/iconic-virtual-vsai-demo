@@ -2,36 +2,41 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 const VSAI_API_KEY = process.env.VSAI_API_KEY;
 
-if (!VSAI_API_KEY) {
-  throw new Error("VSAI_API_KEY is not set in environment variables");
-}
+type Resp =
+  | { ok: true; data: { variationId: string | null; resultImageUrl: string | null; raw: any } }
+  | { ok: false; error: string; raw?: any };
 
-type VariationRequestBody = {
-  renderId?: string;
-  roomType?: string;
-  style?: string;
-  removeExistingFurniture?: boolean;
-  addFurniture?: boolean;
-  baseVariationId?: string;
-};
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<Resp>
+) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ ok: false, error: "Method not allowed" });
+  }
+
+  if (!VSAI_API_KEY) {
+    return res.status(500).json({ ok: false, error: "VSAI_API_KEY is not set on the server." });
   }
 
   try {
     const {
       renderId,
-      roomType,
+      room_type,
       style,
       removeExistingFurniture,
       addFurniture,
       baseVariationId,
-    } = (req.body || {}) as VariationRequestBody;
+    } = req.body as {
+      renderId?: string;
+      room_type?: string;
+      style?: string;
+      removeExistingFurniture?: boolean;
+      addFurniture?: boolean;
+      baseVariationId?: string;
+    };
 
     if (!renderId) {
-      return res.status(400).json({ error: "renderId is required" });
+      return res.status(400).json({ ok: false, error: "renderId is required" });
     }
 
     // Build config for variation
@@ -41,10 +46,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       add_virtually_staged_watermark: true,
     };
 
-    if (addFurniture) {
+    const shouldAddFurniture = addFurniture !== false; // default true
+    if (shouldAddFurniture) {
       config.add_furniture = {
         style: style || "standard",
-        room_type: roomType || "living",
+        room_type: room_type || "living",
       };
 
       if (baseVariationId) {
@@ -74,30 +80,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     );
 
-    const data: any = await vsaiRes.json();
+    const data = await vsaiRes.json().catch(() => ({}));
 
     if (!vsaiRes.ok) {
-      console.error("VSAI variation error:", data);
       return res.status(vsaiRes.status).json({
+        ok: false,
         error: data?.message || "Failed to create variation",
         raw: data,
       });
     }
 
-    const variationsArray = data.variations?.items || data.variations || [];
+    const variationsArray = data?.variations?.items || data?.variations || [];
     const variation = variationsArray[0] || null;
 
     const resultImageUrl = variation?.result?.url || null;
     const variationId = variation?.id || null;
 
     return res.status(200).json({
-      renderId,
-      variationId,
-      resultImageUrl,
-      raw: data,
+      ok: true,
+      data: { variationId, resultImageUrl, raw: data },
     });
-  } catch (err) {
-    console.error("VSAI variation handler error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+  } catch (err: any) {
+    console.error("[vsai-variation] error:", err);
+    return res.status(500).json({ ok: false, error: err?.message || "Internal server error" });
   }
 }
