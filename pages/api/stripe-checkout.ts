@@ -1,3 +1,4 @@
+// pages/api/stripe-checkout.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 
@@ -27,10 +28,9 @@ export default async function handler(
       .json({ ok: false, error: "Stripe is not configured on the server." });
   }
 
-  const { jobId, renderId, variationId } = req.body as {
+  const { jobId, selectedIndex } = req.body as {
     jobId?: string;
-    renderId?: string;
-    variationId?: string | null;
+    selectedIndex?: number;
   };
 
   if (!jobId) {
@@ -39,17 +39,22 @@ export default async function handler(
       .json({ ok: false, error: "Missing jobId in request body." });
   }
 
-  const baseUrl =
+  const idx =
+    typeof selectedIndex === "number" && Number.isFinite(selectedIndex)
+      ? Math.max(0, Math.floor(selectedIndex))
+      : 0;
+
+  // Always use your real site URL (so it doesn't show vercel.app in Wix)
+  const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL ||
-    (typeof req.headers.origin === "string" ? req.headers.origin : "") ||
-    "http://localhost:3000";
+    (req.headers.host ? `https://${req.headers.host}` : "http://localhost:3000");
 
   try {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
 
-      // Stripe will collect email automatically, and we ENABLE phone collection for SMS.
+      // Collect phone so Twilio can send a text
       phone_number_collection: { enabled: true },
 
       line_items: [
@@ -57,27 +62,28 @@ export default async function handler(
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: 500, // $5.00
+            unit_amount: 500,
             product_data: {
-              name: "Virtual Staging Download",
-              description: "High-resolution staged image download",
+              name: "Virtual Staging Render",
+              description: "High-resolution virtually staged interior image",
             },
           },
         },
       ],
 
-      // Important: include session_id in the redirect so the success page can verify & send delivery
-      success_url: `${baseUrl}/success?jobId=${encodeURIComponent(
-        jobId
-      )}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/?checkout=cancelled`,
-
       metadata: {
         jobId,
-        renderId: renderId || "",
-        variationId: variationId || "",
-        deliverySent: "0",
+        selectedIndex: String(idx),
       },
+
+      // include session_id for post-checkout processing
+      success_url: `${siteUrl}/success?jobId=${encodeURIComponent(
+        jobId
+      )}&selectedIndex=${encodeURIComponent(
+        String(idx)
+      )}&session_id={CHECKOUT_SESSION_ID}`,
+
+      cancel_url: `${siteUrl}/?checkout=cancelled`,
     });
 
     if (!session.url) {
