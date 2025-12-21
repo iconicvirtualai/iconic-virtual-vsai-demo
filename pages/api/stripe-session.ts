@@ -50,11 +50,20 @@ export default async function handler(
 
     let receipt_url: string | null = null;
 
-    // Try to get receipt_url from the charge
+    // Pull receipt from latest_charge (expanded)
     if (session.payment_intent && typeof session.payment_intent === "string") {
-      const pi = await stripe.paymentIntents.retrieve(session.payment_intent);
-      const charge = pi.charges?.data?.[0];
-      receipt_url = charge?.receipt_url || null;
+      const pi = await stripe.paymentIntents.retrieve(session.payment_intent, {
+        expand: ["latest_charge"],
+      });
+
+      const latest = pi.latest_charge;
+      if (latest && typeof latest !== "string") {
+        receipt_url = latest.receipt_url || null;
+      } else if (latest && typeof latest === "string") {
+        // fallback: retrieve the charge by id
+        const ch = await stripe.charges.retrieve(latest);
+        receipt_url = ch.receipt_url || null;
+      }
     }
 
     return res.status(200).json({
