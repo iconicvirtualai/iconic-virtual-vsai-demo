@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 import Twilio from "twilio";
-import { getMailer } from "../../lib/mailer";
+import { getMailerOrNull } from "../../lib/mailer";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 
@@ -64,12 +64,11 @@ export default async function handler(
     const baseUrl =
       process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-    // We will link them back to the verified success page for the actual download
     const downloadPageUrl = `${baseUrl}/success?jobId=${encodeURIComponent(
       jobId
     )}&session_id=${encodeURIComponent(session.id)}`;
 
-    // Try to resolve a direct image URL (optional)
+    // optional direct image url (nice for SMS)
     let directImageUrl: string | null = null;
     if (renderId && variationId) {
       try {
@@ -83,11 +82,20 @@ export default async function handler(
       } catch {}
     }
 
-    // Receipt URL
+    // Receipt URL (FIX: use latest_charge expanded)
     let receiptUrl: string | null = null;
     if (session.payment_intent && typeof session.payment_intent === "string") {
-      const pi = await stripe.paymentIntents.retrieve(session.payment_intent);
-      receiptUrl = pi.charges?.data?.[0]?.receipt_url || null;
+      const pi = await stripe.paymentIntents.retrieve(session.payment_intent, {
+        expand: ["latest_charge"],
+      });
+
+      const latest = pi.latest_charge;
+      if (latest && typeof latest !== "string") {
+        receiptUrl = latest.receipt_url || null;
+      } else if (latest && typeof latest === "string") {
+        const ch = await stripe.charges.retrieve(latest);
+        receiptUrl = ch.receipt_url || null;
+      }
     }
 
     const toEmail = session.customer_details?.email || null;
@@ -95,69 +103,78 @@ export default async function handler(
     const fullName = session.customer_details?.name || null;
     const firstName = firstNameFrom(fullName);
 
-    // ----- EMAIL -----
+    // ----- EMAIL (optional) -----
+    // If Gmail env vars aren't set yet, this just skips email.
     if (toEmail) {
-      const mailer = getMailer();
+      const mailer = getMailerOrNull();
+      if (mailer) {
+        const imageLink = directImageUrl || downloadPageUrl;
 
-      const imageLink = directImageUrl || downloadPageUrl;
+        const html = `
+          <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #0f172a;">
+            <h2>Delivery Notification: IconicVirtual.AI</h2>
+            <p>Hi ${firstName}!</p>
 
-      const html = `
-        <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #0f172a;">
-          <h2>Delivery Notification: IconicVirtual.AI</h2>
-          <p>Hi ${firstName}!</p>
+            <p>
+              Thank you so much for choosing IconicVirtual.AI to enhance your images and online rep.
+              We're so excited to be in business with you! Now - a few things.
+            </p>
 
-          <p>
-            Thank you so much for choosing IconicVirtual.AI to enhance your images and online rep.
-            We're so excited to be in business with you! Now - a few things.
-          </p>
+            <ol>
+              <li>
+                <strong>Your staged image can be downloaded here:</strong><br/>
+                <a href="${imageLink}" style="display:inline-block; margin-top:8px; padding:10px 16px; background:#0f172a; color:#fff; text-decoration:none; border-radius:12px;">
+                  Download Your Staged Image
+                </a>
+              </li>
+              <li style="margin-top:12px;">
+                <strong>Your payment receipt can be downloaded here:</strong><br/>
+                ${
+                  receiptUrl
+                    ? `<a href="${receiptUrl}" style="display:inline-block; margin-top:8px; padding:10px 16px; background:#16a34a; color:#fff; text-decoration:none; border-radius:12px;">
+                         Download Receipt
+                       </a>`
+                    : `<span style="color:#64748b;">Receipt link not available yet.</span>`
+                }
+              </li>
+              <li style="margin-top:12px;">
+                Place your next order with our design team or virtually stage your own images with our AI and enjoy
+                <strong>10% off</strong> with code: <strong>#IconicAI</strong> (expires 12/31/2025)
+              </li>
+            </ol>
 
-          <ol>
-            <li>
-              <strong>Your staged image can be downloaded here:</strong><br/>
-              <a href="${imageLink}" style="display:inline-block; margin-top:8px; padding:10px 16px; background:#0f172a; color:#fff; text-decoration:none; border-radius:12px;">
-                Download Your Staged Image
-              </a>
-            </li>
-            <li style="margin-top:12px;">
-              <strong>Your payment receipt can be downloaded here:</strong><br/>
-              ${
-                receiptUrl
-                  ? `<a href="${receiptUrl}" style="display:inline-block; margin-top:8px; padding:10px 16px; background:#16a34a; color:#fff; text-decoration:none; border-radius:12px;">
-                       Download Receipt
-                     </a>`
-                  : `<span style="color:#64748b;">Receipt link not available yet. You can also view it in Stripe.</span>`
-              }
-            </li>
-            <li style="margin-top:12px;">
-              Place your next order with our design team or virtually stage your own images with our AI and enjoy
-              <strong>10% off</strong> with code: <strong>#IconicAI</strong> (expires 12/31/2025)
-            </li>
-          </ol>
+            <p>Best of luck and we'll see ya next round!</p>
 
-          <p>Best of luck and we'll see ya next round!</p>
+            <p>
+              <strong>The IconicVirtual.AI Team</strong><br/>
+              info@iconicvirtual.ai<br/>
+              www.iconicvirtual.ai
+            </p>
 
-          <p>
-            <strong>The IconicVirtual.AI Team</strong><br/>
-            info@iconicvirtual.ai<br/>
-            www.iconicvirtual.ai
-          </p>
+            <p style="font-size:12px; color:#64748b;">
+              website | IG | FB | TikTok | Pinterest | YouTube<br/>
+              @IconicVirtual.AI (2025) is affiliated with @Iconicimagestx (2016)
+            </p>
+          </div>
+        `;
 
-          <p style="font-size:12px; color:#64748b;">
-            website | IG | FB | TikTok | Pinterest | YouTube<br/>
-            @IconicVirtual.AI (2025) is affiliated with @Iconicimagestx (2016)
-          </p>
-        </div>
-      `;
-
-      await mailer.sendMail({
-        from: `IconicVirtual.AI <${process.env.GMAIL_USER}>`,
-        to: toEmail,
-        subject: "Delivery Notification: IconicVirtual.AI",
-        html,
-      });
+        try {
+          await mailer.sendMail({
+            from: `IconicVirtual.AI <${process.env.GMAIL_USER}>`,
+            to: toEmail,
+            subject: "Delivery Notification: IconicVirtual.AI",
+            html,
+          });
+        } catch (e) {
+          console.error("[post-checkout] email send failed:", e);
+          // do NOT fail the whole request if email fails
+        }
+      } else {
+        console.log("[post-checkout] Gmail not configured. Skipping email.");
+      }
     }
 
-    // ----- SMS (Twilio) -----
+    // ----- SMS (Twilio, optional) -----
     const sid = process.env.TWILIO_ACCOUNT_SID;
     const token = process.env.TWILIO_AUTH_TOKEN;
     const from = process.env.TWILIO_FROM_NUMBER;
@@ -171,11 +188,15 @@ export default async function handler(
         `Here is your staged image: ${directImageUrl || downloadPageUrl} ` +
         `Talk soon - IVAI`;
 
-      await twilio.messages.create({
-        from,
-        to: toPhone,
-        body: smsBody,
-      });
+      try {
+        await twilio.messages.create({
+          from,
+          to: toPhone,
+          body: smsBody,
+        });
+      } catch (e) {
+        console.error("[post-checkout] sms failed:", e);
+      }
     }
 
     // Mark sent (idempotent)
