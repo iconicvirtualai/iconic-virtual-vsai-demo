@@ -1,12 +1,11 @@
 import nodemailer from "nodemailer";
 
-export function getMailer() {
+export function getMailerOrNull() {
   const user = process.env.GMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD;
 
-  if (!user || !pass) {
-    throw new Error("GMAIL_USER or GMAIL_APP_PASSWORD missing");
-  }
+  // Gmail not configured yet? Return null so the rest of the flow still works.
+  if (!user || !pass) return null;
 
   return nodemailer.createTransport({
     host: "smtp.gmail.com",
