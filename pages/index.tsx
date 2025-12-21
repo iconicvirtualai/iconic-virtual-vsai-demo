@@ -29,6 +29,7 @@ type Job = {
   status: JobStatus;
   room_type: string;
   style: string;
+  renderId?: string;
   source?: {
     fileName?: string;
     storagePath?: string;
@@ -292,7 +293,8 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
             ...(prev || ({} as Job)),
             ...j,
             source: j.source || prev?.source,
-          };
+  renderId: (j as any).renderId || (prev as any)?.renderId, 
+};
           return merged;
         });
 
@@ -502,6 +504,11 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
       }
 
       const newJobId: string = renderJson.data.jobId;
+      const renderIdFromCreate: string | null =
+  renderJson.data.renderId ||
+  renderJson.data.render_id ||
+  renderJson.data.vsaiRenderId ||
+  null;
       const initialStatus: JobStatus = renderJson.data.status || "rendering";
 
       const initialJob: Job = {
@@ -510,6 +517,7 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
         status: initialStatus,
         room_type: roomType,
         style,
+        renderId: renderIdFromCreate || undefined,
         source: {
           fileName: file.name,
           publicUrl: imageUrl,
@@ -580,12 +588,14 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId,
-          imageUrl,
-          room_type: roomTypeValue,
-          style: styleValue,
-          jobId: job?.id,
-        }),
+  userId,
+  imageUrl,
+  room_type: roomTypeValue,
+  style: styleValue,
+  jobId: job?.id,
+  renderId: (job as any)?.renderId || null, // ✅ ADD THIS
+}),
+
       });
 
       const json: any = await resp.json().catch(() => ({}));
@@ -673,11 +683,16 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
       const json: any = await resp.json().catch(() => ({}));
 
-      if (!resp.ok || !json.url) {
-        if (popup && !popup.closed) popup.close();
-        setStatusText(json.error || "Stripe checkout failed.");
-        return;
-      }
+     if (popup && !popup.closed) {
+  try {
+    popup.location.href = url;
+    return;
+  } catch (e) {
+    // If Wix sandbox prevents navigating the popup, close it so "about:blank" doesn't linger
+    try { popup.close(); } catch {}
+  }
+}
+
 
       const url = json.url as string;
       setCheckoutUrl(url);
