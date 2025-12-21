@@ -479,14 +479,17 @@ const [variationIds, setVariationIds] = useState<string[]>([]);
       const initialStatus: JobStatus = renderJson.data.status || "rendering";
 
       // ✅ In your backend: jobId === renderId, so set both
-    const initialJob: Job = {
+  const initialJob: Job = {
   id: newJobId,
   renderId: newJobId,
   userId,
   status: initialStatus,
   room_type: roomType,
   style,
-  source: { ... },
+  source: {
+    fileName: file.name,
+    publicUrl: imageUrl,
+  },
 };
       setJob(initialJob);
       setJobId(newJobId);
