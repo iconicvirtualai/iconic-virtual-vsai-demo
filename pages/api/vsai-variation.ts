@@ -1,11 +1,13 @@
+// pages/api/vsai-variation.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 
-const VSAI_API_KEY = process.env.VSAI_API_KEY;
+const VSAI_BASE = "https://api.virtualstagingai.app/v1";
+const VSAI_API_KEY =
+  process.env.VSAI_API_KEY || process.env.VIRTUAL_STAGING_AI_API_KEY;
 
-type VariationItem = { id: string; url: string };
 type Resp =
-  | { ok: true; data: { renderId: string; variations: VariationItem[]; raw: any } }
-  | { ok: false; error: string; raw?: any };
+  | { ok: true; data: { jobId: string; status: "queued" | "rendering" | "done" } }
+  | { ok: false; error: string };
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,70 +23,55 @@ export default async function handler(
       .json({ ok: false, error: "VSAI_API_KEY is not set on the server." });
   }
 
+  const { renderId, room_type, style } = req.body as {
+    renderId?: string;
+    room_type?: string;
+    style?: string;
+  };
+
+  if (!renderId) {
+    return res.status(400).json({ ok: false, error: "renderId is required" });
+  }
+
   try {
-    const { renderId, room_type, style, variation_count } = req.body as {
-      renderId?: string;
-      room_type?: string;
-      style?: string;
-      variation_count?: number;
-    };
-
-    if (!renderId) {
-      return res.status(400).json({ ok: false, error: "renderId is required" });
-    }
-
     const body = {
-      config: {
-        type: "staging",
-        output_resolution: "default",
-        // Keep this OFF because you already overlay ICONICVIRTUAL.AI in the UI
-        add_virtually_staged_watermark: false,
-        add_furniture: {
-          style: style || "standard",
-          room_type: room_type || "living",
-        },
-      },
-      variation_count: typeof variation_count === "number" ? variation_count : 4,
-      wait_for_completion: true,
+      wait_for_completion: false, // we'll poll /api/vsai-render
+      switch_to_queued_immediately: true,
+      add_virtually_staged_watermark: false,
+      roomType: room_type || "living",
+      style: style || "standard",
     };
 
     const vsaiRes = await fetch(
-      `https://api.virtualstagingai.app/v2/renders/${encodeURIComponent(
+      `${VSAI_BASE}/render/create-variation?render_id=${encodeURIComponent(
         renderId
-      )}/variations`,
+      )}`,
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Api-Key ${VSAI_API_KEY}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
       }
     );
 
-    const data = await vsaiRes.json().catch(() => ({}));
+    const data: any = await vsaiRes.json().catch(() => ({}));
 
     if (!vsaiRes.ok) {
       return res.status(vsaiRes.status).json({
         ok: false,
-        error: data?.message || "Failed to create variations",
-        raw: data,
+        error: data?.error || data?.message || "Failed to create variation",
       });
     }
 
-    const items =
-      data?.variations?.items || data?.variations || data?.items || [];
-
-    const variations: VariationItem[] = (Array.isArray(items) ? items : [])
-      .map((v: any) => ({
-        id: String(v?.id || ""),
-        url: String(v?.result?.url || ""),
-      }))
-      .filter((v: VariationItem) => v.id && v.url);
-
+    // v1 returns render_id
     return res.status(200).json({
       ok: true,
-      data: { renderId, variations, raw: data },
+      data: {
+        jobId: data?.render_id || renderId,
+        status: "rendering",
+      },
     });
   } catch (err: any) {
     console.error("[vsai-variation] error:", err);
