@@ -701,7 +701,7 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
           // If Wix sandbox prevents navigating the popup, close it so "about:blank" doesn't linger
           try {
             popup.close();
-          } catch {}
+          } catch (e) {}
         }
       }
 
@@ -711,14 +711,14 @@ const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
           window.top.location.href = url;
           return;
         }
-      } catch {}
+      } catch (e) {}
 
       // 3) Fallback (same tab)
       window.location.href = url;
 
           return;
         }
-      } catch {}
+} catch (e) {}
 
       // 3) Fallback
       window.location.href = url;
