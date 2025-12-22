@@ -1057,6 +1057,8 @@ const handlePurchaseClick = async () => {
             </aside>
           </div>
         </div>
+          </div>
+          <div> {/* closes: mx-auto flex max-w-6xl ... */}
       </main>
 
       {/* Regenerate modal */}
