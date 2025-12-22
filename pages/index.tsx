@@ -719,8 +719,7 @@ export default function Index() {
                       <img
                         src={previewUrl || undefined}
                         alt="Before"
-                        className="h-full w-full object-cover grayscale brightness-95"
-                      />
+className="h-full w-full object-cover"                      />
 
                       {/* After overlay */}
                       <div
