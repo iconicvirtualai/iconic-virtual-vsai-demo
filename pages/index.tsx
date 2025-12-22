@@ -585,9 +585,12 @@ const handlePurchaseClick = async () => {
     return;
   }
 
-  // ✅ the actual image the user is currently viewing
+  // ✅ THIS is the image currently shown in the "after" side of the slider
   const selectedUrl =
-    variationUrls?.[currentVariationIndex] || stagedUrl || currentFinalUrl || "";
+    (variationUrls?.length ? variationUrls[currentVariationIndex] : null) ||
+    stagedUrl ||
+    currentFinalUrl ||
+    "";
 
   if (!selectedUrl) {
     setStatusText("No staged image selected.");
@@ -602,20 +605,20 @@ const handlePurchaseClick = async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jobId: job.id,
-        // ✅ send BOTH for compatibility (API can use either)
         selectedIndex: currentVariationIndex ?? 0,
-        selectedUrl,
+        selectedUrl, // ✅ Pass the exact in-frame image URL
       }),
     });
 
     const json: any = await resp.json().catch(() => ({}));
     const checkoutUrl: string | undefined = json?.url;
 
-    if (!resp.ok || !checkoutUrl) {
+    if (!resp.ok || !checkoutUrl || typeof checkoutUrl !== "string") {
       setStatusText(json?.error || "Stripe checkout failed (missing url).");
       return;
     }
 
+    // Wix-safe escape iframe
     try {
       if (window.top && window.top !== window.self) {
         window.top.location.href = checkoutUrl;
