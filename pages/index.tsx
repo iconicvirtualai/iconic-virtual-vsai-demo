@@ -741,8 +741,6 @@ export default function Index() {
 
   const stagedOrPreview = currentFinalUrl || previewUrl;
 
-  return (
-    <>
        return (
     <>
       <main className="min-h-screen bg-white text-slate-900">
