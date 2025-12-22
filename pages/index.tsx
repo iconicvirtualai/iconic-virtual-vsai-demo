@@ -743,6 +743,8 @@ export default function Index() {
 
   return (
     <>
+       return (
+    <>
       <main className="min-h-screen bg-white text-slate-900">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8 bg-transparent">
           {/* Hero */}
@@ -837,7 +839,9 @@ export default function Index() {
                       {/* After overlay */}
                       <div
                         className="absolute inset-0 overflow-hidden"
-                        style={{ clipPath: `inset(0 ${100 - sliderValue}% 0 0)` }}
+                        style={{
+                          clipPath: `inset(0 ${100 - sliderValue}% 0 0)`,
+                        }}
                       >
                         <img
                           src={stagedOrPreview || undefined}
@@ -903,7 +907,6 @@ export default function Index() {
                       Use the arrows &amp; slider to explore staged variations.
                     </div>
 
-                    {/* ✅ BUTTON ROW (properly closed) */}
                     <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
                       <button
                         className="inline-flex items-center gap-2 rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900 disabled:opacity-50"
@@ -928,11 +931,10 @@ export default function Index() {
                         disabled={isProcessing}
                         className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900 disabled:opacity-50"
                       >
-                        {settings.purchaseLabel}
+                        Purchase Staging – $5
                       </button>
                     </div>
 
-                    {/* ✅ this is OUTSIDE the button row now */}
                     <p className="mt-3 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
                       <a href="/" className="underline">
                         return to main menu
@@ -969,10 +971,8 @@ export default function Index() {
               {/* Controls */}
               {previewUrl && (
                 <div className="space-y-6">
-                  {/* BEFORE render: show controls */}
                   {!isProcessed && (
                     <>
-                      {/* Room + style */}
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="rounded-2xl border border-slate-200 bg-white p-4">
                           <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
@@ -1019,7 +1019,6 @@ export default function Index() {
                         </div>
                       </div>
 
-                      {/* Main CTA + "upload different file" */}
                       <div className="flex flex-col items-center gap-3">
                         <button
                           className="w-1/2 max-w-[260px] rounded-2xl border border-slate-700 bg-slate-100 px-6 py-3 text-lg font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
@@ -1049,7 +1048,6 @@ export default function Index() {
                     </>
                   )}
 
-                  {/* Tiny hint after any regeneration */}
                   {hasRegenerated && isProcessed && (
                     <div className="text-center text-xs uppercase tracking-[0.4em] text-slate-500">
                       Use the arrows &amp; slider to explore staged variations.
@@ -1059,7 +1057,7 @@ export default function Index() {
               )}
             </section>
 
-            {/* ✅ Right: explainer (now a sibling of the section, not inside it) */}
+            {/* Right: explainer */}
             <aside className="space-y-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-200/60">
               <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
                 Key Features
@@ -1074,7 +1072,8 @@ export default function Index() {
                   <span>
                     File size impacts render speed{" "}
                     <span className="text-slate-500">
-                      (file sizes over 10MB will be automatically resized for optimal use).
+                      (file sizes over 10MB will be automatically resized for
+                      optimal use).
                     </span>
                   </span>
                 </li>
@@ -1090,7 +1089,8 @@ export default function Index() {
               <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
                 <p className="font-semibold text-slate-900">Tips</p>
                 <p className="mt-1 text-slate-600">
-                  Use high-resolution photos with neutral/bright lighting for best results.
+                  Use high-resolution photos with neutral/bright lighting for
+                  best results.
                 </p>
                 <p className="mt-1 text-slate-600">
                   For fastest results, limit file sizes to 10MB.
