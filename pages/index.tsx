@@ -562,12 +562,12 @@ const handleRegenerateClick = async (
   overrideRoomType?: string,
   overrideStyle?: string
 ) => {
-  const renderId = (job as any)?.renderId || job?.id || null;
+const imageUrl = job?.source?.publicUrl || originalImageUrlRef.current || "";
+if (!imageUrl) {
+  setStatusText("No original job/image to regenerate.");
+  return;
+}
 
-  if (!renderId) {
-    setStatusText("No renderId available to regenerate.");
-    return;
-  }
   if (isProcessing) return;
 
   setIsProcessing(true);
@@ -601,7 +601,7 @@ const handleRegenerateClick = async (
     setStatusText("Staging new variation...");
 
     // Poll the same renderId; outputs[] will grow by ONE
-    startPolling(renderId);
+startPolling(renderId, imageUrl, { appendVariation: true });
   } catch (err: any) {
     console.error("[UI] handleRegenerateClick error", err);
     setIsProcessing(false);
@@ -609,6 +609,8 @@ const handleRegenerateClick = async (
   }
 };
 const handleModalReStage = async () => {
+  setRoomType(modalRoomType);
+  setStyle(modalStyle);
   setIsRegenerateModalOpen(false);
   await handleRegenerateClick(modalRoomType, modalStyle);
 };
