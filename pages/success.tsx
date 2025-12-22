@@ -1,10 +1,7 @@
-// pages/api/post-checkout.ts
-import type { NextApiRequest, NextApiResponse } from "next";
-import Stripe from "stripe";
+// pages/success.tsx
+import { useEffect, useState } from "react";
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-
-type Resp =
+type ApiResp =
   | {
       ok: true;
       data: {
@@ -17,61 +14,119 @@ type Resp =
         customerEmail: string | null;
       };
     }
-  | { ok: false; error: string; raw?: any };
+  | { ok: false; error: string };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<Resp>
-) {
-  if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method not allowed" });
-  if (!STRIPE_SECRET_KEY) return res.status(500).json({ ok: false, error: "STRIPE_SECRET_KEY is not set." });
+export default function SuccessPage() {
+  const [loading, setLoading] = useState(true);
+  const [statusText, setStatusText] = useState("Finalizing your order...");
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
 
-  try {
-    const { session_id } = req.body as { session_id?: string };
-    if (!session_id) return res.status(400).json({ ok: false, error: "session_id is required" });
+  useEffect(() => {
+    // ✅ Client-only: safe for next export/prerender
+    const params = new URLSearchParams(window.location.search);
+    const session_id = params.get("session_id");
 
-    const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
+    if (!session_id) {
+      setStatusText("Missing session_id in the URL.");
+      setLoading(false);
+      return;
+    }
 
-    // Expand payment_intent.latest_charge so we can safely pull receipt_url
-    const session = await stripe.checkout.sessions.retrieve(session_id, {
-      expand: ["payment_intent", "payment_intent.latest_charge"],
-    });
+    (async () => {
+      try {
+        const resp = await fetch("/api/post-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id }),
+        });
 
-    const paid = session.payment_status === "paid";
-    if (!paid) return res.status(400).json({ ok: false, error: "Payment not completed.", raw: session });
+        const json: ApiResp = await resp
+          .json()
+          .catch(() => ({ ok: false, error: "Bad response" } as any));
 
-    const meta: any = session.metadata || {};
-    const jobId = meta.jobId || null;
-    const selectedUrl = meta.selectedUrl || null;
+        if (!resp.ok || !("ok" in json) || !json.ok) {
+          setStatusText((json as any)?.error || "We couldn’t finalize your order.");
+          setLoading(false);
+          return;
+        }
 
-    const selectedIndexRaw = meta.selectedIndex;
-    const selectedIndex =
-      typeof selectedIndexRaw === "string" ? Number(selectedIndexRaw) : null;
+        const selectedUrl = json.data.selectedUrl;
 
-    const customerEmail = session.customer_details?.email || null;
+        if (!selectedUrl) {
+          setStatusText("Payment succeeded, but we couldn't find the purchased image.");
+          setLoading(false);
+          return;
+        }
 
-    // Receipt URL (safe with expanded latest_charge)
-    let receiptUrl: string | null = null;
-    const pi = session.payment_intent as any;
-    if (pi?.latest_charge?.receipt_url) receiptUrl = pi.latest_charge.receipt_url;
+        setDownloadUrl(selectedUrl);
+        setReceiptUrl(json.data.receiptUrl || null);
+        setStatusText("Payment complete. Your download is ready.");
+        setLoading(false);
+      } catch (e) {
+        console.error(e);
+        setStatusText("Unexpected error finalizing order.");
+        setLoading(false);
+      }
+    })();
+  }, []);
 
-    // Invoice URL: only exists if you’re using invoices/subscriptions; for one-time Checkout usually null
-    const invoiceUrl = (session as any)?.invoice?.hosted_invoice_url || null;
+  return (
+    <main className="min-h-screen bg-white text-slate-900">
+      <div className="mx-auto max-w-3xl px-6 py-16">
+        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/60">
+          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+            Iconic Virtual.AI
+          </p>
 
-    return res.status(200).json({
-      ok: true,
-      data: {
-        paid,
-        jobId,
-        selectedUrl,
-        selectedIndex: Number.isFinite(selectedIndex) ? selectedIndex : 0,
-        receiptUrl,
-        invoiceUrl,
-        customerEmail,
-      },
-    });
-  } catch (err: any) {
-    console.error("[post-checkout] error:", err);
-    return res.status(500).json({ ok: false, error: err?.message || "Internal server error" });
-  }
+          <h1 className="mt-3 text-3xl font-semibold">Success</h1>
+
+          <p className="mt-4 text-slate-600">{statusText}</p>
+
+          {downloadUrl && (
+            <div className="mt-8 space-y-4">
+              <div className="overflow-hidden rounded-2xl border border-slate-200">
+                <img
+                  src={downloadUrl}
+                  alt="Purchased staging"
+                  className="w-full object-cover"
+                />
+              </div>
+
+              <a
+                href={downloadUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:border-slate-900"
+              >
+                Download your image
+              </a>
+
+              {receiptUrl && (
+                <a
+                  href={receiptUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block text-center text-xs uppercase tracking-[0.3em] text-slate-500 underline"
+                >
+                  View receipt
+                </a>
+              )}
+            </div>
+          )}
+
+          {!loading && !downloadUrl && (
+            <div className="mt-8">
+              <a
+                href="/"
+                className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
+              >
+                Return to staging
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    </main>
+  );
 }
