@@ -1,4 +1,3 @@
-// pages/api/stripe-checkout.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 
@@ -28,9 +27,10 @@ export default async function handler(
       .json({ ok: false, error: "Stripe is not configured on the server." });
   }
 
-  const { jobId, selectedIndex } = req.body as {
+  const { jobId, selectedIndex, selectedUrl } = req.body as {
     jobId?: string;
     selectedIndex?: number;
+    selectedUrl?: string;
   };
 
   if (!jobId) {
@@ -39,30 +39,32 @@ export default async function handler(
       .json({ ok: false, error: "Missing jobId in request body." });
   }
 
-  const idx =
-    typeof selectedIndex === "number" && Number.isFinite(selectedIndex)
-      ? Math.max(0, Math.floor(selectedIndex))
-      : 0;
-
-  // Always use your real site URL (so it doesn't show vercel.app in Wix)
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (req.headers.host ? `https://${req.headers.host}` : "http://localhost:3000");
-
   try {
+    const originHeader = req.headers.origin;
+    const fallbackOrigin =
+      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const origin =
+      typeof originHeader === "string" && originHeader.length > 0
+        ? originHeader
+        : fallbackOrigin;
+
+    const idx =
+      typeof selectedIndex === "number" && Number.isFinite(selectedIndex)
+        ? selectedIndex
+        : 0;
+
+    const img = typeof selectedUrl === "string" ? selectedUrl : "";
+    const imgParam = img ? `&img=${encodeURIComponent(img)}` : "";
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
-
-      // Collect phone so Twilio can send a text
-      phone_number_collection: { enabled: true },
-
       line_items: [
         {
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: 500,
+            unit_amount: 500, // $5.00
             product_data: {
               name: "Virtual Staging Render",
               description: "High-resolution virtually staged interior image",
@@ -70,20 +72,16 @@ export default async function handler(
           },
         },
       ],
-
+      // ✅ Carry selected image into success page
+      success_url: `${origin}/success?jobId=${encodeURIComponent(
+        jobId
+      )}&selectedIndex=${encodeURIComponent(String(idx))}${imgParam}`,
+      cancel_url: `${origin}/?checkout=cancelled`,
       metadata: {
         jobId,
         selectedIndex: String(idx),
+        selectedUrl: img || "",
       },
-
-      // include session_id for post-checkout processing
-      success_url: `${siteUrl}/success?jobId=${encodeURIComponent(
-        jobId
-      )}&selectedIndex=${encodeURIComponent(
-        String(idx)
-      )}&session_id={CHECKOUT_SESSION_ID}`,
-
-      cancel_url: `${siteUrl}/?checkout=cancelled`,
     });
 
     if (!session.url) {
