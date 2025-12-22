@@ -557,16 +557,23 @@ const closeRegenerateModal = () => {
   setIsRegenerateModalOpen(false);
 };
 
-// Regenerate: create a BATCH of variations on the SAME renderId (so arrows work)
+// Regenerate: request ONE new result and append it to the carousel (no polling)
 const handleRegenerateClick = async (
   overrideRoomType?: string,
   overrideStyle?: string
 ) => {
-const imageUrl = job?.source?.publicUrl || originalImageUrlRef.current || "";
-if (!imageUrl) {
-  setStatusText("No original job/image to regenerate.");
-  return;
-}
+  const imageUrl = job?.source?.publicUrl || originalImageUrlRef.current || "";
+  if (!imageUrl) {
+    setStatusText("No original job/image to regenerate.");
+    return;
+  }
+
+  // In your app, job.id is your renderId (from vsai-create)
+  const renderId = (job as any)?.renderId || job?.id || "";
+  if (!renderId) {
+    setStatusText("Missing renderId.");
+    return;
+  }
 
   if (isProcessing) return;
 
@@ -590,24 +597,49 @@ if (!imageUrl) {
     });
 
     const json: any = await resp.json().catch(() => ({}));
+
     if (!resp.ok || !json.ok) {
       setIsProcessing(false);
       setStatusText(json.error || "Variation request failed.");
       return;
     }
 
+    const newUrl: string | null = json.data?.resultImageUrl || null;
+    if (!newUrl) {
+      setIsProcessing(false);
+      setStatusText("Variation finished but no image URL was returned.");
+      return;
+    }
+
+    // ✅ Append EXACTLY ONE new image to the carousel
+    setVariationUrls((prev) => {
+      // Ensure we always keep the original staged image as index 0
+      const base =
+        prev && prev.length > 0
+          ? prev
+          : stagedUrl
+          ? [stagedUrl]
+          : [];
+
+      // Avoid duplicates
+      const next = base.includes(newUrl) ? base : [...base, newUrl];
+      setCurrentVariationIndex(next.length - 1);
+      return next;
+    });
+
+    setStagedUrl(newUrl);
     setHasRegenerated(true);
     setSliderValue(55);
-    setStatusText("Staging new variation...");
-
-    // Poll the same renderId; outputs[] will grow by ONE
-startPolling(renderId, imageUrl, { appendVariation: true });
+    setIsProcessed(true);
+    setIsProcessing(false);
+    setStatusText("Staging complete.");
   } catch (err: any) {
     console.error("[UI] handleRegenerateClick error", err);
     setIsProcessing(false);
     setStatusText(err.message || "Variation failed.");
   }
 };
+
 const handleModalReStage = async () => {
   setRoomType(modalRoomType);
   setStyle(modalStyle);
@@ -625,6 +657,12 @@ const handlePurchaseClick = async () => {
   const selectedIndex =
     typeof currentVariationIndex === "number" ? currentVariationIndex : 0;
 
+  const selectedUrl =
+    (variationUrls && variationUrls[selectedIndex]) ||
+    stagedUrl ||
+    currentFinalUrl ||
+    "";
+
   setStatusText("Redirecting to checkout...");
 
   try {
@@ -634,6 +672,7 @@ const handlePurchaseClick = async () => {
       body: JSON.stringify({
         jobId: job.id, // renderId in your app
         selectedIndex,
+        selectedUrl,
       }),
     });
 
