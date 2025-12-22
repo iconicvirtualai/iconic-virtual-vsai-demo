@@ -1,7 +1,12 @@
+// pages/api/stripe-checkout.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+
+if (!STRIPE_SECRET_KEY) {
+  console.warn("[stripe-checkout] STRIPE_SECRET_KEY is not set.");
+}
 
 const stripe = STRIPE_SECRET_KEY
   ? new Stripe(STRIPE_SECRET_KEY, {
@@ -27,10 +32,9 @@ export default async function handler(
       .json({ ok: false, error: "Stripe is not configured on the server." });
   }
 
-  const { jobId, selectedIndex, selectedUrl } = req.body as {
+  const { jobId, selectedIndex } = req.body as {
     jobId?: string;
     selectedIndex?: number;
-    selectedUrl?: string;
   };
 
   if (!jobId) {
@@ -39,26 +43,24 @@ export default async function handler(
       .json({ ok: false, error: "Missing jobId in request body." });
   }
 
+  const idx =
+    typeof selectedIndex === "number" && Number.isFinite(selectedIndex)
+      ? selectedIndex
+      : 0;
+
   try {
-    const originHeader = req.headers.origin;
-    const fallbackOrigin =
-      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const origin =
-      typeof originHeader === "string" && originHeader.length > 0
-        ? originHeader
-        : fallbackOrigin;
-
-    const idx =
-      typeof selectedIndex === "number" && Number.isFinite(selectedIndex)
-        ? selectedIndex
-        : 0;
-
-    const img = typeof selectedUrl === "string" ? selectedUrl : "";
-    const imgParam = img ? `&img=${encodeURIComponent(img)}` : "";
+    // ✅ IMPORTANT: force your production domain here (no Vercel URL)
+    // Put this in Vercel env too, but hard-forcing is safest while testing:
+    const SITE_URL =
+      process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://sites.iconicvirtual.ai";
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
+
+      // ✅ Needed if you want to text them from Twilio
+      phone_number_collection: { enabled: true },
+
       line_items: [
         {
           quantity: 1,
@@ -66,21 +68,23 @@ export default async function handler(
             currency: "usd",
             unit_amount: 500, // $5.00
             product_data: {
-              name: "Virtual Staging Render",
+              name: "Virtual Staging Download",
               description: "High-resolution virtually staged interior image",
             },
           },
         },
       ],
-      // ✅ Carry selected image into success page
-      success_url: `${origin}/success?jobId=${encodeURIComponent(
+
+      // ✅ Always include session_id for the success page
+      success_url: `${SITE_URL}/success?jobId=${encodeURIComponent(
         jobId
-      )}&selectedIndex=${encodeURIComponent(String(idx))}${imgParam}`,
-      cancel_url: `${origin}/?checkout=cancelled`,
+      )}&session_id={CHECKOUT_SESSION_ID}`,
+
+      cancel_url: `${SITE_URL}/?checkout=cancelled`,
+
       metadata: {
         jobId,
         selectedIndex: String(idx),
-        selectedUrl: img || "",
       },
     });
 
