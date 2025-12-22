@@ -659,14 +659,29 @@ const handlePurchaseClick = async () => {
     return;
   }
 
-  const selectedIndex =
-    typeof currentVariationIndex === "number" ? currentVariationIndex : 0;
+  // Always send the exact image the user is currently viewing
+  const viewedUrl =
+    currentFinalUrl || stagedUrl || variationUrls[currentVariationIndex] || "";
+
+  const selectedIndex = (() => {
+    if (variationUrls.length > 0) {
+      const idx = variationUrls.indexOf(viewedUrl);
+      if (idx >= 0) return idx;
+      return Math.max(
+        0,
+        Math.min(
+          typeof currentVariationIndex === "number"
+            ? currentVariationIndex
+            : 0,
+          variationUrls.length - 1
+        )
+      );
+    }
+    return 0;
+  })();
 
   const selectedUrl =
-    (variationUrls && variationUrls[selectedIndex]) ||
-    stagedUrl ||
-    currentFinalUrl ||
-    "";
+    variationUrls[selectedIndex] || viewedUrl || stagedUrl || "";
 
   setStatusText("Redirecting to checkout...");
 
