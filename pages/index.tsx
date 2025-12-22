@@ -568,7 +568,7 @@ const handleRegenerateClick = async (
     return;
   }
 
-  // In your app, job.id is your renderId (from vsai-create)
+  // Use existing renderId if present, otherwise fall back to job.id
   const renderId = (job as any)?.renderId || job?.id || "";
   if (!renderId) {
     setStatusText("Missing renderId.");
@@ -604,35 +604,40 @@ const handleRegenerateClick = async (
       return;
     }
 
-    const newUrl: string | null = json.data?.resultImageUrl || null;
-    if (!newUrl) {
+    const newUrl: string | null = json?.data?.resultImageUrl || null;
+
+    // If we got the URL back, update carousel immediately (NO polling needed)
+    if (newUrl) {
+      setVariationUrls((prev) => {
+        // Ensure the original staged image is included as the first item
+        const originalAfter = (prev[0] || currentFinalUrl || stagedUrl || "").trim();
+        const seeded = originalAfter ? [originalAfter, ...prev.filter((u) => u !== originalAfter)] : [...prev];
+
+        if (!seeded.includes(newUrl)) {
+          const next = [...seeded, newUrl];
+          setCurrentVariationIndex(next.length - 1);
+          return next;
+        } else {
+          const idx = seeded.indexOf(newUrl);
+          if (idx >= 0) setCurrentVariationIndex(idx);
+          return seeded;
+        }
+      });
+
+      setStagedUrl(newUrl);
+      setHasRegenerated(true);
+      setSliderValue(55);
       setIsProcessing(false);
-      setStatusText("Variation finished but no image URL was returned.");
+      setIsProcessed(true);
+      setStatusText("Staging complete.");
       return;
     }
 
-    // ✅ Append EXACTLY ONE new image to the carousel
-    setVariationUrls((prev) => {
-      // Ensure we always keep the original staged image as index 0
-      const base =
-        prev && prev.length > 0
-          ? prev
-          : stagedUrl
-          ? [stagedUrl]
-          : [];
-
-      // Avoid duplicates
-      const next = base.includes(newUrl) ? base : [...base, newUrl];
-      setCurrentVariationIndex(next.length - 1);
-      return next;
-    });
-
-    setStagedUrl(newUrl);
+    // Fallback: if VSAI didn’t return url yet, poll same renderId
     setHasRegenerated(true);
     setSliderValue(55);
-    setIsProcessed(true);
-    setIsProcessing(false);
-    setStatusText("Staging complete.");
+    setStatusText("Staging in progress...");
+    startPolling(renderId, imageUrl, { appendVariation: true });
   } catch (err: any) {
     console.error("[UI] handleRegenerateClick error", err);
     setIsProcessing(false);
