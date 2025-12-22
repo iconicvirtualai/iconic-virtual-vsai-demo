@@ -78,9 +78,10 @@ export default async function handler(
       expand: ["payment_intent", "payment_intent.latest_charge"],
     });
 
-    const paid =
-      session.payment_status === "paid" ||
-      (session.status === "complete" && session.payment_status === "paid");
+const paid =
+  session.status === "complete" &&
+  (session.payment_status as any) !== "unpaid";
+
 
     if (!paid) {
       return res.status(400).json({ ok: false, error: "Payment not completed." });
