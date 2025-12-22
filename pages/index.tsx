@@ -652,36 +652,11 @@ const handleModalReStage = async () => {
   await handleRegenerateClick(modalRoomType, modalStyle);
 };
 
-// Purchase -> Stripe Checkout (NO popups, avoids about:blank)
 const handlePurchaseClick = async () => {
   if (!job) {
     setStatusText("No staged image to purchase yet.");
     return;
   }
-
-  // Always send the exact image the user is currently viewing
-  const viewedUrl =
-    currentFinalUrl || stagedUrl || variationUrls[currentVariationIndex] || "";
-
-  const selectedIndex = (() => {
-    if (variationUrls.length > 0) {
-      const idx = variationUrls.indexOf(viewedUrl);
-      if (idx >= 0) return idx;
-      return Math.max(
-        0,
-        Math.min(
-          typeof currentVariationIndex === "number"
-            ? currentVariationIndex
-            : 0,
-          variationUrls.length - 1
-        )
-      );
-    }
-    return 0;
-  })();
-
-  const selectedUrl =
-    variationUrls[selectedIndex] || viewedUrl || stagedUrl || "";
 
   setStatusText("Redirecting to checkout...");
 
@@ -690,33 +665,40 @@ const handlePurchaseClick = async () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        jobId: job.id, // renderId in your app
-        selectedIndex,
-        selectedUrl,
+        jobId: job.id,
+        selectedIndex: currentVariationIndex ?? 0,
       }),
     });
 
     const json: any = await resp.json().catch(() => ({}));
-    if (!resp.ok || !json.url) {
-      setStatusText(json.error || "Stripe checkout failed.");
+    console.log("[UI] stripe-checkout response", resp.status, json);
+
+    // IMPORTANT: must be json.url (your API returns { ok:true, url: session.url })
+    const checkoutUrl: string | undefined = json?.url;
+
+    if (!resp.ok || !checkoutUrl) {
+      setStatusText(json?.error || "Stripe checkout failed (missing url).");
       return;
     }
 
-    const url = json.url as string;
-
+    // Try to escape Wix iframe first
     try {
       if (window.top && window.top !== window.self) {
-        window.top.location.href = url;
+        window.top.location.href = checkoutUrl;
         return;
       }
-    } catch {}
+    } catch {
+      // ignore
+    }
 
-    window.location.href = url;
+    // Fallback: normal redirect
+    window.location.href = checkoutUrl;
   } catch (err) {
     console.error("handlePurchaseClick error", err);
     setStatusText("Unexpected error during checkout.");
   }
 };
+
 
   const handlePrevVariation = () => {
     if (variationUrls.length <= 1) return;
@@ -903,15 +885,14 @@ const handlePurchaseClick = async () => {
                         Submit for Pro Staging
                       </a>
 
-                      <button
-                        className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900 disabled:opacity-50"
-                        type="button"
-                        onClick={handlePurchaseClick}
-                        disabled={isProcessing}
-                      >
-                        {settings.purchaseLabel}
-                      </button>
-                    </div>
+                     <button
+  type="button"
+  onClick={handlePurchaseClick}
+  disabled={isProcessing}
+  className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900 disabled:opacity-50"
+>
+  {settings.purchaseLabel}
+</button>
 
                     <p className="mt-3 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
                       <a href="/" className="underline">
