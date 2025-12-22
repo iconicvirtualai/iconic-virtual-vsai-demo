@@ -926,6 +926,7 @@ const handlePurchaseClick = async () => {
                   </div>
                 )}
               </div>
+            </div>
               {/* Controls */}
               {previewUrl && (
                 <div className="space-y-6">
