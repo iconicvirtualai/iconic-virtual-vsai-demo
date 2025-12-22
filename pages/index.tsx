@@ -688,42 +688,42 @@ export default function Index() {
 
     setStatusText("Redirecting to checkout...");
 
-    try {
-      const resp = await fetch("/api/stripe-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jobId: job.id,
-          selectedIndex: currentVariationIndex ?? 0,
-        }),
-      });
+   try {
+  const selectedUrl =
+    variationUrls[currentVariationIndex] || stagedUrl || currentFinalUrl || "";
 
-      const json: any = await resp.json().catch(() => ({}));
-      console.log("[UI] stripe-checkout response", resp.status, json);
+  const resp = await fetch("/api/stripe-checkout", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jobId: job.id,
+      selectedIndex: currentVariationIndex ?? 0,
+      selectedUrl, // <-- ADD THIS
+    }),
+  });
 
-      const checkoutUrl: string | undefined = json?.url;
+  const json: any = await resp.json().catch(() => ({}));
+  console.log("[UI] stripe-checkout response", resp.status, json);
 
-      if (!resp.ok || !checkoutUrl) {
-        setStatusText(json?.error || "Stripe checkout failed (missing url).");
-        return;
-      }
+  const checkoutUrl: string | undefined = json?.url;
 
-      // Escape Wix iframe
-      try {
-        if (window.top && window.top !== window.self) {
-          window.top.location.href = checkoutUrl;
-          return;
-        }
-      } catch {
-        // ignore
-      }
+  if (!resp.ok || !checkoutUrl) {
+    setStatusText(json?.error || "Stripe checkout failed (missing url).");
+    return;
+  }
 
-      window.location.href = checkoutUrl;
-    } catch (err) {
-      console.error("handlePurchaseClick error", err);
-      setStatusText("Unexpected error during checkout.");
+  try {
+    if (window.top && window.top !== window.self) {
+      window.top.location.href = checkoutUrl;
+      return;
     }
-  };
+  } catch {}
+
+  window.location.href = checkoutUrl;
+} catch (err) {
+  console.error("handlePurchaseClick error", err);
+  setStatusText("Unexpected error during checkout.");
+}
 
   const handlePrevVariation = () => {
     if (variationUrls.length <= 1) return;
