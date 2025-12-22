@@ -52,7 +52,7 @@ export default async function handler(
     // ✅ IMPORTANT: force your production domain here (no Vercel URL)
     // Put this in Vercel env too, but hard-forcing is safest while testing:
     const SITE_URL =
-      process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://sites.iconicvirtual.ai";
+      process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://stage.iconicvirtual.ai";
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
