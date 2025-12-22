@@ -4,110 +4,94 @@ import Stripe from "stripe";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 
-const stripe = STRIPE_SECRET_KEY
-  ? new Stripe(STRIPE_SECRET_KEY, {
-      apiVersion: "2024-06-20" as Stripe.LatestApiVersion,
-    })
-  : null;
-
-type CheckoutResponse =
+type Resp =
   | { ok: true; url: string }
   | { ok: false; error: string };
 
+function getBaseUrl(req: NextApiRequest) {
+  const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (envUrl) return envUrl.replace(/\/$/, "");
+
+  const proto =
+    (req.headers["x-forwarded-proto"] as string) ||
+    (req.headers["x-forwarded-protocol"] as string) ||
+    "https";
+  const host = (req.headers["x-forwarded-host"] as string) || req.headers.host;
+  return `${proto}://${host}`;
+}
+
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<CheckoutResponse>
+  res: NextApiResponse<Resp>
 ) {
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
-  if (!stripe) {
-    return res
-      .status(500)
-      .json({ ok: false, error: "Stripe is not configured on the server." });
-  }
-
-  const { jobId, selectedIndex, selectedUrl } = req.body as {
-    jobId?: string;
-    selectedIndex?: number;
-    selectedUrl?: string;
-  };
-
-  if (!jobId) {
-    return res
-      .status(400)
-      .json({ ok: false, error: "Missing jobId in request body." });
-  }
-
-  if (!selectedUrl || typeof selectedUrl !== "string") {
-    return res.status(400).json({
-      ok: false,
-      error: "Missing selectedUrl in request body (which image the user purchased).",
-    });
+  if (!STRIPE_SECRET_KEY) {
+    return res.status(500).json({ ok: false, error: "STRIPE_SECRET_KEY is not set." });
   }
 
   try {
-    const originHeader = req.headers.origin;
-    const fallbackOrigin =
-      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
-    const origin =
-      typeof originHeader === "string" && originHeader.length > 0
-        ? originHeader
-        : fallbackOrigin;
+    const { jobId, selectedIndex, selectedUrl } = req.body as {
+      jobId?: string;
+      selectedIndex?: number;
+      selectedUrl?: string;
+    };
 
-    // IMPORTANT: include the Stripe session id placeholder so success can verify payment
-    const successUrl = `${origin}/success?jobId=${encodeURIComponent(
-      jobId
-    )}&session_id={CHECKOUT_SESSION_ID}`;
+    if (!jobId) {
+      return res.status(400).json({ ok: false, error: "Missing jobId in request body." });
+    }
+    if (!selectedUrl) {
+      return res.status(400).json({
+        ok: false,
+        error: "Missing selectedUrl in request body (which image the user purchased).",
+      });
+    }
+
+    const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
+    const baseUrl = getBaseUrl(req);
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
 
-      // ✅ Collect phone so Twilio can text a receipt + download link
-      phone_number_collection: { enabled: true },
-
       line_items: [
         {
-          quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: 500, // $5
+            unit_amount: 500,
             product_data: {
-              name: "Virtual Staging Render",
-              description: "High-resolution virtually staged interior image",
+              name: "Virtual Staging – High Resolution Download",
+              // optional thumbnail inside Stripe
+              images: selectedUrl.startsWith("https://") ? [selectedUrl] : undefined,
             },
           },
+          quantity: 1,
         },
       ],
 
-      success_url: successUrl,
-      cancel_url: `${origin}/?checkout=cancelled`,
-
-      // ✅ THIS is the fix: tell Stripe which image was purchased
+      // ✅ STORE EXACT SELECTION HERE
       metadata: {
         jobId,
-        selectedIndex: String(
-          typeof selectedIndex === "number" ? selectedIndex : 0
-        ),
+        selectedIndex: String(typeof selectedIndex === "number" ? selectedIndex : 0),
         selectedUrl,
       },
+
+      // ✅ must include session_id for success page
+      success_url: `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}&jobId=${encodeURIComponent(
+        jobId
+      )}`,
+      cancel_url: `${baseUrl}/?canceled=1`,
     });
 
     if (!session.url) {
-      return res.status(500).json({
-        ok: false,
-        error: "Stripe did not return a checkout URL.",
-      });
+      return res.status(500).json({ ok: false, error: "Stripe did not return a checkout URL." });
     }
 
     return res.status(200).json({ ok: true, url: session.url });
   } catch (err: any) {
     console.error("[stripe-checkout] error:", err);
-    return res.status(500).json({
-      ok: false,
-      error: err.message || "Failed to create checkout session.",
-    });
+    return res.status(500).json({ ok: false, error: err?.message || "Failed to create Stripe session." });
   }
 }
