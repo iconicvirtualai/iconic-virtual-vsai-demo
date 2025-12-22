@@ -5,7 +5,7 @@ import { Check, ImageIcon, LogOut } from "lucide-react";
 
 export default function SuccessPage() {
   const router = useRouter();
-  const { session_id } = router.query;
+const { jobId, session_id, img } = router.query;
 
   const [finalUrl, setFinalUrl] = useState<string | null>(null);
   const [statusText, setStatusText] = useState(
@@ -16,15 +16,36 @@ export default function SuccessPage() {
   const ranRef = useRef(false);
 
   useEffect(() => {
-    if (!router.isReady) return;
-    if (ranRef.current) return;
+  if (!router.isReady) return;
+  if (ranRef.current) return;
+  ranRef.current = true;
 
-    if (!session_id || typeof session_id !== "string") {
-      setStatusText("Missing session_id in the URL.");
-      setIsLoading(false);
-      return;
-    }
+  // ✅ If Stripe sent the image URL, show it immediately (this ensures regenerated image shows)
+  if (img && typeof img === "string" && img.length > 0) {
+    setFinalUrl(img);
+    setStatusText("Your staged image is ready.");
+    setIsLoading(false);
+    return;
+  }
 
+  // ✅ If we have a jobId, we can load job directly
+  if (jobId && typeof jobId === "string") {
+    // continue into your existing job polling logic (below)
+  } else if (session_id && typeof session_id === "string") {
+    // continue into your existing session_id logic (below)
+  } else {
+    setStatusText("Missing jobId or session_id in the URL.");
+    setIsLoading(false);
+    return;
+  }
+// ✅ If Stripe sent us the selected image URL, show it immediately
+if (img && typeof img === "string" && img.length > 0) {
+  setFinalUrl(img);
+  setStatusText("Your staged image is ready.");
+  setIsLoading(false);
+  return;
+}
+    
     ranRef.current = true;
 
     const run = async () => {
