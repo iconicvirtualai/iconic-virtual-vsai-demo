@@ -585,19 +585,25 @@ const handlePurchaseClick = async () => {
     return;
   }
 
-  // ✅ THIS is the image currently shown in the "after" side of the slider
+  // ✅ The image the user is currently viewing in the slider/carousel
   const selectedUrl =
-    (variationUrls?.length ? variationUrls[currentVariationIndex] : null) ||
-    stagedUrl ||
+    variationUrls?.[currentVariationIndex] ||
     currentFinalUrl ||
-    "";
+    stagedUrl ||
+    null;
 
   if (!selectedUrl) {
-    setStatusText("No staged image selected.");
+    setStatusText("Missing selected image to purchase.");
     return;
   }
 
   setStatusText("Redirecting to checkout...");
+
+  // ✅ Popup opened synchronously to avoid blockers (Wix iframe often blocks redirects)
+  let popup: Window | null = null;
+  try {
+    popup = window.open("about:blank", "_blank");
+  } catch {}
 
   try {
     const resp = await fetch("/api/stripe-checkout", {
@@ -605,34 +611,52 @@ const handlePurchaseClick = async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jobId: job.id,
-        selectedIndex: currentVariationIndex ?? 0,
-        selectedUrl, // ✅ Pass the exact in-frame image URL
+        selectedUrl,              // ✅ REQUIRED by your API
+        selectedIndex: currentVariationIndex ?? 0, // optional (nice for logging)
       }),
     });
 
     const json: any = await resp.json().catch(() => ({}));
-    const checkoutUrl: string | undefined = json?.url;
 
-    if (!resp.ok || !checkoutUrl || typeof checkoutUrl !== "string") {
-      setStatusText(json?.error || "Stripe checkout failed (missing url).");
+    // ✅ Support multiple possible shapes
+    const checkoutUrl: string | undefined =
+      json?.url || json?.data?.url || json?.data?.checkoutUrl;
+
+    if (!resp.ok || !checkoutUrl) {
+      try { popup?.close(); } catch {}
+      setStatusText(json?.error || "Stripe checkout failed.");
       return;
     }
 
-    // Wix-safe escape iframe
+    // ✅ Best case: escape Wix iframe to top window
     try {
       if (window.top && window.top !== window.self) {
         window.top.location.href = checkoutUrl;
+        try { popup?.close(); } catch {}
         return;
       }
-    } catch {}
+    } catch {
+      // ignore
+    }
 
+    // ✅ If top redirect is blocked, use the pre-opened tab
+    if (popup && !popup.closed) {
+      try {
+        popup.location.href = checkoutUrl;
+        return;
+      } catch {
+        try { popup.close(); } catch {}
+      }
+    }
+
+    // ✅ Final fallback
     window.location.href = checkoutUrl;
   } catch (err) {
     console.error("handlePurchaseClick error", err);
+    try { popup?.close(); } catch {}
     setStatusText("Unexpected error during checkout.");
   }
 };
-
   const handlePrevVariation = () => {
     if (variationUrls.length <= 1) return;
     setCurrentVariationIndex((prev) => (prev === 0 ? variationUrls.length - 1 : prev - 1));
