@@ -1,103 +1,67 @@
 // pages/success.tsx
 import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
-import { Check, ImageIcon, LogOut } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, ImageIcon, LogOut, Receipt } from "lucide-react";
 
 export default function SuccessPage() {
   const router = useRouter();
-const { jobId, session_id, img } = router.query;
+  const { session_id } = router.query;
 
-  const [finalUrl, setFinalUrl] = useState<string | null>(null);
-  const [statusText, setStatusText] = useState(
-    "Thank you for your payment. Preparing your download..."
-  );
+  const [statusText, setStatusText] = useState("Confirming payment...");
   const [isLoading, setIsLoading] = useState(true);
 
-  const ranRef = useRef(false);
+  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
 
   useEffect(() => {
-  if (!router.isReady) return;
-  if (ranRef.current) return;
-  ranRef.current = true;
+    if (!router.isReady) return;
 
-  // ✅ If Stripe sent the image URL, show it immediately (this ensures regenerated image shows)
-  if (img && typeof img === "string" && img.length > 0) {
-    setFinalUrl(img);
-    setStatusText("Your staged image is ready.");
-    setIsLoading(false);
-    return;
-  }
-
-  // ✅ If we have a jobId, we can load job directly
-  if (jobId && typeof jobId === "string") {
-    // continue into your existing job polling logic (below)
-  } else if (session_id && typeof session_id === "string") {
-    // continue into your existing session_id logic (below)
-  } else {
-    setStatusText("Missing jobId or session_id in the URL.");
-    setIsLoading(false);
-    return;
-  }
-// ✅ If Stripe sent us the selected image URL, show it immediately
-if (img && typeof img === "string" && img.length > 0) {
-  setFinalUrl(img);
-  setStatusText("Your staged image is ready.");
-  setIsLoading(false);
-  return;
-}
-    
-    ranRef.current = true;
+    if (!session_id || typeof session_id !== "string") {
+      setStatusText("Missing session_id in the URL.");
+      setIsLoading(false);
+      return;
+    }
 
     const run = async () => {
       try {
         setIsLoading(true);
         setStatusText("Finalizing your order...");
 
-        const resp = await fetch("/api/post-checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id }),
-        });
-
-        const json: any = await resp.json().catch(() => ({}));
+        const resp = await fetch(`/api/post-checkout?session_id=${encodeURIComponent(session_id)}`);
+        const json = await resp.json().catch(() => ({}));
 
         if (!resp.ok || !json.ok) {
-          setStatusText(json.error || "Unable to finalize your order.");
+          setStatusText(json.error || "We couldn't finalize this order.");
           setIsLoading(false);
           return;
         }
 
-        setFinalUrl(json.data.finalUrl);
-        setStatusText("Your staged image is ready.");
+        const dl = json?.data?.downloadUrl || null;
+        const rc = json?.data?.receiptUrl || null;
+
+        setDownloadUrl(dl);
+        setReceiptUrl(rc);
+
+        if (!dl) {
+          setStatusText("Payment confirmed, but we couldn't load a download link yet.");
+        } else {
+          setStatusText("Your staged image is ready.");
+        }
+
         setIsLoading(false);
       } catch (e) {
-        console.error("[success] post-checkout error:", e);
+        console.error("[success] error:", e);
         setStatusText("Unexpected error while finalizing your order.");
         setIsLoading(false);
       }
     };
 
-    void run();
+    run();
   }, [router.isReady, session_id]);
 
   const handleDownload = async () => {
-    if (!finalUrl) return;
-    try {
-      const response = await fetch(finalUrl);
-      if (!response.ok) return;
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = "iconic-virtual-staged.jpg";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-    } catch (err) {
-      console.error("[success] download error:", err);
-    }
+    if (!downloadUrl) return;
+    window.open(downloadUrl, "_blank", "noopener,noreferrer");
   };
 
   const handleStageMore = () => router.push("/");
@@ -112,44 +76,49 @@ if (img && typeof img === "string" && img.length > 0) {
               <Check size={20} />
             </span>
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
-                Payment Successful
-              </p>
-              <h1 className="mt-1 text-2xl font-semibold text-slate-900">
-                Thank you for your purchase
-              </h1>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Payment Successful</p>
+              <h1 className="mt-1 text-2xl font-semibold text-slate-900">Thank you for your purchase</h1>
             </div>
           </div>
           <p className="mt-4 text-sm text-slate-600">{statusText}</p>
         </div>
 
         <section className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
-          {isLoading && !finalUrl && (
+          {isLoading && (
             <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
               <span className="h-12 w-12 animate-spin rounded-full border-2 border-transparent border-t-slate-500" />
-              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">
-                Fetching final image...
-              </p>
+              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Finalizing...</p>
             </div>
           )}
 
-          {!isLoading && !finalUrl && (
+          {!isLoading && !downloadUrl && (
             <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
               <ImageIcon size={36} className="text-slate-400" />
               <p className="text-sm text-slate-600">
                 We couldn&apos;t load a final image for this order.
               </p>
+              {receiptUrl && (
+                <a
+                  className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-500"
+                  href={receiptUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <Receipt size={16} />
+                  View Receipt
+                </a>
+              )}
             </div>
           )}
 
-          {finalUrl && (
+          {!isLoading && downloadUrl && (
             <>
               <div
                 className="relative rounded-3xl border border-slate-300 bg-white shadow-inner shadow-slate-300/60"
                 style={{ aspectRatio: "1024 / 683" }}
               >
                 <img
-                  src={finalUrl}
+                  src={downloadUrl}
                   alt="Final staged"
                   width={1024}
                   height={683}
@@ -168,6 +137,7 @@ if (img && typeof img === "string" && img.length > 0) {
                     <ImageIcon size={16} />
                     Download Image
                   </button>
+
                   <button
                     className="inline-flex items-center gap-2 rounded-2xl border border-slate-900 bg-slate-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-black hover:border-black"
                     onClick={handleStageMore}
@@ -176,6 +146,18 @@ if (img && typeof img === "string" && img.length > 0) {
                     Stage More Images
                   </button>
                 </div>
+
+                {receiptUrl && (
+                  <a
+                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-500"
+                    href={receiptUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <Receipt size={16} />
+                    View Receipt
+                  </a>
+                )}
 
                 <button
                   className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-500"
