@@ -3,123 +3,75 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-const stripe = STRIPE_SECRET_KEY
-  ? new Stripe(STRIPE_SECRET_KEY, {
-      apiVersion: "2024-06-20" as Stripe.LatestApiVersion,
-    })
-  : null;
-
-// Twilio (optional but you want texts)
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
-const TWILIO_FROM_NUMBER = process.env.TWILIO_FROM_NUMBER;
 
 type Resp =
   | {
       ok: true;
       data: {
+        paid: boolean;
         jobId: string | null;
-        finalUrl: string | null;
+        selectedUrl: string | null;
+        selectedIndex: number | null;
         receiptUrl: string | null;
-        phone: string | null;
-        email: string | null;
+        invoiceUrl: string | null;
+        customerEmail: string | null;
       };
     }
-  | { ok: false; error: string };
-
-async function sendTwilioSms(to: string, body: string) {
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_FROM_NUMBER) return;
-
-  const auth = Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString("base64");
-
-  const form = new URLSearchParams();
-  form.set("To", to);
-  form.set("From", TWILIO_FROM_NUMBER);
-  form.set("Body", body);
-
-  const resp = await fetch(
-    `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${auth}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: form.toString(),
-    }
-  );
-
-  const json = await resp.json().catch(() => ({}));
-  if (!resp.ok) {
-    console.error("[twilio] sms failed", resp.status, json);
-  }
-}
+  | { ok: false; error: string; raw?: any };
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Resp>
 ) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ ok: false, error: "Method not allowed" });
-  }
-
-  if (!stripe) {
-    return res.status(500).json({ ok: false, error: "Stripe not configured." });
-  }
-
-  const session_id = (req.query.session_id || req.query.sessionId) as string | undefined;
-  if (!session_id) {
-    return res.status(400).json({ ok: false, error: "session_id is required" });
-  }
+  if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method not allowed" });
+  if (!STRIPE_SECRET_KEY) return res.status(500).json({ ok: false, error: "STRIPE_SECRET_KEY is not set." });
 
   try {
-    // Expand payment_intent.latest_charge to access receipt_url safely
+    const { session_id } = req.body as { session_id?: string };
+    if (!session_id) return res.status(400).json({ ok: false, error: "session_id is required" });
+
+    const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
+
+    // Expand payment_intent.latest_charge so we can safely pull receipt_url
     const session = await stripe.checkout.sessions.retrieve(session_id, {
       expand: ["payment_intent", "payment_intent.latest_charge"],
     });
 
-const paid =
-  session.status === "complete" &&
-  (session.payment_status as any) !== "unpaid";
+    const paid = session.payment_status === "paid";
+    if (!paid) return res.status(400).json({ ok: false, error: "Payment not completed.", raw: session });
 
+    const meta: any = session.metadata || {};
+    const jobId = meta.jobId || null;
+    const selectedUrl = meta.selectedUrl || null;
 
-    if (!paid) {
-      return res.status(400).json({ ok: false, error: "Payment not completed." });
-    }
+    const selectedIndexRaw = meta.selectedIndex;
+    const selectedIndex =
+      typeof selectedIndexRaw === "string" ? Number(selectedIndexRaw) : null;
 
-    const jobId = session.metadata?.jobId || null;
-    const selectedUrl = session.metadata?.selectedUrl || null;
+    const customerEmail = session.customer_details?.email || null;
 
-    // Receipt URL (safe typing)
+    // Receipt URL (safe with expanded latest_charge)
     let receiptUrl: string | null = null;
-    const pi = session.payment_intent as Stripe.PaymentIntent | null;
+    const pi = session.payment_intent as any;
+    if (pi?.latest_charge?.receipt_url) receiptUrl = pi.latest_charge.receipt_url;
 
-    if (pi && typeof pi !== "string") {
-      const latestCharge = pi.latest_charge as Stripe.Charge | string | null;
-      if (latestCharge && typeof latestCharge !== "string") {
-        receiptUrl = latestCharge.receipt_url || null;
-      }
-    }
-
-    const email = session.customer_details?.email || null;
-    const phone = session.customer_details?.phone || null;
-
-    const finalUrl = selectedUrl; // ✅ the exact image they purchased
-
-    // Send SMS confirmation w/ download link
-    if (phone && finalUrl) {
-      const msg =
-        `ICONICVIRTUAL.AI — Payment received ✅\n\nDownload your staged image:\n${finalUrl}` +
-        (receiptUrl ? `\n\nReceipt:\n${receiptUrl}` : "");
-      await sendTwilioSms(phone, msg);
-    }
+    // Invoice URL: only exists if you’re using invoices/subscriptions; for one-time Checkout usually null
+    const invoiceUrl = (session as any)?.invoice?.hosted_invoice_url || null;
 
     return res.status(200).json({
       ok: true,
-      data: { jobId, finalUrl, receiptUrl, phone, email },
+      data: {
+        paid,
+        jobId,
+        selectedUrl,
+        selectedIndex: Number.isFinite(selectedIndex) ? selectedIndex : 0,
+        receiptUrl,
+        invoiceUrl,
+        customerEmail,
+      },
     });
   } catch (err: any) {
-    console.error("[post-checkout] error", err);
-    return res.status(500).json({ ok: false, error: err?.message || "Server error" });
+    console.error("[post-checkout] error:", err);
+    return res.status(500).json({ ok: false, error: err?.message || "Internal server error" });
   }
 }
