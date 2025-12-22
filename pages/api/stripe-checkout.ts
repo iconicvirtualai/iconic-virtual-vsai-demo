@@ -4,10 +4,6 @@ import Stripe from "stripe";
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 
-if (!STRIPE_SECRET_KEY) {
-  console.warn("[stripe-checkout] STRIPE_SECRET_KEY is not set.");
-}
-
 const stripe = STRIPE_SECRET_KEY
   ? new Stripe(STRIPE_SECRET_KEY, {
       apiVersion: "2024-06-20" as Stripe.LatestApiVersion,
@@ -32,9 +28,10 @@ export default async function handler(
       .json({ ok: false, error: "Stripe is not configured on the server." });
   }
 
-  const { jobId, selectedIndex } = req.body as {
+  const { jobId, selectedIndex, selectedUrl } = req.body as {
     jobId?: string;
     selectedIndex?: number;
+    selectedUrl?: string;
   };
 
   if (!jobId) {
@@ -43,22 +40,32 @@ export default async function handler(
       .json({ ok: false, error: "Missing jobId in request body." });
   }
 
-  const idx =
-    typeof selectedIndex === "number" && Number.isFinite(selectedIndex)
-      ? selectedIndex
-      : 0;
+  if (!selectedUrl || typeof selectedUrl !== "string") {
+    return res.status(400).json({
+      ok: false,
+      error: "Missing selectedUrl in request body (which image the user purchased).",
+    });
+  }
 
   try {
-    // ✅ IMPORTANT: force your production domain here (no Vercel URL)
-    // Put this in Vercel env too, but hard-forcing is safest while testing:
-    const SITE_URL =
-      process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://stage.iconicvirtual.ai";
+    const originHeader = req.headers.origin;
+    const fallbackOrigin =
+      process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const origin =
+      typeof originHeader === "string" && originHeader.length > 0
+        ? originHeader
+        : fallbackOrigin;
+
+    // IMPORTANT: include the Stripe session id placeholder so success can verify payment
+    const successUrl = `${origin}/success?jobId=${encodeURIComponent(
+      jobId
+    )}&session_id={CHECKOUT_SESSION_ID}`;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
 
-      // ✅ Needed if you want to text them from Twilio
+      // ✅ Collect phone so Twilio can text a receipt + download link
       phone_number_collection: { enabled: true },
 
       line_items: [
@@ -66,25 +73,25 @@ export default async function handler(
           quantity: 1,
           price_data: {
             currency: "usd",
-            unit_amount: 500, // $5.00
+            unit_amount: 500, // $5
             product_data: {
-              name: "Virtual Staging Download",
+              name: "Virtual Staging Render",
               description: "High-resolution virtually staged interior image",
             },
           },
         },
       ],
 
-      // ✅ Always include session_id for the success page
-      success_url: `${SITE_URL}/success?jobId=${encodeURIComponent(
-        jobId
-      )}&session_id={CHECKOUT_SESSION_ID}`,
+      success_url: successUrl,
+      cancel_url: `${origin}/?checkout=cancelled`,
 
-      cancel_url: `${SITE_URL}/?checkout=cancelled`,
-
+      // ✅ THIS is the fix: tell Stripe which image was purchased
       metadata: {
         jobId,
-        selectedIndex: String(idx),
+        selectedIndex: String(
+          typeof selectedIndex === "number" ? selectedIndex : 0
+        ),
+        selectedUrl,
       },
     });
 
