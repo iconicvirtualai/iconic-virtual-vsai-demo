@@ -579,48 +579,56 @@ export default function Index() {
     await handleRegenerateClick(modalRoomType, modalStyle);
   };
 
-  const handlePurchaseClick = async () => {
-    if (!job) {
-      setStatusText("No staged image to purchase yet.");
+const handlePurchaseClick = async () => {
+  if (!job) {
+    setStatusText("No staged image to purchase yet.");
+    return;
+  }
+
+  // ✅ the actual image the user is currently viewing
+  const selectedUrl =
+    variationUrls?.[currentVariationIndex] || stagedUrl || currentFinalUrl || "";
+
+  if (!selectedUrl) {
+    setStatusText("No staged image selected.");
+    return;
+  }
+
+  setStatusText("Redirecting to checkout...");
+
+  try {
+    const resp = await fetch("/api/stripe-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jobId: job.id,
+        // ✅ send BOTH for compatibility (API can use either)
+        selectedIndex: currentVariationIndex ?? 0,
+        selectedUrl,
+      }),
+    });
+
+    const json: any = await resp.json().catch(() => ({}));
+    const checkoutUrl: string | undefined = json?.url;
+
+    if (!resp.ok || !checkoutUrl) {
+      setStatusText(json?.error || "Stripe checkout failed (missing url).");
       return;
     }
 
-    setStatusText("Redirecting to checkout...");
-
     try {
-      const resp = await fetch("/api/stripe-checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          jobId: job.id,
-          selectedIndex: currentVariationIndex ?? 0,
-        }),
-      });
-
-      const json: any = await resp.json().catch(() => ({}));
-      const checkoutUrl: string | undefined = json?.url;
-
-      if (!resp.ok || !checkoutUrl) {
-        setStatusText(json?.error || "Stripe checkout failed (missing url).");
+      if (window.top && window.top !== window.self) {
+        window.top.location.href = checkoutUrl;
         return;
       }
+    } catch {}
 
-      // Escape Wix iframe if embedded
-      try {
-        if (window.top && window.top !== window.self) {
-          window.top.location.href = checkoutUrl;
-          return;
-        }
-      } catch {
-        // ignore
-      }
-
-      window.location.href = checkoutUrl;
-    } catch (err) {
-      console.error("handlePurchaseClick error", err);
-      setStatusText("Unexpected error during checkout.");
-    }
-  };
+    window.location.href = checkoutUrl;
+  } catch (err) {
+    console.error("handlePurchaseClick error", err);
+    setStatusText("Unexpected error during checkout.");
+  }
+};
 
   const handlePrevVariation = () => {
     if (variationUrls.length <= 1) return;
