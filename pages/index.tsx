@@ -926,12 +926,14 @@ const handlePurchaseClick = async () => {
                   </div>
                 )}
               </div>
-            </div>
-              {/* Controls */}
+ 
+                         {/* Controls */}
               {previewUrl && (
                 <div className="space-y-6">
+                  {/* BEFORE render: show controls */}
                   {!isProcessed && (
                     <>
+                      {/* Room + style */}
                       <div className="grid gap-4 md:grid-cols-2">
                         <div className="rounded-2xl border border-slate-200 bg-white p-4">
                           <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
@@ -944,7 +946,11 @@ const handlePurchaseClick = async () => {
                             onChange={(e) => setRoomType(e.target.value)}
                           >
                             {roomTypes.map((rt) => (
-                              <option key={rt} value={rt} className="bg-white text-slate-900">
+                              <option
+                                key={rt}
+                                value={rt}
+                                className="bg-white text-slate-900"
+                              >
                                 {formatLabel(rt)}
                               </option>
                             ))}
@@ -962,7 +968,11 @@ const handlePurchaseClick = async () => {
                             onChange={(e) => setStyle(e.target.value)}
                           >
                             {styles.map((s) => (
-                              <option key={s} value={s} className="bg-white text-slate-900">
+                              <option
+                                key={s}
+                                value={s}
+                                className="bg-white text-slate-900"
+                              >
                                 {formatLabel(s)}
                               </option>
                             ))}
@@ -970,6 +980,7 @@ const handlePurchaseClick = async () => {
                         </div>
                       </div>
 
+                      {/* Main CTA + "upload different file" */}
                       <div className="flex flex-col items-center gap-3">
                         <button
                           className="w-1/2 max-w-[260px] rounded-2xl border border-slate-700 bg-slate-100 px-6 py-3 text-lg font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
@@ -999,14 +1010,14 @@ const handlePurchaseClick = async () => {
                     </>
                   )}
 
+                  {/* Tiny hint after any regeneration */}
                   {hasRegenerated && isProcessed && (
-                    <div className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                    <div className="text-center text-xs uppercase tracking-[0.4em] text-slate-500">
                       Use the arrows &amp; slider to explore staged variations.
                     </div>
                   )}
                 </div>
               )}
-            </section>
 
             {/* Right: explainer */}
             <aside className="space-y-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-200/60">
