@@ -1,111 +1,77 @@
-// pages/success.tsx
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
-import { Check, ImageIcon } from "lucide-react";
+// pages/api/post-checkout.ts
+import type { NextApiRequest, NextApiResponse } from "next";
+import Stripe from "stripe";
 
-export default function SuccessPage() {
-  const router = useRouter();
-  const { session_id } = router.query;
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 
-  const [finalUrl, setFinalUrl] = useState<string | null>(null);
-  const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
-  const [statusText, setStatusText] = useState("Verifying payment...");
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!router.isReady) return;
-
-    if (!session_id || typeof session_id !== "string") {
-      setStatusText("Missing session_id in the URL.");
-      setIsLoading(false);
-      return;
+type Resp =
+  | {
+      ok: true;
+      data: {
+        paid: boolean;
+        jobId: string | null;
+        selectedUrl: string | null;
+        selectedIndex: number | null;
+        receiptUrl: string | null;
+        invoiceUrl: string | null;
+        customerEmail: string | null;
+      };
     }
+  | { ok: false; error: string; raw?: any };
 
-    const run = async () => {
-      try {
-        const resp = await fetch(`/api/post-checkout?session_id=${encodeURIComponent(session_id)}`);
-        const json: any = await resp.json().catch(() => ({}));
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<Resp>
+) {
+  if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method not allowed" });
+  if (!STRIPE_SECRET_KEY) return res.status(500).json({ ok: false, error: "STRIPE_SECRET_KEY is not set." });
 
-        if (!resp.ok || !json.ok) {
-          setStatusText(json.error || "Unable to verify payment.");
-          setIsLoading(false);
-          return;
-        }
+  try {
+    const { session_id } = req.body as { session_id?: string };
+    if (!session_id) return res.status(400).json({ ok: false, error: "session_id is required" });
 
-        setFinalUrl(json?.data?.finalUrl || null);
-        setReceiptUrl(json?.data?.receiptUrl || null);
-        setStatusText(json?.data?.finalUrl ? "Your staged image is ready." : "Paid, but no final image was returned.");
-        setIsLoading(false);
-      } catch (e) {
-        console.error("[success] post-checkout error", e);
-        setStatusText("Unexpected error verifying payment.");
-        setIsLoading(false);
-      }
-    };
+    const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
 
-    run();
-  }, [router.isReady, session_id]);
+    // Expand payment_intent.latest_charge so we can safely pull receipt_url
+    const session = await stripe.checkout.sessions.retrieve(session_id, {
+      expand: ["payment_intent", "payment_intent.latest_charge"],
+    });
 
-  const handleDownload = async () => {
-    if (!finalUrl) return;
-    window.location.href = finalUrl; // simple + reliable
-  };
+    const paid = session.payment_status === "paid";
+    if (!paid) return res.status(400).json({ ok: false, error: "Payment not completed.", raw: session });
 
-  return (
-    <main className="min-h-screen bg-white text-slate-900">
-      <div className="mx-auto flex max-w-4xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-              <Check size={20} />
-            </span>
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Payment Successful</p>
-              <h1 className="mt-1 text-2xl font-semibold text-slate-900">Thank you for your purchase</h1>
-            </div>
-          </div>
-          <p className="mt-4 text-sm text-slate-600">{statusText}</p>
-        </div>
+    const meta: any = session.metadata || {};
+    const jobId = meta.jobId || null;
+    const selectedUrl = meta.selectedUrl || null;
 
-        <section className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
-          {isLoading && (
-            <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
-              <span className="h-12 w-12 animate-spin rounded-full border-2 border-transparent border-t-slate-500" />
-              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Finalizing...</p>
-            </div>
-          )}
+    const selectedIndexRaw = meta.selectedIndex;
+    const selectedIndex =
+      typeof selectedIndexRaw === "string" ? Number(selectedIndexRaw) : null;
 
-          {!isLoading && !finalUrl && (
-            <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
-              <ImageIcon size={36} className="text-slate-400" />
-              <p className="text-sm text-slate-600">We couldn&apos;t load a final image for this order.</p>
-            </div>
-          )}
+    const customerEmail = session.customer_details?.email || null;
 
-          {finalUrl && (
-            <>
-              <div className="relative rounded-3xl border border-slate-300 bg-white shadow-inner shadow-slate-300/60" style={{ aspectRatio: "1024 / 683" }}>
-                <img src={finalUrl} alt="Final staged" className="h-full w-full rounded-3xl object-cover" />
-              </div>
+    // Receipt URL (safe with expanded latest_charge)
+    let receiptUrl: string | null = null;
+    const pi = session.payment_intent as any;
+    if (pi?.latest_charge?.receipt_url) receiptUrl = pi.latest_charge.receipt_url;
 
-              <div className="flex flex-col items-center gap-3">
-                <button
-                  onClick={handleDownload}
-                  className="inline-flex items-center gap-2 rounded-2xl border border-emerald-700 bg-emerald-600 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-emerald-700 hover:border-emerald-800"
-                >
-                  Download Image
-                </button>
+    // Invoice URL: only exists if you’re using invoices/subscriptions; for one-time Checkout usually null
+    const invoiceUrl = (session as any)?.invoice?.hosted_invoice_url || null;
 
-                {receiptUrl && (
-                  <a className="text-xs uppercase tracking-[0.2em] text-slate-500 underline" href={receiptUrl} target="_blank" rel="noreferrer">
-                    View receipt
-                  </a>
-                )}
-              </div>
-            </>
-          )}
-        </section>
-      </div>
-    </main>
-  );
+    return res.status(200).json({
+      ok: true,
+      data: {
+        paid,
+        jobId,
+        selectedUrl,
+        selectedIndex: Number.isFinite(selectedIndex) ? selectedIndex : 0,
+        receiptUrl,
+        invoiceUrl,
+        customerEmail,
+      },
+    });
+  } catch (err: any) {
+    console.error("[post-checkout] error:", err);
+    return res.status(500).json({ ok: false, error: err?.message || "Internal server error" });
+  }
 }
