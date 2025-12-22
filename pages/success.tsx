@@ -1,17 +1,16 @@
 // pages/success.tsx
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { Check, ImageIcon, LogOut, Receipt } from "lucide-react";
+import { Check, ImageIcon } from "lucide-react";
 
 export default function SuccessPage() {
   const router = useRouter();
   const { session_id } = router.query;
 
-  const [statusText, setStatusText] = useState("Confirming payment...");
-  const [isLoading, setIsLoading] = useState(true);
-
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [finalUrl, setFinalUrl] = useState<string | null>(null);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [statusText, setStatusText] = useState("Verifying payment...");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -24,34 +23,22 @@ export default function SuccessPage() {
 
     const run = async () => {
       try {
-        setIsLoading(true);
-        setStatusText("Finalizing your order...");
-
         const resp = await fetch(`/api/post-checkout?session_id=${encodeURIComponent(session_id)}`);
-        const json = await resp.json().catch(() => ({}));
+        const json: any = await resp.json().catch(() => ({}));
 
         if (!resp.ok || !json.ok) {
-          setStatusText(json.error || "We couldn't finalize this order.");
+          setStatusText(json.error || "Unable to verify payment.");
           setIsLoading(false);
           return;
         }
 
-        const dl = json?.data?.downloadUrl || null;
-        const rc = json?.data?.receiptUrl || null;
-
-        setDownloadUrl(dl);
-        setReceiptUrl(rc);
-
-        if (!dl) {
-          setStatusText("Payment confirmed, but we couldn't load a download link yet.");
-        } else {
-          setStatusText("Your staged image is ready.");
-        }
-
+        setFinalUrl(json?.data?.finalUrl || null);
+        setReceiptUrl(json?.data?.receiptUrl || null);
+        setStatusText(json?.data?.finalUrl ? "Your staged image is ready." : "Paid, but no final image was returned.");
         setIsLoading(false);
       } catch (e) {
-        console.error("[success] error:", e);
-        setStatusText("Unexpected error while finalizing your order.");
+        console.error("[success] post-checkout error", e);
+        setStatusText("Unexpected error verifying payment.");
         setIsLoading(false);
       }
     };
@@ -60,12 +47,9 @@ export default function SuccessPage() {
   }, [router.isReady, session_id]);
 
   const handleDownload = async () => {
-    if (!downloadUrl) return;
-    window.open(downloadUrl, "_blank", "noopener,noreferrer");
+    if (!finalUrl) return;
+    window.location.href = finalUrl; // simple + reliable
   };
-
-  const handleStageMore = () => router.push("/");
-  const handleLogout = () => router.push("/");
 
   return (
     <main className="min-h-screen bg-white text-slate-900">
@@ -91,82 +75,32 @@ export default function SuccessPage() {
             </div>
           )}
 
-          {!isLoading && !downloadUrl && (
+          {!isLoading && !finalUrl && (
             <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
               <ImageIcon size={36} className="text-slate-400" />
-              <p className="text-sm text-slate-600">
-                We couldn&apos;t load a final image for this order.
-              </p>
-              {receiptUrl && (
-                <a
-                  className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-500"
-                  href={receiptUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <Receipt size={16} />
-                  View Receipt
-                </a>
-              )}
+              <p className="text-sm text-slate-600">We couldn&apos;t load a final image for this order.</p>
             </div>
           )}
 
-          {!isLoading && downloadUrl && (
+          {finalUrl && (
             <>
-              <div
-                className="relative rounded-3xl border border-slate-300 bg-white shadow-inner shadow-slate-300/60"
-                style={{ aspectRatio: "1024 / 683" }}
-              >
-                <img
-                  src={downloadUrl}
-                  alt="Final staged"
-                  width={1024}
-                  height={683}
-                  className="h-full w-full rounded-3xl object-cover"
-                />
-                <div className="absolute inset-0 rounded-3xl border border-slate-300/60" />
+              <div className="relative rounded-3xl border border-slate-300 bg-white shadow-inner shadow-slate-300/60" style={{ aspectRatio: "1024 / 683" }}>
+                <img src={finalUrl} alt="Final staged" className="h-full w-full rounded-3xl object-cover" />
               </div>
 
-              <div className="flex flex-col items-center gap-4 pt-4">
-                <div className="flex flex-wrap justify-center gap-3">
-                  <button
-                    className="inline-flex items-center gap-2 rounded-2xl border border-emerald-700 bg-emerald-600 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-emerald-700 hover:border-emerald-800"
-                    onClick={handleDownload}
-                    type="button"
-                  >
-                    <ImageIcon size={16} />
-                    Download Image
-                  </button>
-
-                  <button
-                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-900 bg-slate-900 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-black hover:border-black"
-                    onClick={handleStageMore}
-                    type="button"
-                  >
-                    Stage More Images
-                  </button>
-                </div>
+              <div className="flex flex-col items-center gap-3">
+                <button
+                  onClick={handleDownload}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-emerald-700 bg-emerald-600 px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-emerald-700 hover:border-emerald-800"
+                >
+                  Download Image
+                </button>
 
                 {receiptUrl && (
-                  <a
-                    className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-500"
-                    href={receiptUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <Receipt size={16} />
-                    View Receipt
+                  <a className="text-xs uppercase tracking-[0.2em] text-slate-500 underline" href={receiptUrl} target="_blank" rel="noreferrer">
+                    View receipt
                   </a>
                 )}
-
-                <button
-                  className="inline-flex items-center gap-2 rounded-2xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 transition hover:border-slate-500"
-                  onClick={handleLogout}
-                  type="button"
-                >
-                  <LogOut size={16} />
-                  Log Out
-                </button>
               </div>
             </>
           )}
