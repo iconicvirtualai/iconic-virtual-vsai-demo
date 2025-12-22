@@ -1,19 +1,7 @@
 // pages/index.tsx
-import {
-  ChangeEvent,
-  DragEvent,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  ImageIcon,
-  RefreshCw,
-  Sparkles,
-} from "lucide-react";
+import type { ChangeEvent, DragEvent } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, ImageIcon, RefreshCw, Sparkles } from "lucide-react";
 
 type JobStatus =
   | "uploading"
@@ -24,14 +12,13 @@ type JobStatus =
   | "paid_done";
 
 type Job = {
-  id: string;
+  id: string; // your renderId/jobId
   userId: string;
   status: JobStatus;
   room_type: string;
   style: string;
 
-  // ✅ IMPORTANT: We persist renderId so regenerate can work
-  // In your current backend, jobId === renderId, so we set renderId = id
+  // In your app jobId === renderId, we persist it anyway for clarity
   renderId?: string;
 
   source?: {
@@ -39,21 +26,15 @@ type Job = {
     storagePath?: string;
     publicUrl?: string;
   };
-  watermarked?: {
-    url: string;
-    storagePath?: string;
-  };
-  final?: {
-    url: string;
-    storagePath?: string;
-  };
+
+  watermarked?: { url: string; storagePath?: string };
+  final?: { url: string; storagePath?: string };
+
   error?: string;
 };
 
 const dragDropPatternSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><rect width="28" height="28" fill="none"/><path d="M14 0v28M0 14h28" stroke="%230f172a" stroke-width="0.5" opacity="0.2"/></svg>`;
-const DRAG_DROP_PATTERN = `data:image/svg+xml,${encodeURIComponent(
-  dragDropPatternSvg
-)}`;
+const DRAG_DROP_PATTERN = `data:image/svg+xml,${encodeURIComponent(dragDropPatternSvg)}`;
 
 const DEFAULT_SETTINGS = {
   heroTitle: "Transform vacant spaces into story-rich interiors",
@@ -61,16 +42,13 @@ const DEFAULT_SETTINGS = {
   heroCopy: "Upload a photo. Pick your mood. Watch the magic happen.",
   processLabel: "Stage Image",
   regenerateLabel: "Regenerate Image",
-  // ✅ changed per your request
-  purchaseLabel: "Purchase Staging – $5",
   layoutMode: "modern",
 };
 
-// File size logic
-const TEN_MB = 10 * 1024 * 1024; // 10 MB in bytes (UI limit)
-const RESIZE_THRESHOLD_BYTES = 4 * 1024 * 1024; // resize anything above ~4MB to avoid 413
-const TARGET_RESIZED_BYTES = 3 * 1024 * 1024; // target ~3MB after resize
-const HARD_MAX_FILE_SIZE = 50 * 1024 * 1024; // absolute cap at 50MB
+const TEN_MB = 10 * 1024 * 1024;
+const RESIZE_THRESHOLD_BYTES = 4 * 1024 * 1024;
+const TARGET_RESIZED_BYTES = 3 * 1024 * 1024;
+const HARD_MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 function formatLabel(value: string) {
   return value
@@ -78,10 +56,6 @@ function formatLabel(value: string) {
     .replace(/\s+/g, " ")
     .trim()
     .replace(/\w\S*/g, (txt) => txt[0].toUpperCase() + txt.slice(1));
-}
-
-function makeVariationKey(roomType: string, style: string) {
-  return `${roomType || "living"}::${style || "standard"}`;
 }
 
 async function fileToBase64(file: File): Promise<string> {
@@ -97,13 +71,11 @@ async function fileToBase64(file: File): Promise<string> {
   });
 }
 
-// Resize an image file client-side to be under `maxBytes` (approx), returning a new File
-async function resizeImageToMaxSize(
-  file: File,
-  maxBytes: number
-): Promise<File> {
+// Resize an image file client-side to be under `maxBytes` (approx)
+async function resizeImageToMaxSize(file: File, maxBytes: number): Promise<File> {
   return new Promise((resolve) => {
     const image = new Image();
+
     image.onload = () => {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
@@ -112,9 +84,9 @@ async function resizeImageToMaxSize(
         return;
       }
 
-      // Basic scaling: keep aspect ratio, max width 2400px
       const maxWidth = 2400;
       let { width, height } = image;
+
       if (width > maxWidth) {
         const scale = maxWidth / width;
         width = maxWidth;
@@ -127,7 +99,7 @@ async function resizeImageToMaxSize(
 
       let quality = 0.9;
 
-      const attemptBlob = () => {
+      const attempt = () => {
         canvas.toBlob(
           (blob) => {
             if (!blob) {
@@ -142,17 +114,18 @@ async function resizeImageToMaxSize(
                 { type: "image/jpeg" }
               );
               resolve(resizedFile);
-            } else {
-              quality -= 0.1;
-              attemptBlob();
+              return;
             }
+
+            quality -= 0.1;
+            attempt();
           },
           "image/jpeg",
           quality
         );
       };
 
-      attemptBlob();
+      attempt();
     };
 
     image.onerror = () => resolve(file);
@@ -161,6 +134,8 @@ async function resizeImageToMaxSize(
 }
 
 export default function Index() {
+  const settings = DEFAULT_SETTINGS;
+
   // Image + job state
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -183,15 +158,9 @@ export default function Index() {
   const [hasRegenerated, setHasRegenerated] = useState(false);
   const [sliderValue, setSliderValue] = useState(55);
 
-  // Variation URLs displayed in carousel
+  // Variations carousel
   const [variationUrls, setVariationUrls] = useState<string[]>([]);
   const [currentVariationIndex, setCurrentVariationIndex] = useState<number>(0);
-
-  // ✅ Cache variations per (roomType+style) so we don't keep paying for the same “regenerate”
-  const variationCacheRef = useRef<Map<string, string[]>>(new Map());
-  const activeVariationKeyRef = useRef<string>(
-    makeVariationKey("living", "standard")
-  );
 
   // Regenerate modal
   const [isRegenerateModalOpen, setIsRegenerateModalOpen] = useState(false);
@@ -202,9 +171,6 @@ export default function Index() {
   const userIdRef = useRef<string | null>(null);
   const originalImageUrlRef = useRef<string | null>(null);
 
-  const settings = DEFAULT_SETTINGS;
-
-  // Stable per-session user id
   const getUserId = () => {
     if (!userIdRef.current) {
       userIdRef.current =
@@ -218,37 +184,22 @@ export default function Index() {
     const fetchOptions = async () => {
       try {
         const resp = await fetch("/api/vsai-options");
-        const json = await resp.json();
+        const json = await resp.json().catch(() => ({}));
 
-        let data: any = null;
-        if (json && typeof json === "object") {
-          if ("ok" in json && json.ok && json.data) data = json.data;
-          else data = json;
-        }
+        const data = json?.ok ? json.data : json;
 
-        const rt: string[] =
-          data?.room_types || data?.roomTypes || data?.room_types_list || [];
-        const st: string[] =
-          data?.styles || data?.style_list || data?.design_styles || [];
+        const rt: string[] = data?.room_types || data?.roomTypes || [];
+        const st: string[] = data?.styles || data?.style_list || data?.design_styles || [];
 
         const finalRoomTypes =
-          rt.length > 0
-            ? rt
-            : ["living", "bed", "kitchen", "dining", "home_office"];
+          rt.length > 0 ? rt : ["living", "bed", "kitchen", "dining", "home_office"];
         const finalStyles =
-          st.length > 0
-            ? st
-            : ["standard", "modern", "scandinavian", "luxury"];
+          st.length > 0 ? st : ["standard", "modern", "scandinavian", "luxury"];
 
         setRoomTypes(finalRoomTypes);
         setStyles(finalStyles);
         setRoomType(finalRoomTypes[0]);
         setStyle(finalStyles[0]);
-
-        activeVariationKeyRef.current = makeVariationKey(
-          finalRoomTypes[0],
-          finalStyles[0]
-        );
       } catch (e) {
         console.error("Failed to fetch VSAI options", e);
         const fallbackRooms = ["living", "bed", "kitchen", "dining", "home_office"];
@@ -257,20 +208,16 @@ export default function Index() {
         setStyles(fallbackStyles);
         setRoomType(fallbackRooms[0]);
         setStyle(fallbackStyles[0]);
-
-        activeVariationKeyRef.current = makeVariationKey(
-          fallbackRooms[0],
-          fallbackStyles[0]
-        );
       }
     };
+
     fetchOptions();
   }, []);
 
   // Cleanup
   useEffect(() => {
     return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (previewUrl && previewUrl.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, [previewUrl]);
@@ -282,50 +229,30 @@ export default function Index() {
     }
   };
 
-  const setActiveVariations = (key: string, urls: string[]) => {
-    variationCacheRef.current.set(key, urls);
-    activeVariationKeyRef.current = key;
-
-    setVariationUrls(urls);
-    setCurrentVariationIndex(0);
-
-    // keep stagedUrl in sync with first item
-    setStagedUrl(urls[0] || null);
-  };
-
-  // Poll job status (for initial render and any server-side job)
   const startPolling = (
     jobIdToPoll: string,
     fallbackImageUrl: string,
-    options?: {
-      resetVariations?: boolean;
-      appendVariation?: boolean;
-      cacheKey?: string;
-    }
+    options?: { resetVariations?: boolean; appendVariation?: boolean }
   ) => {
     clearPolling();
 
     pollRef.current = setInterval(async () => {
       try {
         const jobResp = await fetch(`/api/jobs/${jobIdToPoll}`);
-        const jobJson = await jobResp.json();
+        const jobJson = await jobResp.json().catch(() => ({}));
 
         if (!jobResp.ok || !jobJson.ok) {
-          setStatusText(jobJson.error || "Status check failed.");
+          setStatusText(jobJson?.error || "Status check failed.");
           return;
         }
 
         const j: Job = jobJson.data;
 
-        // Keep job state updated
-        setJob((prev) => {
-          const merged: Job = {
-            ...(prev || ({} as Job)),
-            ...j,
-            source: j.source || prev?.source,
-          };
-          return merged;
-        });
+        setJob((prev) => ({
+          ...(prev || ({} as Job)),
+          ...j,
+          source: j.source || prev?.source,
+        }));
 
         if (j.status === "done" || j.status === "paid_done") {
           clearPolling();
@@ -337,13 +264,11 @@ export default function Index() {
           setIsProcessed(true);
           setStatusText("Staging complete.");
 
-          // Variation carousel behavior
           setVariationUrls((prev) => {
             if (options?.resetVariations || prev.length === 0) {
               setCurrentVariationIndex(0);
               return [imgUrl];
             }
-
             if (options?.appendVariation) {
               if (!prev.includes(imgUrl)) {
                 const next = [...prev, imgUrl];
@@ -351,7 +276,6 @@ export default function Index() {
                 return next;
               }
             }
-
             return prev;
           });
 
@@ -372,34 +296,32 @@ export default function Index() {
     }, 2500);
   };
 
-  // Slider "after" URL
   const currentFinalUrl = useMemo(() => {
     if (variationUrls.length > 0) {
-      return variationUrls[
-        Math.min(variationUrls.length - 1, Math.max(0, currentVariationIndex))
-      ];
+      const idx = Math.min(variationUrls.length - 1, Math.max(0, currentVariationIndex));
+      return variationUrls[idx];
     }
     return stagedUrl || previewUrl;
   }, [variationUrls, currentVariationIndex, stagedUrl, previewUrl]);
 
-  // Reset everything
+  const stagedOrPreview = currentFinalUrl || previewUrl;
+
   const handleResetFile = () => {
-    if (previewUrl && previewUrl.startsWith("blob:"))
-      URL.revokeObjectURL(previewUrl);
+    if (previewUrl && previewUrl.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
 
     setFile(null);
     setPreviewUrl(null);
     setStagedUrl(null);
+
     setJob(null);
     setJobId(null);
 
     setVariationUrls([]);
     setCurrentVariationIndex(0);
 
-    variationCacheRef.current.clear();
-
     setIsProcessed(false);
     setHasRegenerated(false);
+
     setStatusText("Awaiting upload");
   };
 
@@ -427,9 +349,7 @@ export default function Index() {
 
     setFile(workingFile);
 
-    if (previewUrl && previewUrl.startsWith("blob:"))
-      URL.revokeObjectURL(previewUrl);
-
+    if (previewUrl && previewUrl.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
     const url = URL.createObjectURL(workingFile);
     setPreviewUrl(url);
 
@@ -440,7 +360,6 @@ export default function Index() {
 
     setVariationUrls([]);
     setCurrentVariationIndex(0);
-    variationCacheRef.current.clear();
 
     setStatusText("Image selected.");
   };
@@ -488,9 +407,7 @@ export default function Index() {
 
       if (uploadResp.status === 413) {
         setIsProcessing(false);
-        setStatusText(
-          "Upload failed: image payload was too large for the server. Please try a smaller image."
-        );
+        setStatusText("Upload failed: image payload too large. Try a smaller image.");
         return;
       }
 
@@ -523,7 +440,6 @@ export default function Index() {
       const newJobId: string = renderJson.data.jobId;
       const initialStatus: JobStatus = renderJson.data.status || "rendering";
 
-      // ✅ In your backend: jobId === renderId, so set both
       const initialJob: Job = {
         id: newJobId,
         renderId: newJobId,
@@ -531,21 +447,14 @@ export default function Index() {
         status: initialStatus,
         room_type: roomType,
         style,
-        source: {
-          fileName: file.name,
-          publicUrl: imageUrl,
-        },
+        source: { fileName: file.name, publicUrl: imageUrl },
       };
 
       setJob(initialJob);
       setJobId(newJobId);
 
-      // cache key for this combo
-      const key = makeVariationKey(roomType, style);
-      activeVariationKeyRef.current = key;
-
-      // reset active variations for this combo
-      setActiveVariations(key, []);
+      setVariationUrls([]);
+      setCurrentVariationIndex(0);
 
       setStatusText("Staging in progress...");
       startPolling(newJobId, imageUrl, { resetVariations: true });
@@ -561,7 +470,7 @@ export default function Index() {
     void startRender();
   };
 
-  // Open regenerate modal (do NOT hit VSAI yet)
+  // Regenerate modal
   const openRegenerateModal = () => {
     const baseUrl = job?.source?.publicUrl || originalImageUrlRef.current;
     if (!baseUrl) {
@@ -575,23 +484,17 @@ export default function Index() {
     setIsRegenerateModalOpen(true);
   };
 
-  const closeRegenerateModal = () => {
-    setIsRegenerateModalOpen(false);
-  };
+  const closeRegenerateModal = () => setIsRegenerateModalOpen(false);
 
-  // Regenerate: request ONE new result and append it to the carousel (no polling if URL returned)
-  const handleRegenerateClick = async (
-    overrideRoomType?: string,
-    overrideStyle?: string
-  ) => {
-    const imageUrl =
-      job?.source?.publicUrl || originalImageUrlRef.current || "";
+  // Regenerate: request ONE new result and append to carousel
+  const handleRegenerateClick = async (overrideRoomType?: string, overrideStyle?: string) => {
+    const imageUrl = job?.source?.publicUrl || originalImageUrlRef.current || "";
     if (!imageUrl) {
       setStatusText("No original job/image to regenerate.");
       return;
     }
 
-    const renderId = (job as any)?.renderId || job?.id || "";
+    const renderId = job?.renderId || job?.id || "";
     if (!renderId) {
       setStatusText("Missing renderId.");
       return;
@@ -604,8 +507,7 @@ export default function Index() {
     setStatusText("Requesting a new variation from AI...");
 
     try {
-      const roomTypeValue =
-        overrideRoomType || roomType || job?.room_type || "living";
+      const roomTypeValue = overrideRoomType || roomType || job?.room_type || "living";
       const styleValue = overrideStyle || style || job?.style || "standard";
 
       const resp = await fetch("/api/vsai-variation", {
@@ -619,10 +521,9 @@ export default function Index() {
       });
 
       const json: any = await resp.json().catch(() => ({}));
-
       if (!resp.ok || !json.ok) {
         setIsProcessing(false);
-        setStatusText(json.error || "Variation request failed.");
+        setStatusText(json?.error || "Variation request failed.");
         return;
       }
 
@@ -630,16 +531,13 @@ export default function Index() {
 
       if (newUrl) {
         setVariationUrls((prev) => {
-          const originalAfter = (
-            prev[0] ||
-            currentFinalUrl ||
-            stagedUrl ||
-            ""
-          ).trim();
-
-          const seeded = originalAfter
-            ? [originalAfter, ...prev.filter((u) => u !== originalAfter)]
-            : [...prev];
+          // ensure we have at least the first staged URL in the carousel
+          const seeded =
+            prev.length > 0
+              ? prev
+              : stagedUrl
+              ? [stagedUrl]
+              : [];
 
           if (!seeded.includes(newUrl)) {
             const next = [...seeded, newUrl];
@@ -655,13 +553,14 @@ export default function Index() {
         setStagedUrl(newUrl);
         setHasRegenerated(true);
         setSliderValue(55);
+
         setIsProcessing(false);
         setIsProcessed(true);
         setStatusText("Staging complete.");
         return;
       }
 
-      // Fallback: if no URL yet, poll same renderId
+      // Fallback: poll the renderId to pick up the new output
       setHasRegenerated(true);
       setSliderValue(55);
       setStatusText("Staging in progress...");
@@ -669,7 +568,7 @@ export default function Index() {
     } catch (err: any) {
       console.error("[UI] handleRegenerateClick error", err);
       setIsProcessing(false);
-      setStatusText(err.message || "Variation failed.");
+      setStatusText(err?.message || "Variation failed.");
     }
   };
 
@@ -688,60 +587,52 @@ export default function Index() {
 
     setStatusText("Redirecting to checkout...");
 
-   try {
-  const selectedUrl =
-    variationUrls[currentVariationIndex] || stagedUrl || currentFinalUrl || "";
+    try {
+      const resp = await fetch("/api/stripe-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jobId: job.id,
+          selectedIndex: currentVariationIndex ?? 0,
+        }),
+      });
 
-  const resp = await fetch("/api/stripe-checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      jobId: job.id,
-      selectedIndex: currentVariationIndex ?? 0,
-      selectedUrl, // <-- ADD THIS
-    }),
-  });
+      const json: any = await resp.json().catch(() => ({}));
+      const checkoutUrl: string | undefined = json?.url;
 
-  const json: any = await resp.json().catch(() => ({}));
-  console.log("[UI] stripe-checkout response", resp.status, json);
+      if (!resp.ok || !checkoutUrl) {
+        setStatusText(json?.error || "Stripe checkout failed (missing url).");
+        return;
+      }
 
-  const checkoutUrl: string | undefined = json?.url;
+      // Escape Wix iframe if embedded
+      try {
+        if (window.top && window.top !== window.self) {
+          window.top.location.href = checkoutUrl;
+          return;
+        }
+      } catch {
+        // ignore
+      }
 
-  if (!resp.ok || !checkoutUrl) {
-    setStatusText(json?.error || "Stripe checkout failed (missing url).");
-    return;
-  }
-
-  try {
-    if (window.top && window.top !== window.self) {
-      window.top.location.href = checkoutUrl;
-      return;
+      window.location.href = checkoutUrl;
+    } catch (err) {
+      console.error("handlePurchaseClick error", err);
+      setStatusText("Unexpected error during checkout.");
     }
-  } catch {}
-
-  window.location.href = checkoutUrl;
-} catch (err) {
-  console.error("handlePurchaseClick error", err);
-  setStatusText("Unexpected error during checkout.");
-}
+  };
 
   const handlePrevVariation = () => {
     if (variationUrls.length <= 1) return;
-    setCurrentVariationIndex((prev) =>
-      prev === 0 ? variationUrls.length - 1 : prev - 1
-    );
+    setCurrentVariationIndex((prev) => (prev === 0 ? variationUrls.length - 1 : prev - 1));
   };
 
   const handleNextVariation = () => {
     if (variationUrls.length <= 1) return;
-    setCurrentVariationIndex((prev) =>
-      prev === variationUrls.length - 1 ? 0 : prev + 1
-    );
+    setCurrentVariationIndex((prev) => (prev === variationUrls.length - 1 ? 0 : prev + 1));
   };
 
-  const stagedOrPreview = currentFinalUrl || previewUrl;
-
-       return (
+  return (
     <>
       <main className="min-h-screen bg-white text-slate-900">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8 bg-transparent">
@@ -764,7 +655,7 @@ export default function Index() {
                 : "lg:grid-cols-[3fr_2fr]"
             }`}
           >
-            {/* Left: upload + preview */}
+            {/* Left */}
             <section className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
               <div className="space-y-6">
                 <p className="text-xs text-center uppercase tracking-[0.2em] text-slate-500">
@@ -776,9 +667,7 @@ export default function Index() {
                   <>
                     <div
                       className={`relative flex h-full min-h-[360px] flex-col items-center justify-center rounded-3xl border-2 border-dashed transition-all duration-300 ${
-                        isDragActive
-                          ? "border-slate-700 bg-slate-50"
-                          : "border-slate-300 bg-white"
+                        isDragActive ? "border-slate-700 bg-slate-50" : "border-slate-300 bg-white"
                       }`}
                       style={{
                         backgroundImage: isDragActive
@@ -811,7 +700,6 @@ export default function Index() {
                       </label>
                     </div>
 
-                    {/* Return to home link OUTSIDE the box */}
                     <div className="mt-4 text-center">
                       <a
                         href="https://www.iconicvirtual.ai"
@@ -831,15 +719,13 @@ export default function Index() {
                       <img
                         src={previewUrl || undefined}
                         alt="Before"
-                        className="h-full w-full object-cover grayscale-50 brightness-90"
+                        className="h-full w-full object-cover grayscale brightness-95"
                       />
 
                       {/* After overlay */}
                       <div
                         className="absolute inset-0 overflow-hidden"
-                        style={{
-                          clipPath: `inset(0 ${100 - sliderValue}% 0 0)`,
-                        }}
+                        style={{ clipPath: `inset(0 ${100 - sliderValue}% 0 0)` }}
                       >
                         <img
                           src={stagedOrPreview || undefined}
@@ -847,7 +733,7 @@ export default function Index() {
                           className="h-full w-full object-cover"
                         />
 
-                        {/* WATERMARK overlay on staged side */}
+                        {/* Watermark overlay */}
                         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
                           <span className="select-none text-2xl md:text-3xl font-semibold tracking-[0.2em] text-slate-900/70 mix-blend-multiply">
                             ICONICVIRTUAL.AI
@@ -855,7 +741,7 @@ export default function Index() {
                         </div>
                       </div>
 
-                      {/* Slider line */}
+                      {/* Slider line + knob */}
                       <div
                         className="absolute inset-y-0 -ml-0.5 hidden w-px bg-white/80 sm:block"
                         style={{ left: `${sliderValue}%` }}
@@ -895,9 +781,7 @@ export default function Index() {
                       min={10}
                       max={90}
                       value={sliderValue}
-                      onChange={(event) =>
-                        setSliderValue(Number(event.target.value))
-                      }
+                      onChange={(event) => setSliderValue(Number(event.target.value))}
                       className="w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-slate-500"
                     />
 
@@ -966,96 +850,85 @@ export default function Index() {
                 )}
               </div>
 
-              {/* Controls */}
-              {previewUrl && (
+              {/* Controls (only before render) */}
+              {previewUrl && !isProcessed && (
                 <div className="space-y-6">
-                  {!isProcessed && (
-                    <>
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-                            Room Type
-                          </p>
-                          <select
-                            id="vsai-room-type"
-                            className="mt-3 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
-                            value={roomType}
-                            onChange={(e) => setRoomType(e.target.value)}
-                          >
-                            {roomTypes.map((rt) => (
-                              <option
-                                key={rt}
-                                value={rt}
-                                className="bg-white text-slate-900"
-                              >
-                                {formatLabel(rt)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-                            Style Type
-                          </p>
-                          <select
-                            id="vsai-style"
-                            className="mt-3 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
-                            value={style}
-                            onChange={(e) => setStyle(e.target.value)}
-                          >
-                            {styles.map((s) => (
-                              <option
-                                key={s}
-                                value={s}
-                                className="bg-white text-slate-900"
-                              >
-                                {formatLabel(s)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-center gap-3">
-                        <button
-                          className="w-1/2 max-w-[260px] rounded-2xl border border-slate-700 bg-slate-100 px-6 py-3 text-lg font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
-                          onClick={handleProcessClick}
-                          type="button"
-                          disabled={!previewUrl || isProcessing}
-                        >
-                          {isProcessing ? (
-                            <span className="flex items-center justify-center gap-2">
-                              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-transparent border-t-slate-700" />
-                              Processing...
-                            </span>
-                          ) : (
-                            settings.processLabel
-                          )}
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={handleResetFile}
-                          className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500 underline"
-                          disabled={isProcessing}
-                        >
-                          upload a different file
-                        </button>
-                      </div>
-                    </>
-                  )}
-
-                  {hasRegenerated && isProcessed && (
-                    <div className="text-center text-xs uppercase tracking-[0.4em] text-slate-500">
-                      Use the arrows &amp; slider to explore staged variations.
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                        Room Type
+                      </p>
+                      <select
+                        id="vsai-room-type"
+                        className="mt-3 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
+                        value={roomType}
+                        onChange={(e) => setRoomType(e.target.value)}
+                      >
+                        {roomTypes.map((rt) => (
+                          <option key={rt} value={rt} className="bg-white text-slate-900">
+                            {formatLabel(rt)}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  )}
+
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                      <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                        Style Type
+                      </p>
+                      <select
+                        id="vsai-style"
+                        className="mt-3 w-full rounded-xl border border-slate-300 bg-transparent px-4 py-3 text-lg text-slate-900 outline-none transition focus:border-slate-500"
+                        value={style}
+                        onChange={(e) => setStyle(e.target.value)}
+                      >
+                        {styles.map((s) => (
+                          <option key={s} value={s} className="bg-white text-slate-900">
+                            {formatLabel(s)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-3">
+                    <button
+                      className="w-1/2 max-w-[260px] rounded-2xl border border-slate-700 bg-slate-100 px-6 py-3 text-lg font-semibold text-slate-900 transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={handleProcessClick}
+                      type="button"
+                      disabled={!previewUrl || isProcessing}
+                    >
+                      {isProcessing ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-transparent border-t-slate-700" />
+                          Processing...
+                        </span>
+                      ) : (
+                        settings.processLabel
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleResetFile}
+                      className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500 underline"
+                      disabled={isProcessing}
+                    >
+                      upload a different file
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Hint after regen */}
+              {hasRegenerated && isProcessed && (
+                <div className="text-center text-xs uppercase tracking-[0.4em] text-slate-500">
+                  Use the arrows &amp; slider to explore staged variations.
                 </div>
               )}
             </section>
 
-            {/* Right: explainer */}
+            {/* Right */}
             <aside className="space-y-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-200/60">
               <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
                 Key Features
@@ -1070,8 +943,7 @@ export default function Index() {
                   <span>
                     File size impacts render speed{" "}
                     <span className="text-slate-500">
-                      (file sizes over 10MB will be automatically resized for
-                      optimal use).
+                      (file sizes over 10MB will be automatically resized for optimal use).
                     </span>
                   </span>
                 </li>
@@ -1087,12 +959,9 @@ export default function Index() {
               <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
                 <p className="font-semibold text-slate-900">Tips</p>
                 <p className="mt-1 text-slate-600">
-                  Use high-resolution photos with neutral/bright lighting for
-                  best results.
+                  Use high-resolution photos with neutral/bright lighting for best results.
                 </p>
-                <p className="mt-1 text-slate-600">
-                  For fastest results, limit file sizes to 10MB.
-                </p>
+                <p className="mt-1 text-slate-600">For fastest results, limit file sizes to 10MB.</p>
               </div>
             </aside>
           </div>
@@ -1104,11 +973,9 @@ export default function Index() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
           <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl shadow-slate-900/30">
             <div className="mb-4 space-y-3">
-              <h3 className="text-xl font-semibold text-slate-900">
-                Choose new staging options
-              </h3>
+              <h3 className="text-xl font-semibold text-slate-900">Choose new staging options</h3>
               <p className="text-sm text-slate-600">
-                If you already generated this combo, we reuse it (no extra cost).
+                Pick a new room &amp; style. We’ll generate one new variation.
               </p>
             </div>
 
@@ -1127,11 +994,7 @@ export default function Index() {
                   onChange={(event) => setModalRoomType(event.target.value)}
                 >
                   {roomTypes.map((rt) => (
-                    <option
-                      key={rt}
-                      value={rt}
-                      className="bg-white text-slate-900"
-                    >
+                    <option key={rt} value={rt} className="bg-white text-slate-900">
                       {formatLabel(rt)}
                     </option>
                   ))}
@@ -1152,11 +1015,7 @@ export default function Index() {
                   onChange={(event) => setModalStyle(event.target.value)}
                 >
                   {styles.map((s) => (
-                    <option
-                      key={s}
-                      value={s}
-                      className="bg-white text-slate-900"
-                    >
+                    <option key={s} value={s} className="bg-white text-slate-900">
                       {formatLabel(s)}
                     </option>
                   ))}
