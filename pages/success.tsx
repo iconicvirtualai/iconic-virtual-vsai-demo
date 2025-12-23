@@ -85,7 +85,7 @@ export default function SuccessPage() {
 
         setDownloadUrl(selectedUrl);
         setReceiptUrl(json.data.receiptUrl || null);
-        setStatusText("Thank you for your Purchase.");
+        setStatusText("Your Staged Image is Ready.");
         setLoading(false);
       } catch (e) {
         console.error(e);
@@ -100,10 +100,10 @@ export default function SuccessPage() {
       <div className="mx-auto max-w-3xl px-6 py-16">
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/60">
           <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-            IconicVirtual.AI
+            Payment Successful
           </p>
 
-          <h1 className="text-xs uppercase tracking-[0.3em] text-slate-500"> Payment Successful</h1>
+          <h1 className="mt-1 text-2xl font-semibold text-slate-900"> Thank you for your purchase</h1>
           <p className="mt-4 text-slate-600">{statusText}</p>
 
           {downloadUrl && (
