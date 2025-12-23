@@ -585,21 +585,13 @@ const handlePurchaseClick = async () => {
     return;
   }
 
-  // ✅ The image the user is currently viewing in the slider/carousel
-  const selectedUrl =
-    variationUrls?.[currentVariationIndex] ||
-    currentFinalUrl ||
-    stagedUrl ||
-    null;
-
-  if (!selectedUrl) {
-    setStatusText("Missing selected image to purchase.");
-    return;
-  }
+  // prevent double-click / multiple checkout sessions
+  if (isProcessing) return;
+  setIsProcessing(true);
 
   setStatusText("Redirecting to checkout...");
 
-  // ✅ Popup opened synchronously to avoid blockers (Wix iframe often blocks redirects)
+  // Open tab synchronously to reduce blockers in iframes
   let popup: Window | null = null;
   try {
     popup = window.open("about:blank", "_blank");
@@ -611,24 +603,22 @@ const handlePurchaseClick = async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jobId: job.id,
-        selectedUrl,              // ✅ REQUIRED by your API
-        selectedIndex: currentVariationIndex ?? 0, // optional (nice for logging)
+        selectedIndex: currentVariationIndex ?? 0, // ✅ store just index
       }),
     });
 
     const json: any = await resp.json().catch(() => ({}));
-
-    // ✅ Support multiple possible shapes
     const checkoutUrl: string | undefined =
       json?.url || json?.data?.url || json?.data?.checkoutUrl;
 
     if (!resp.ok || !checkoutUrl) {
       try { popup?.close(); } catch {}
+      setIsProcessing(false);
       setStatusText(json?.error || "Stripe checkout failed.");
       return;
     }
 
-    // ✅ Best case: escape Wix iframe to top window
+    // Try to escape iframe to top
     try {
       if (window.top && window.top !== window.self) {
         window.top.location.href = checkoutUrl;
@@ -639,7 +629,7 @@ const handlePurchaseClick = async () => {
       // ignore
     }
 
-    // ✅ If top redirect is blocked, use the pre-opened tab
+    // Use pre-opened tab
     if (popup && !popup.closed) {
       try {
         popup.location.href = checkoutUrl;
@@ -649,14 +639,16 @@ const handlePurchaseClick = async () => {
       }
     }
 
-    // ✅ Final fallback
+    // Fallback
     window.location.href = checkoutUrl;
   } catch (err) {
     console.error("handlePurchaseClick error", err);
     try { popup?.close(); } catch {}
+    setIsProcessing(false);
     setStatusText("Unexpected error during checkout.");
   }
 };
+
   const handlePrevVariation = () => {
     if (variationUrls.length <= 1) return;
     setCurrentVariationIndex((prev) => (prev === 0 ? variationUrls.length - 1 : prev - 1));
