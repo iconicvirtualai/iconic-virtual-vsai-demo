@@ -595,9 +595,9 @@ const handlePurchaseClick = async () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        jobId: job.id,
-        selectedIndex,
-      }),
+  jobId: job.id,
+  selectedIndex: currentVariationIndex ?? 0,
+}),
     });
 
     const json: any = await resp.json().catch(() => ({}));
