@@ -85,7 +85,7 @@ export default function SuccessPage() {
 
         setDownloadUrl(selectedUrl);
         setReceiptUrl(json.data.receiptUrl || null);
-        setStatusText("Thank you! Your Image is Ready for Download.");
+        setStatusText("Thank you for your Purchase.");
         setLoading(false);
       } catch (e) {
         console.error(e);
@@ -103,7 +103,7 @@ export default function SuccessPage() {
             IconicVirtual.AI
           </p>
 
-          <h1 className="mt-3 text-3xl font-semibold">PAYMENT SUCCESSFUL</h1>
+          <h1 className="text-xs uppercase tracking-[0.3em] text-slate-500"> Payment Successful</h1>
           <p className="mt-4 text-slate-600">{statusText}</p>
 
           {downloadUrl && (
