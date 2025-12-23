@@ -19,11 +19,9 @@ type SmsArgs = {
 
 function canSendEmail() {
   return !!(
-    process.env.SMTP_HOST &&
-    process.env.SMTP_PORT &&
-    process.env.SMTP_USER &&
-    process.env.SMTP_PASS &&
-    process.env.EMAIL_FROM
+    process.env.GMAIL_SMTP_USER &&
+    process.env.GMAIL_SMTP_APP_PASSWORD &&
+    process.env.FROM_EMAIL
   );
 }
 
@@ -35,23 +33,29 @@ function canSendSms() {
   );
 }
 
-export async function sendOrderEmail(args: EmailArgs) {
+export async function sendOrderEmail(args: {
+  to: string;
+  downloadPageUrl: string;
+  receiptUrl: string | null;
+  jobId: string | null;
+  selectedIndex: number;
+}) {
   if (!canSendEmail()) {
-    console.warn("[notify] Email not configured; skipping email send");
+    console.warn("[notify] Gmail env not configured; skipping email send");
     return;
   }
 
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST!,
-    port: Number(process.env.SMTP_PORT!),
-    secure: String(process.env.SMTP_SECURE || "false") === "true",
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
-      user: process.env.SMTP_USER!,
-      pass: process.env.SMTP_PASS!,
+      user: process.env.GMAIL_SMTP_USER!,
+      pass: process.env.GMAIL_SMTP_APP_PASSWORD!,
     },
   });
 
-  const from = process.env.EMAIL_FROM!;
+  const from = process.env.FROM_EMAIL!;
   const subject = "Your IconicVirtual.AI staging is ready ✅";
 
   const html = `
