@@ -580,22 +580,15 @@ export default function Index() {
   };
 
 const handlePurchaseClick = async () => {
-  if (!job) {
+  if (!job?.id) {
     setStatusText("No staged image to purchase yet.");
     return;
   }
 
-  // prevent double-click / multiple checkout sessions
-  if (isProcessing) return;
-  setIsProcessing(true);
+  const selectedIndex =
+    typeof currentVariationIndex === "number" ? currentVariationIndex : 0;
 
   setStatusText("Redirecting to checkout...");
-
-  // Open tab synchronously to reduce blockers in iframes
-  let popup: Window | null = null;
-  try {
-    popup = window.open("about:blank", "_blank");
-  } catch {}
 
   try {
     const resp = await fetch("/api/stripe-checkout", {
@@ -603,48 +596,34 @@ const handlePurchaseClick = async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         jobId: job.id,
-        selectedIndex: currentVariationIndex ?? 0, // ✅ store just index
+        selectedIndex,
       }),
     });
 
     const json: any = await resp.json().catch(() => ({}));
-    const checkoutUrl: string | undefined =
-      json?.url || json?.data?.url || json?.data?.checkoutUrl;
+
+    // Your API returns: { ok: true, url: "https://checkout.stripe.com/..." }
+    const checkoutUrl: string | undefined = json?.url;
 
     if (!resp.ok || !checkoutUrl) {
-      try { popup?.close(); } catch {}
-      setIsProcessing(false);
       setStatusText(json?.error || "Stripe checkout failed.");
       return;
     }
 
-    // Try to escape iframe to top
+    // If embedded (Wix), escape iframe
     try {
       if (window.top && window.top !== window.self) {
         window.top.location.href = checkoutUrl;
-        try { popup?.close(); } catch {}
         return;
       }
     } catch {
       // ignore
     }
 
-    // Use pre-opened tab
-    if (popup && !popup.closed) {
-      try {
-        popup.location.href = checkoutUrl;
-        return;
-      } catch {
-        try { popup.close(); } catch {}
-      }
-    }
-
-    // Fallback
+    // Normal redirect
     window.location.href = checkoutUrl;
   } catch (err) {
     console.error("handlePurchaseClick error", err);
-    try { popup?.close(); } catch {}
-    setIsProcessing(false);
     setStatusText("Unexpected error during checkout.");
   }
 };
@@ -833,14 +812,9 @@ className="h-full w-full object-cover"                      />
                         Submit for Pro Staging
                       </a>
 
-                      <button
-                        type="button"
-                        onClick={handlePurchaseClick}
-                        disabled={isProcessing}
-                        className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900 disabled:opacity-50"
-                      >
-                        Purchase Staging – $5
-                      </button>
+<button type="button" onClick={handlePurchaseClick} disabled={isProcessing}>
+  Purchase Staging – $5
+</button>
                     </div>
 
                     <p className="mt-3 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
