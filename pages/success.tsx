@@ -7,23 +7,26 @@ type ApiResp =
       data: {
         paid: boolean;
         jobId: string | null;
-        selectedUrl: string | null;
-        selectedIndex: number | null;
+        selectedIndex: number;
+        selectedVariationId: string | null;
+        downloadUrl: string | null;
         receiptUrl: string | null;
         invoiceUrl: string | null;
         customerEmail: string | null;
+        customerPhone: string | null;
       };
     }
-  | { ok: false; error: string };
+  | { ok: false; error: string; raw?: any };
 
 export default function SuccessPage() {
   const [loading, setLoading] = useState(true);
   const [statusText, setStatusText] = useState("Finalizing your order...");
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [invoiceUrl, setInvoiceUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    // ✅ Client-only: safe for next export/prerender
+    // ✅ client-only
     const params = new URLSearchParams(window.location.search);
     const session_id = params.get("session_id");
 
@@ -35,11 +38,10 @@ export default function SuccessPage() {
 
     (async () => {
       try {
-        const resp = await fetch("/api/post-checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ session_id }),
-        });
+        // ✅ GET endpoint with session_id in query string
+        const resp = await fetch(
+          `/api/post-checkout?session_id=${encodeURIComponent(session_id)}`
+        );
 
         const json: ApiResp = await resp
           .json()
@@ -51,16 +53,19 @@ export default function SuccessPage() {
           return;
         }
 
-        const selectedUrl = json.data.selectedUrl;
+        const url = json.data.downloadUrl;
 
-        if (!selectedUrl) {
-          setStatusText("Payment succeeded, but we couldn't find the purchased image.");
+        if (!url) {
+          setStatusText(
+            "Payment succeeded, but we couldn't locate the final image yet. Please refresh in 10–20 seconds."
+          );
           setLoading(false);
           return;
         }
 
-        setDownloadUrl(selectedUrl);
+        setDownloadUrl(url);
         setReceiptUrl(json.data.receiptUrl || null);
+        setInvoiceUrl(json.data.invoiceUrl || null);
         setStatusText("Payment complete. Your download is ready.");
         setLoading(false);
       } catch (e) {
@@ -102,21 +107,42 @@ export default function SuccessPage() {
                 Download your image
               </a>
 
-              {receiptUrl && (
-                <a
-                  href={receiptUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block text-center text-xs uppercase tracking-[0.3em] text-slate-500 underline"
-                >
-                  View receipt
-                </a>
-              )}
+              <div className="flex flex-col gap-2 pt-2">
+                {receiptUrl && (
+                  <a
+                    href={receiptUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block text-center text-xs uppercase tracking-[0.3em] text-slate-500 underline"
+                  >
+                    View receipt
+                  </a>
+                )}
+
+                {invoiceUrl && (
+                  <a
+                    href={invoiceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block text-center text-xs uppercase tracking-[0.3em] text-slate-500 underline"
+                  >
+                    View invoice
+                  </a>
+                )}
+              </div>
             </div>
           )}
 
           {!loading && !downloadUrl && (
-            <div className="mt-8">
+            <div className="mt-8 space-y-3">
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
+              >
+                Refresh
+              </button>
+
               <a
                 href="/"
                 className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
