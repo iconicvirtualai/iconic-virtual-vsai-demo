@@ -100,7 +100,7 @@ export default function SuccessPage() {
       <div className="mx-auto max-w-3xl px-6 py-16">
         <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/60">
           <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-            Iconic Virtual.AI
+            IconicVirtual.AI
           </p>
 
           <h1 className="mt-3 text-3xl font-semibold">PAYMENT SUCCESSFUL</h1>
