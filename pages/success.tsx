@@ -27,7 +27,27 @@ export default function SuccessPage() {
   const [statusText, setStatusText] = useState("Finalizing your order...");
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const downloadFile = async () => {
+    if (!downloadUrl) return;
 
+    try {
+      const resp = await fetch(downloadUrl);
+      const blob = await resp.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = "iconic-virtual-staged.jpg";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(objectUrl);
+    } catch (e) {
+      console.error(e);
+      window.open(downloadUrl, "_blank", "noopener,noreferrer");
+    }
+  };
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const session_id = params.get("session_id");
