@@ -116,14 +116,13 @@ export default function SuccessPage() {
                 />
               </div>
 
-              <a
-                href={downloadUrl}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={downloadFile}
                 className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:border-slate-900"
               >
                 Download your image
-              </a>
+              </button>
 
               {receiptUrl && (
                 <a
