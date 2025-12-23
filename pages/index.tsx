@@ -812,7 +812,12 @@ className="h-full w-full object-cover"                      />
                         Submit for Pro Staging
                       </a>
 
-<button type="button" onClick={handlePurchaseClick} disabled={isProcessing}>
+<button
+  type="button"
+  onClick={handlePurchaseClick}
+  disabled={isProcessing || !job}
+  className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:bg-slate-800 hover:border-slate-900 disabled:opacity-50"
+>
   Purchase Staging – $5
 </button>
                     </div>
