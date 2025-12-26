@@ -51,4 +51,59 @@ function makeTokenDownloadUrl(bucketName: string, storagePath: string, token: st
   )}?alt=media&token=${token}`;
 }
 
-/
+/**
+ * Uploads a buffer to Firebase Storage and returns a stable download URL.
+ * This is public via token (no auth) and does NOT expire.
+ */
+export async function firebaseUpload(
+  buffer: Buffer,
+  destPath: string,
+  contentType = "image/jpeg"
+) {
+  const file = bucket.file(destPath);
+
+  // token makes a stable download URL
+  const token = crypto.randomUUID();
+
+  await file.save(buffer, {
+    contentType,
+    resumable: false,
+    metadata: {
+      metadata: {
+        firebaseStorageDownloadTokens: token,
+      },
+    },
+  });
+
+  return {
+    publicUrl: makeTokenDownloadUrl(bucket.name, destPath, token),
+    storagePath: destPath,
+  };
+}
+
+/**
+ * Optional: if you ever need a Signed URL instead.
+ * (Typically longer + includes query signature, but sometimes useful.)
+ */
+export async function firebaseUploadSignedUrl(
+  buffer: Buffer,
+  destPath: string,
+  contentType = "image/jpeg"
+) {
+  const file = bucket.file(destPath);
+
+  await file.save(buffer, {
+    contentType,
+    resumable: false,
+  });
+
+  const [signedUrl] = await file.getSignedUrl({
+    action: "read",
+    expires: "2500-01-01",
+  });
+
+  return {
+    publicUrl: signedUrl,
+    storagePath: destPath,
+  };
+}
