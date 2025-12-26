@@ -3,6 +3,13 @@ import type { ChangeEvent, DragEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, ImageIcon, RefreshCw, Sparkles } from "lucide-react";
 
+type CartItem = {
+  jobId: string;
+  selectedIndex: number;
+  selectedUrl: string;
+  addedAt: number;
+};
+
 type JobStatus =
   | "uploading"
   | "rendering"
@@ -44,6 +51,12 @@ const DEFAULT_SETTINGS = {
   regenerateLabel: "Regenerate Image",
   layoutMode: "modern",
 };
+
+const CART_KEY = "iv_cart_v1";
+
+const [cartItems, setCartItems] = useState<CartItem[]>([]);
+const [isAddMoreModalOpen, setIsAddMoreModalOpen] = useState(false);
+const pendingPurchaseRef = useRef<CartItem | null>(null);
 
 const TEN_MB = 10 * 1024 * 1024;
 const RESIZE_THRESHOLD_BYTES = 4 * 1024 * 1024;
