@@ -510,15 +510,17 @@ export default function Index() {
       const roomTypeValue = overrideRoomType || roomType || job?.room_type || "living";
       const styleValue = overrideStyle || style || job?.style || "standard";
 
-      const resp = await fetch("/api/vsai-variation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          renderId,
-          room_type: roomTypeValue,
-          style: styleValue,
-        }),
-      });
+     const resp = await fetch("/api/vsai-variation", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    userId: getUserId(),   
+    renderId,
+    room_type: roomTypeValue,
+    style: styleValue,
+  }),
+});
+
 
       const json: any = await resp.json().catch(() => ({}));
       if (!resp.ok || !json.ok) {
