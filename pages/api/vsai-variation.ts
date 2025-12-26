@@ -76,7 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     const config: any = {
       type: "staging",
       output_resolution: "default",
-      add_virtually_staged_watermark: true,
+      add_virtually_staged_watermark: false,
     };
 
     const shouldAddFurniture = addFurniture !== false; // default true
