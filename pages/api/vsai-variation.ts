@@ -59,6 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   try {
     const { renderId, room_type, style, removeExistingFurniture, addFurniture, baseVariationId } =
       req.body as {
+        userId?: string;
         renderId?: string;
         room_type?: string;
         style?: string;
