@@ -54,10 +54,6 @@ const DEFAULT_SETTINGS = {
 
 const CART_KEY = "iv_cart_v1";
 
-const [cartItems, setCartItems] = useState<CartItem[]>([]);
-const [isAddMoreModalOpen, setIsAddMoreModalOpen] = useState(false);
-const pendingPurchaseRef = useRef<CartItem | null>(null);
-
 const TEN_MB = 10 * 1024 * 1024;
 const RESIZE_THRESHOLD_BYTES = 4 * 1024 * 1024;
 const TARGET_RESIZED_BYTES = 3 * 1024 * 1024;
@@ -157,6 +153,11 @@ export default function Index() {
   const [job, setJob] = useState<Job | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [statusText, setStatusText] = useState("Awaiting upload");
+
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+const [isAddMoreModalOpen, setIsAddMoreModalOpen] = useState(false);
+const pendingPurchaseRef = useRef<CartItem | null>(null);
+
 
   // VSAI options
   const [roomTypes, setRoomTypes] = useState<string[]>([]);
