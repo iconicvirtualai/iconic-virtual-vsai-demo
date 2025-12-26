@@ -1,6 +1,6 @@
 // pages/api/vsai-create.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { db } from "../../lib/firebaseadmin";
+import { db } from "../../lib/firebaseAdmin";
 
 const VSAI_BASE = "https://api.virtualstagingai.app/v1";
 const VSAI_API_KEY =
