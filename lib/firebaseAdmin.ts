@@ -2,16 +2,43 @@
 import * as admin from "firebase-admin";
 
 const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
-const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
 
 if (!serviceAccountJson) {
   throw new Error("FIREBASE_SERVICE_ACCOUNT env var is missing");
 }
-if (!storageBucket) {
-  throw new Error("FIREBASE_STORAGE_BUCKET env var is missing");
-}
 
-const serviceAccount = JSON.parse(serviceAccountJson);
+const serviceAccount = JSON.parse(serviceAccountJson) as admin.ServiceAccount & {
+  project_id?: string;
+};
+
+const normalizeBucketName = (value?: string | null) =>
+  (value || "")
+    .trim()
+    .replace(/^gs:\/\//i, "")
+    .replace(/^https?:\/\/storage.googleapis.com\//i, "")
+    .replace(/\/+$/, "");
+
+const resolveBucketName = () => {
+  const fromEnv = normalizeBucketName(process.env.FIREBASE_STORAGE_BUCKET);
+  if (fromEnv) return fromEnv;
+
+  const projectId =
+    serviceAccount.project_id ||
+    process.env.GCLOUD_PROJECT ||
+    process.env.GOOGLE_CLOUD_PROJECT ||
+    process.env.PROJECT_ID;
+
+  return projectId ? normalizeBucketName(`${projectId}.appspot.com`) : "";
+};
+
+// Prefer explicit env, then any known project id, otherwise fail fast with guidance
+const storageBucket = resolveBucketName();
+
+if (!storageBucket) {
+  throw new Error(
+    "FIREBASE_STORAGE_BUCKET is missing. Provide a bucket name (no gs://) or set FIREBASE_SERVICE_ACCOUNT.project_id."
+  );
+}
 
 const app =
   admin.apps.length > 0

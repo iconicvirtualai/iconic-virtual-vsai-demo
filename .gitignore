@@ -1,0 +1,16 @@
+# Dependency directories
+node_modules
+
+# Build output
+.next
+out
+
+# Env and local config
+.env
+.env.local
+.env.*.local
+
+# IDE/editor
+.vscode
+.idea
+.DS_Store
