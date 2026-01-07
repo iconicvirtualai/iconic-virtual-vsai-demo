@@ -72,6 +72,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // IMPORTANT: We do NOT store selectedUrl in metadata (Stripe 500-char limit).
       // Instead we send a link back to your own success page using session_id.
       const downloadPageUrl = `${SITE_URL}/success?session_id=${encodeURIComponent(full.id)}`;
+      // ✅ Idempotent write: store order record for portal/admin
+      const upsertPayload = {
+        stripe_session_id: full.id,
+        stripe_payment_intent_id: typeof full.payment_intent === "string" ? full.payment_intent : (full.payment_intent as any)?.id || null,
+        amount_total: full.amount_total ?? null,
+        currency: full.currency ?? null,
+        payment_status: full.payment_status ?? null,
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
+        job_id: jobId,
+        selected_index: Number.isFinite(selectedIndex) ? selectedIndex : 0,
+        receipt_url: receiptUrl,
+        download_page_url: downloadPageUrl,
+      };
+
+      const { error: orderErr } = await supabaseAdmin
+        .from("orders")
+        .upsert(upsertPayload, { onConflict: "stripe_session_id" });
+
+      if (orderErr) {
+        console.error("[stripe-webhook] order upsert error:", orderErr);
+        // don't fail the webhook if storage hiccups; Stripe will retry anyway
+      }
 
       // Send email (if configured + email exists)
       if (customerEmail) {
