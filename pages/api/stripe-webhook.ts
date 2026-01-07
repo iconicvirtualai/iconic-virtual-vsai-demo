@@ -2,6 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 import { sendOrderEmail, sendOrderSms } from "../../lib/notify";
+import { supabaseAdmin } from "../../lib/supabaseAdmin";
 
 export const config = {
   api: {
