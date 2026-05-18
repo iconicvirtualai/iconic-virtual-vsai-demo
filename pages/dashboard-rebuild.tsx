@@ -329,7 +329,7 @@ export default function DashboardRebuild() {
                 </h4>
 
                 <p className="text-gray-600 mb-6">
-                  JPG or PNG • Single or bulk upload • Up to 30 images
+                  JPG or PNG • Drag & drop your listing photo
                 </p>
 
                 <button className="px-8 py-4 rounded-2xl bg-black text-white font-semibold hover:bg-gray-800">
@@ -598,8 +598,3 @@ export default function DashboardRebuild() {
     </div>
   )
 }
-```
-
-
-
-DONE.
