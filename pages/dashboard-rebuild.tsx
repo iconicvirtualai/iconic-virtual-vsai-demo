@@ -407,9 +407,9 @@ export default function DashboardRebuild() {
                       className="flex items-center gap-4 p-5 rounded-2xl border bg-gray-50"
                     >
 
-                      <input type=\"checkbox\" className=\"w-5 h-5\" />
+                      <input type="checkbox" className="w-5 h-5" />
 
-                      <span className=\"font-medium\">
+                      <span className="font-medium">
                         {option}
                       </span>
 
@@ -425,18 +425,18 @@ export default function DashboardRebuild() {
 
               {/* CREDIT ESTIMATE */}
 
-              <div className=\"bg-gray-100 rounded-3xl p-6 flex flex-wrap items-center justify-between gap-5 mb-8\">
+              <div className="bg-gray-100 rounded-3xl p-6 flex flex-wrap items-center justify-between gap-5 mb-8">
 
-                <div className=\"text-lg\">
+                <div className="text-lg">
                   Estimated Credits:
-                  <strong className=\"ml-2\">
+                  <strong className="ml-2">
                     12
                   </strong>
                 </div>
 
-                <div className=\"text-lg\">
+                <div className="text-lg">
                   Queue Time:
-                  <strong className=\"ml-2\">
+                  <strong className="ml-2">
                     ~45 Seconds
                   </strong>
                 </div>
@@ -445,7 +445,7 @@ export default function DashboardRebuild() {
 
 
 
-              <button className=\"w-full px-8 py-5 rounded-2xl bg-black text-white text-lg font-semibold hover:bg-gray-800\">
+              <button className="w-full px-8 py-5 rounded-2xl bg-black text-white text-lg font-semibold hover:bg-gray-800">
                 Generate AI Staging
               </button>
 
@@ -455,41 +455,41 @@ export default function DashboardRebuild() {
 
             {/* PROCESSING QUEUE */}
 
-            <div className=\"bg-white border rounded-3xl p-8\">
+            <div className="bg-white border rounded-3xl p-8">
 
-              <h3 className=\"text-2xl font-bold mb-6\">
+              <h3 className="text-2xl font-bold mb-6">
                 Processing Queue
               </h3>
 
 
-              <div className=\"space-y-5\">
+              <div className="space-y-5">
 
-                <div className=\"border rounded-2xl p-5\">
+                <div className="border rounded-2xl p-5">
 
-                  <div className=\"flex items-center justify-between mb-4\">
+                  <div className="flex items-center justify-between mb-4">
 
                     <div>
 
-                      <div className=\"font-semibold\">
+                      <div className="font-semibold">
                         living-room-main.jpg
                       </div>
 
-                      <div className=\"text-sm text-gray-500\">
+                      <div className="text-sm text-gray-500">
                         Luxury Modern
                       </div>
 
                     </div>
 
-                    <div className=\"text-sm font-medium\">
+                    <div className="text-sm font-medium">
                       Rendering...
                     </div>
 
                   </div>
 
 
-                  <div className=\"w-full h-3 bg-gray-200 rounded-full overflow-hidden\">
+                  <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
 
-                    <div className=\"h-full bg-black w-[72%]\"></div>
+                    <div className="h-full bg-black w-[72%]"></div>
 
                   </div>
 
@@ -503,15 +503,15 @@ export default function DashboardRebuild() {
 
             {/* RECENT RENDERS */}
 
-            <div className=\"bg-white border rounded-3xl p-8\">
+            <div className="bg-white border rounded-3xl p-8">
 
-              <div className=\"flex items-center justify-between mb-8\">
+              <div className="flex items-center justify-between mb-8">
 
-                <h3 className=\"text-2xl font-bold\">
+                <h3 className="text-2xl font-bold">
                   Recent AI Renders
                 </h3>
 
-                <button className=\"px-5 py-3 rounded-xl border hover:bg-gray-100\">
+                <button className="px-5 py-3 rounded-xl border hover:bg-gray-100">
                   View All
                 </button>
 
@@ -519,41 +519,41 @@ export default function DashboardRebuild() {
 
 
 
-              <div className=\"grid md:grid-cols-2 gap-8\">
+              <div className="grid md:grid-cols-2 gap-8">
 
-                <div className=\"border rounded-3xl overflow-hidden\">
+                <div className="border rounded-3xl overflow-hidden">
 
-                  <div className=\"grid grid-cols-2\">
+                  <div className="grid grid-cols-2">
 
-                    <div className=\"h-[280px] bg-gray-200 flex items-center justify-center\">
+                    <div className="h-[280px] bg-gray-200 flex items-center justify-center">
                       BEFORE
                     </div>
 
-                    <div className=\"h-[280px] bg-gradient-to-br from-purple-300 to-purple-500 flex items-center justify-center text-white font-bold\">
+                    <div className="h-[280px] bg-gradient-to-br from-purple-300 to-purple-500 flex items-center justify-center text-white font-bold">
                       AFTER
                     </div>
 
                   </div>
 
 
-                  <div className=\"p-6\">
+                  <div className="p-6">
 
-                    <div className=\"flex items-center justify-between mb-5\">
+                    <div className="flex items-center justify-between mb-5">
 
                       <div>
 
-                        <h4 className=\"font-bold text-lg\">
+                        <h4 className="font-bold text-lg">
                           Luxury Modern
                         </h4>
 
-                        <div className=\"text-sm text-gray-500\">
+                        <div className="text-sm text-gray-500">
                           Watermarked Preview
                         </div>
 
                       </div>
 
 
-                      <div className=\"px-4 py-2 rounded-full bg-black text-white text-xs font-semibold\">
+                      <div className="px-4 py-2 rounded-full bg-black text-white text-xs font-semibold">
                         PREVIEW
                       </div>
 
@@ -561,21 +561,21 @@ export default function DashboardRebuild() {
 
 
 
-                    <div className=\"grid grid-cols-2 gap-3\">
+                    <div className="grid grid-cols-2 gap-3">
 
-                      <button className=\"px-4 py-3 rounded-xl bg-black text-white font-medium\">
+                      <button className="px-4 py-3 rounded-xl bg-black text-white font-medium">
                         Download HD
                       </button>
 
-                      <button className=\"px-4 py-3 rounded-xl border hover:bg-gray-100\">
+                      <button className="px-4 py-3 rounded-xl border hover:bg-gray-100">
                         Variation
                       </button>
 
-                      <button className=\"px-4 py-3 rounded-xl border hover:bg-gray-100\">
+                      <button className="px-4 py-3 rounded-xl border hover:bg-gray-100">
                         Twilight
                       </button>
 
-                      <button className=\"px-4 py-3 rounded-xl border hover:bg-gray-100\">
+                      <button className="px-4 py-3 rounded-xl border hover:bg-gray-100">
                         Favorite
                       </button>
 
