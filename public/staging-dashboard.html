@@ -3,25 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StageAI — Virtual Staging Platform</title>
+<title>Iconic Virtual.AI — Virtual Staging Platform</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
-    --primary: #6366f1;
-    --primary-dark: #4f46e5;
-    --primary-light: #eef2ff;
-    --accent: #f59e0b;
+    --primary: #8B7355;
+    --primary-dark: #6B5842;
+    --primary-light: #F5F0EB;
+    --accent: #A0896E;
     --success: #10b981;
     --danger: #ef4444;
     --warning: #f59e0b;
-    --bg: #f8fafc;
+    --bg: #FAF8F5;
     --surface: #ffffff;
     --border: #e2e8f0;
     --text: #0f172a;
-    --text-muted: #64748b;
+    --text-muted: #8B7A6B;
     --text-light: #94a3b8;
-    --sidebar-bg: #1e293b;
-    --sidebar-active: #334155;
+    --sidebar-bg: #2C2420;
+    --sidebar-active: #4A3F37;
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -52,7 +52,7 @@
   }
   .logo-icon {
     width: 32px; height: 32px;
-    background: linear-gradient(135deg, var(--primary), var(--accent));
+    background: linear-gradient(135deg, #8B7355, #A0896E);
     border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
     color: white; font-size: 18px;
@@ -81,7 +81,7 @@
   /* ============ HERO ============ */
   .hero {
     padding: 80px 48px 100px; text-align: center;
-    background: linear-gradient(180deg, #fafbff 0%, #ffffff 100%);
+    background: linear-gradient(180deg, #FAF8F5 0%, #ffffff 100%);
   }
   .hero-badge {
     display: inline-block; background: var(--primary-light); color: var(--primary-dark);
@@ -93,7 +93,7 @@
     margin-bottom: 24px; letter-spacing: -1.5px;
   }
   .hero h1 .accent {
-    background: linear-gradient(135deg, var(--primary), var(--accent));
+    background: linear-gradient(135deg, #8B7355, #A0896E);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
   }
   .hero p { font-size: 20px; color: var(--text-muted); max-width: 640px; margin: 0 auto 40px; }
@@ -125,7 +125,7 @@
   .feature-card h3 { font-size: 20px; margin-bottom: 12px; }
   .feature-card p { color: var(--text-muted); font-size: 15px; }
 
-  .examples-section { background: #fafbff; }
+  .examples-section { background: #FAF8F5; }
   .examples-grid {
     display: grid; grid-template-columns: repeat(3, 1fr);
     gap: 20px; max-width: 1200px; margin: 0 auto;
@@ -142,7 +142,7 @@
     color: white; font-weight: 600; position: relative; font-size: 13px;
   }
   .ba-img.before { background: linear-gradient(135deg, #cbd5e1, #94a3b8); }
-  .ba-img.after { background: linear-gradient(135deg, #ddd6fe, #a78bfa); }
+  .ba-img.after { background: linear-gradient(135deg, #D4C5A9, #A0896E); }
   .ba-img .tag {
     position: absolute; top: 8px; left: 8px;
     background: rgba(0,0,0,0.5); padding: 4px 10px;
@@ -162,7 +162,7 @@
   }
   .price-card.featured {
     border: 2px solid var(--primary); transform: scale(1.03);
-    box-shadow: 0 20px 40px rgba(99,102,241,0.15);
+    box-shadow: 0 20px 40px rgba(139,115,85,0.15);
   }
   .price-card.featured::before {
     content: 'MOST POPULAR';
@@ -185,7 +185,7 @@
   .check { color: var(--success); font-weight: 700; }
   .price-card .btn { width: 100%; justify-content: center; }
 
-  .footer { background: #0f172a; color: #cbd5e1; padding: 64px 48px 32px; }
+  .footer { background: #2C2420; color: #cbd5e1; padding: 64px 48px 32px; }
   .footer-grid {
     display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
     gap: 48px; max-width: 1200px; margin: 0 auto 48px;
@@ -199,8 +199,8 @@
   .footer-col a { color: #94a3b8; text-decoration: none; font-size: 14px; cursor: pointer; }
   .footer-col a:hover { color: white; }
   .footer-bottom {
-    border-top: 1px solid #334155; padding-top: 24px;
-    text-align: center; color: #64748b; font-size: 13px;
+    border-top: 1px solid #4A3F37; padding-top: 24px;
+    text-align: center; color: #8B7A6B; font-size: 13px;
     max-width: 1200px; margin: 0 auto;
   }
 
@@ -208,7 +208,7 @@
   .auth-wrap {
     min-height: 100vh; display: flex; align-items: center;
     justify-content: center; padding: 48px 24px;
-    background: linear-gradient(135deg, #eef2ff 0%, #fef3c7 100%);
+    background: linear-gradient(135deg, #F5F0EB 0%, #E8DFD3 100%);
   }
   .auth-card {
     background: white; padding: 48px; border-radius: 20px;
@@ -262,13 +262,13 @@
   .sidebar-logo {
     color: white; font-size: 20px; font-weight: 800;
     padding: 0 12px 24px; display: flex; align-items: center;
-    gap: 10px; border-bottom: 1px solid #334155; margin-bottom: 16px;
+    gap: 10px; border-bottom: 1px solid #4A3F37; margin-bottom: 16px;
     cursor: pointer;
   }
   .sidebar-section { margin-bottom: 24px; }
   .sidebar-section-title {
     font-size: 11px; text-transform: uppercase;
-    letter-spacing: 1px; color: #64748b; padding: 0 12px 8px;
+    letter-spacing: 1px; color: #8B7A6B; padding: 0 12px 8px;
   }
   .sidebar-link {
     display: flex; align-items: center; gap: 12px;
@@ -284,7 +284,7 @@
     font-size: 11px; padding: 2px 8px; border-radius: 100px; font-weight: 700;
   }
   .credit-widget {
-    background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    background: linear-gradient(135deg, #8B7355, #A0896E);
     padding: 16px; border-radius: 12px; margin-top: 24px;
   }
   .credit-widget .label { font-size: 12px; color: rgba(255,255,255,0.8); }
@@ -324,7 +324,7 @@
   }
   .avatar {
     width: 40px; height: 40px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary), var(--accent));
+    background: linear-gradient(135deg, #8B7355, #A0896E);
     color: white; display: flex; align-items: center; justify-content: center;
     font-weight: 700; cursor: pointer;
   }
@@ -408,7 +408,7 @@
   .link-text:hover { text-decoration: underline; }
 
   .quick-action-card {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #8B7355, #A0896E);
     color: white; padding: 32px; border-radius: 16px;
     margin-bottom: 24px;
     display: flex; justify-content: space-between; align-items: center;
@@ -438,11 +438,11 @@
   }
   .pill-success { background: #d1fae5; color: #065f46; }
   .pill-processing { background: #fef3c7; color: #92400e; }
-  .pill-queued { background: #e0e7ff; color: #3730a3; }
+  .pill-queued { background: #F0EBE3; color: #6B5842; }
   .pill-failed { background: #fee2e2; color: #991b1b; }
   .thumb {
     width: 48px; height: 36px;
-    background: linear-gradient(135deg, #ddd6fe, #a78bfa);
+    background: linear-gradient(135deg, #D4C5A9, #A0896E);
     border-radius: 6px; display: inline-block;
     vertical-align: middle; margin-right: 10px;
   }
@@ -488,11 +488,11 @@
   .style-card.selected { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
   .style-preview {
     height: 120px;
-    background: linear-gradient(135deg, #ddd6fe, #a78bfa);
+    background: linear-gradient(135deg, #D4C5A9, #A0896E);
     display: flex; align-items: center; justify-content: center;
     color: white; font-weight: 600;
   }
-  .style-card.modern .style-preview { background: linear-gradient(135deg, #e2e8f0, #64748b); }
+  .style-card.modern .style-preview { background: linear-gradient(135deg, #e2e8f0, #8B7A6B); }
   .style-card.scandi .style-preview { background: linear-gradient(135deg, #fef3c7, #fbbf24); }
   .style-card.coastal .style-preview { background: linear-gradient(135deg, #cffafe, #06b6d4); }
   .style-card.boho .style-preview { background: linear-gradient(135deg, #fed7aa, #f97316); }
@@ -606,7 +606,7 @@
     color: white; font-weight: 600; position: relative; font-size: 14px;
   }
   .image-half.before-img { background: linear-gradient(135deg, #cbd5e1, #94a3b8); }
-  .image-half.after-img { background: linear-gradient(135deg, #ddd6fe, #8b5cf6); }
+  .image-half.after-img { background: linear-gradient(135deg, #D4C5A9, #8B7355); }
   .image-half .badge {
     position: absolute; top: 12px; left: 12px;
     background: rgba(0,0,0,0.6); color: white;
@@ -663,7 +663,7 @@
   }
   .tutorial-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
   .tutorial-thumb {
-    height: 160px; background: linear-gradient(135deg, var(--primary), #8b5cf6);
+    height: 160px; background: linear-gradient(135deg, #8B7355, #A0896E);
     display: flex; align-items: center; justify-content: center;
     font-size: 40px; color: white;
   }
@@ -689,7 +689,7 @@
   .faq-toggle { transition: transform 0.2s; font-size: 20px; color: var(--text-muted); }
 
   .referral-hero {
-    background: linear-gradient(135deg, #f59e0b, #ef4444);
+    background: linear-gradient(135deg, #A0896E, #6B5842);
     color: white; padding: 40px; border-radius: 16px; margin-bottom: 24px;
     text-align: center;
   }
@@ -721,7 +721,7 @@
   }
   .bulk-item:last-child { border: none; }
   .bulk-item-thumb {
-    width: 48px; height: 36px; background: linear-gradient(135deg, #ddd6fe, #a78bfa);
+    width: 48px; height: 36px; background: linear-gradient(135deg, #D4C5A9, #A0896E);
     border-radius: 6px; flex-shrink: 0;
   }
   .bulk-item-name { flex: 1; font-size: 14px; }
@@ -775,13 +775,13 @@
 <div id="userMenu" class="user-menu">
   <div class="user-menu-header">
     <div class="name">Jane Doe</div>
-    <div class="email">jane@brokerage.com</div>
+    <div class="email">you@brokerage.com</div>
   </div>
   <div class="user-menu-item" onclick="showSub('settings'); closeDropdowns();">👤 Profile</div>
   <div class="user-menu-item" onclick="showSub('billing'); closeDropdowns();">💳 Billing</div>
   <div class="user-menu-item" onclick="showSub('settings'); closeDropdowns();">⚙️ Settings</div>
   <div class="user-menu-item" onclick="showSub('support'); closeDropdowns();">💬 Help & Support</div>
-  <div class="user-menu-item" style="border-top: 1px solid var(--border); color: var(--danger);" onclick="goto('landing'); closeDropdowns(); toast('Logged out');">↩️ Log Out</div>
+  <div class="user-menu-item" style="border-top: 1px solid var(--border); color: var(--danger);" onclick="window.location.href='/index.html';">↩️ Log Out</div>
 </div>
 
 <!-- ============ MODALS ============ -->
@@ -794,7 +794,7 @@
 <!-- ============================================ -->
 <div id="landing" class="screen active">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon">✦</div>StageAI</div>
+    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -863,7 +863,7 @@
   <footer class="footer">
     <div class="footer-grid">
       <div class="footer-col">
-        <div class="logo" style="color:white; margin-bottom: 16px;"><div class="logo-icon">✦</div>StageAI</div>
+        <div class="logo" style="color:white; margin-bottom: 16px;"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
         <p style="color: #94a3b8; font-size: 14px;">AI virtual staging for real estate professionals. Trusted by 50,000+ agents worldwide.</p>
       </div>
       <div class="footer-col">
@@ -893,7 +893,7 @@
           <li><a onclick="goto('faq')">FAQ</a></li>
           <li><a onclick="goto('login')">Tutorials</a></li>
           <li><a onclick="toast('Status: All systems operational')">Status</a></li>
-          <li><a onclick="toast('Email: support@stageai.com')">Email Support</a></li>
+          <li><a onclick="toast('Email: info@iconicvirtual.ai')">Email Support</a></li>
         </ul>
       </div>
       <div class="footer-col">
@@ -907,7 +907,7 @@
         </ul>
       </div>
     </div>
-    <div class="footer-bottom">© 2026 StageAI, Inc. All rights reserved. Made with ✦ in San Francisco.</div>
+    <div class="footer-bottom">© 2026 IconicVirtual.AI All rights reserved. Made with ✦ in San Francisco.</div>
   </footer>
 </div>
 
@@ -916,7 +916,7 @@
 <!-- ============================================ -->
 <div id="examples" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon">✦</div>StageAI</div>
+    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -960,7 +960,7 @@
 <!-- ============================================ -->
 <div id="pricing" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon">✦</div>StageAI</div>
+    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -1035,7 +1035,7 @@
 <!-- ============================================ -->
 <div id="howitworks" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon">✦</div>StageAI</div>
+    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -1078,7 +1078,7 @@
 <!-- ============================================ -->
 <div id="faq" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon">✦</div>StageAI</div>
+    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -1132,7 +1132,7 @@
   <div class="auth-wrap">
     <div class="auth-card">
       <div class="logo" style="justify-content: center; margin-bottom: 24px;" onclick="goto('landing')">
-        <div class="logo-icon">✦</div>StageAI
+        <div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div> ICONIC VIRTUAL.AI
       </div>
       <h2>Welcome back</h2>
       <p class="subtitle">Sign in to your account to continue staging.</p>
@@ -1170,7 +1170,7 @@
   <div class="auth-wrap">
     <div class="auth-card">
       <div class="logo" style="justify-content: center; margin-bottom: 24px;" onclick="goto('landing')">
-        <div class="logo-icon">✦</div>StageAI
+        <div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div> ICONIC VIRTUAL.AI
       </div>
       <h2>Create your account</h2>
       <p class="subtitle">Get 3 free stagings — no credit card required.</p>
@@ -1210,7 +1210,7 @@
 <div id="dashboard" class="screen">
   <div class="dashboard">
     <aside class="sidebar">
-      <div class="sidebar-logo" onclick="showSub('home')"><div class="logo-icon">✦</div>StageAI</div>
+      <div class="sidebar-logo" onclick="showSub('home')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
       <div class="sidebar-section">
         <div class="sidebar-section-title">Workspace</div>
         <a class="sidebar-link active" id="link-home" onclick="showSub('home')"><span class="icon">🏠</span> Dashboard</a>
@@ -1231,7 +1231,7 @@
         <a class="sidebar-link" id="link-tutorials" onclick="showSub('tutorials')"><span class="icon">📚</span> Tutorials</a>
         <a class="sidebar-link" id="link-support" onclick="showSub('support')"><span class="icon">💬</span> Support</a>
         <a class="sidebar-link" id="link-refer" onclick="showSub('refer')"><span class="icon">🎁</span> Refer & Earn</a>
-        <a class="sidebar-link" onclick="goto('landing'); toast('Logged out')"><span class="icon">↩️</span> Log Out</a>
+        <a class="sidebar-link" onclick="window.location.href='/index.html';"><span class="icon">↩️</span> Log Out</a>
       </div>
       <div class="credit-widget">
         <div class="label">Credits remaining</div>
@@ -1629,7 +1629,7 @@
 
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
           <div class="panel" style="cursor:pointer; margin-bottom:0;" onclick="openProjectDetail('1247 Oak Street')">
-            <div style="height: 120px; background: linear-gradient(135deg, #ddd6fe, #a78bfa); border-radius: 8px; margin-bottom: 16px;"></div>
+            <div style="height: 120px; background: linear-gradient(135deg, #D4C5A9, #A0896E); border-radius: 8px; margin-bottom: 16px;"></div>
             <h4>1247 Oak Street</h4>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 12px;">Brooklyn, NY 11201</p>
             <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted);">
@@ -1865,7 +1865,7 @@
               <div class="form-group"><label>Last name</label><input type="text" value="Doe"></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label>Email</label><input type="email" value="jane@brokerage.com"></div>
+              <div class="form-group"><label>Email</label><input type="email" value="you@brokerage.com"></div>
               <div class="form-group"><label>Phone</label><input type="tel" value="(555) 123-4567"></div>
             </div>
             <div class="form-row">
@@ -2057,7 +2057,7 @@
           <table class="data-table">
             <thead><tr><th>Member</th><th>Email</th><th>Role</th><th>Stagings</th><th>Last Active</th><th></th></tr></thead>
             <tbody>
-              <tr><td><div style="display: flex; align-items: center; gap: 12px;"><div class="avatar" style="width: 32px; height: 32px; font-size: 13px;">JD</div>Jane Doe (You)</div></td><td>jane@brokerage.com</td><td><span class="pill pill-success">Admin</span></td><td>28</td><td>Now</td><td>—</td></tr>
+              <tr><td><div style="display: flex; align-items: center; gap: 12px;"><div class="avatar" style="width: 32px; height: 32px; font-size: 13px;">JD</div>Jane Doe (You)</div></td><td>you@brokerage.com</td><td><span class="pill pill-success">Admin</span></td><td>28</td><td>Now</td><td>—</td></tr>
               <tr><td><div style="display: flex; align-items: center; gap: 12px;"><div class="avatar" style="width: 32px; height: 32px; font-size: 13px; background: #fbbf24;">MR</div>Mike Rivera</div></td><td>mike@brokerage.com</td><td><span class="pill pill-queued">Editor</span></td><td>14</td><td>2h ago</td><td><a class="link-text" onclick="openModal('manageMember')">Manage</a></td></tr>
               <tr><td><div style="display: flex; align-items: center; gap: 12px;"><div class="avatar" style="width: 32px; height: 32px; font-size: 13px; background: #10b981;">SL</div>Sarah Lin</div></td><td>sarah@brokerage.com</td><td><span class="pill pill-queued">Editor</span></td><td>6</td><td>Yesterday</td><td><a class="link-text" onclick="openModal('manageMember')">Manage</a></td></tr>
             </tbody>
@@ -2222,7 +2222,7 @@
           <h2>Give 10, Get 10</h2>
           <p style="opacity:0.95;font-size:16px;">Friends get 10 free credits • You earn 10 credits when they make their first purchase</p>
           <div class="referral-link-box">
-            <input type="text" value="stageai.com/r/jane-doe-42" readonly id="referLink">
+            <input type="text" value="iconicvirtual.ai/r/you" readonly id="referLink">
             <button onclick="copyRefer()">Copy</button>
           </div>
         </div>
