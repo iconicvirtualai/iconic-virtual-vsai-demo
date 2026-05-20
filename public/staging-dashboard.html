@@ -2417,6 +2417,10 @@ function goWizardStep(n) {
 function toggleBulkMode() {
   const s = document.getElementById('singleMode');
   const b = document.getElementById('bulkMode');
+  if (!s || !b) {
+    toast('Bulk upload is available in the staging workspace');
+    return;
+  }
   if (s.style.display === 'none') {
     s.style.display = 'block';
     b.style.display = 'none';
@@ -2432,7 +2436,12 @@ function simulateUpload() {
   goWizardStep(2);
 }
 function simulateBulkUpload() {
-  document.getElementById('bulkList').style.display = 'block';
+  const bulkList = document.getElementById('bulkList');
+  if (!bulkList) {
+    toast('Use the staging workspace to upload multiple images');
+    return;
+  }
+  bulkList.style.display = 'block';
   toast('5 files uploaded — choose styles');
 }
 function submitStaging() {
@@ -2549,12 +2558,16 @@ function realHandleFile(file) {
   var reader = new FileReader();
   reader.onload = function(e) {
     _realPreviewUrl = e.target.result;
-    document.getElementById('realUploadZone').style.display = 'none';
-    document.getElementById('uploadPreview').style.display = 'none';
-    document.getElementById('uploadProgress').style.display = 'block';
-    
+    var upZone = document.getElementById('realUploadZone');
+    var upPrev = document.getElementById('uploadPreview');
+    var upProg = document.getElementById('uploadProgress');
+
+    if(upZone) upZone.style.display = 'none';
+    if(upPrev) upPrev.style.display = 'none';
+    if(upProg) upProg.style.display = 'block';
+
     var bar = document.getElementById('uploadBar');
-    bar.style.width = '30%';
+    if(bar) bar.style.width = '30%';
     
     // Extract base64 and upload
     var b64 = e.target.result.split(',')[1];
@@ -2563,29 +2576,38 @@ function realHandleFile(file) {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ userId: _userId, fileName: file.name, fileBase64: b64 })
-    }).then(function(r){ bar.style.width='70%'; return r.json(); })
+    }).then(function(r){ if(bar) bar.style.width='70%'; return r.json(); })
     .then(function(data) {
-      bar.style.width = '100%';
+      if(bar) bar.style.width = '100%';
       _realImageUrl = data.publicUrl || data.url || data.imageUrl || '';
       if (_realImageUrl || data.ok !== false) {
         setTimeout(function(){
-          document.getElementById('uploadProgress').style.display = 'none';
-          document.getElementById('uploadPreview').style.display = 'block';
-          document.getElementById('uploadPreviewImg').src = _realPreviewUrl;
-          document.getElementById('uploadFileName').textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB) — Uploaded!';
+          var upProg = document.getElementById('uploadProgress');
+          var upPrev = document.getElementById('uploadPreview');
+          var prevImg = document.getElementById('uploadPreviewImg');
+          var fileName = document.getElementById('uploadFileName');
+
+          if(upProg) upProg.style.display = 'none';
+          if(upPrev) upPrev.style.display = 'block';
+          if(prevImg) prevImg.src = _realPreviewUrl;
+          if(fileName) fileName.textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB) — Uploaded!';
           toast('Photo uploaded! Click Next to choose style.');
-          
+
           // Auto-advance to step 2 after a beat
           setTimeout(function(){ realGoStep(2); }, 800);
         }, 400);
       } else {
-        document.getElementById('uploadProgress').style.display = 'none';
-        document.getElementById('realUploadZone').style.display = 'block';
+        var upProg = document.getElementById('uploadProgress');
+        var upZone = document.getElementById('realUploadZone');
+        if(upProg) upProg.style.display = 'none';
+        if(upZone) upZone.style.display = 'block';
         toast('Upload failed: ' + (data.error || 'Please try again'), 'error');
       }
     }).catch(function(err) {
-      document.getElementById('uploadProgress').style.display = 'none';
-      document.getElementById('realUploadZone').style.display = 'block';
+      var upProg = document.getElementById('uploadProgress');
+      var upZone = document.getElementById('realUploadZone');
+      if(upProg) upProg.style.display = 'none';
+      if(upZone) upZone.style.display = 'block';
       toast('Upload error: ' + err.message, 'error');
     });
   };
@@ -2593,46 +2615,63 @@ function realHandleFile(file) {
 }
 
 function realGoStep(step) {
-  document.getElementById('realStep1').style.display = step===1?'block':'none';
-  document.getElementById('realStep2').style.display = step===2?'block':'none';
-  document.getElementById('realStep3').style.display = step===3?'block':'none';
-  
+  var s1 = document.getElementById('realStep1');
+  var s2 = document.getElementById('realStep2');
+  var s3 = document.getElementById('realStep3');
+
+  if(s1) s1.style.display = step===1?'block':'none';
+  if(s2) s2.style.display = step===2?'block':'none';
+  if(s3) s3.style.display = step===3?'block':'none';
+
   for(var i=1;i<=3;i++){
     var ind = document.getElementById('step-ind-'+i);
     if(ind) ind.style.background = i<=step?'var(--primary)':'var(--border)';
   }
-  
+
   if (step===2) {
-    document.getElementById('realThumbImg').src = _realPreviewUrl;
-    document.getElementById('realThumbName').textContent = 'Your uploaded photo';
+    var thumb = document.getElementById('realThumbImg');
+    var name = document.getElementById('realThumbName');
+    if(thumb) thumb.src = _realPreviewUrl;
+    if(name) name.textContent = 'Your uploaded photo';
   }
 }
 
 function realSubmitStaging() {
   if (!_realImageUrl) { toast('Please upload a photo first', 'error'); return; }
-  
-  var roomType = document.getElementById('realRoomType').value;
-  var style = document.getElementById('realStyle').value;
+
+  var roomTypeEl = document.getElementById('realRoomType');
+  var styleEl = document.getElementById('realStyle');
   var btn = document.getElementById('realSubmitBtn');
+
+  if (!roomTypeEl || !styleEl || !btn) {
+    toast('Staging workspace not fully loaded', 'error');
+    return;
+  }
+
+  var roomType = roomTypeEl.value;
+  var style = styleEl.value;
   btn.disabled = true; btn.textContent = 'Processing...';
-  
+
   realGoStep(3);
-  document.getElementById('processingView').style.display = 'block';
-  document.getElementById('resultView').style.display = 'none';
-  
+  var procView = document.getElementById('processingView');
+  var resView = document.getElementById('resultView');
+  if(procView) procView.style.display = 'block';
+  if(resView) resView.style.display = 'none';
+
   var renderBar = document.getElementById('renderBar');
-  renderBar.style.width = '15%';
+  if(renderBar) renderBar.style.width = '15%';
   
   fetch('/api/vsai-create', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ userId: _userId, imageUrl: _realImageUrl, room_type: roomType, style: style })
-  }).then(function(r){ renderBar.style.width='30%'; return r.json(); })
+  }).then(function(r){ if(renderBar) renderBar.style.width='30%'; return r.json(); })
   .then(function(data) {
     if (data.ok !== false && (data.renderId || data.render_id || data.jobId || data.id)) {
       _realJobId = data.renderId || data.render_id || data.jobId || data.id;
-      renderBar.style.width = '40%';
-      document.getElementById('processingStatus').textContent = 'AI is working its magic...';
+      if(renderBar) renderBar.style.width = '40%';
+      var procStatus = document.getElementById('processingStatus');
+      if(procStatus) procStatus.textContent = 'AI is working its magic...';
       realPollResult(_realJobId, 0);
     } else {
       toast('Staging failed: ' + (data.error || 'Unknown error'), 'error');
@@ -2648,34 +2687,39 @@ function realSubmitStaging() {
 
 function realPollResult(jobId, attempts) {
   if (attempts > 90) {
-    document.getElementById('processingStatus').textContent = 'Taking longer than expected. Check back shortly.';
+    var procStatus = document.getElementById('processingStatus');
+    if(procStatus) procStatus.textContent = 'Taking longer than expected. Check back shortly.';
     return;
   }
-  
+
   var renderBar = document.getElementById('renderBar');
-  renderBar.style.width = Math.min(40 + attempts * 1, 90) + '%';
+  if(renderBar) renderBar.style.width = Math.min(40 + attempts * 1, 90) + '%';
   
   fetch('/api/vsai-render?renderId=' + jobId)
     .then(function(r){ return r.json(); })
     .then(function(data) {
       var status = (data.status || '').toLowerCase();
       if (status === 'completed' || status === 'done' || data.outputs || data.output) {
-        renderBar.style.width = '100%';
+        if(renderBar) renderBar.style.width = '100%';
         var outputUrl = '';
         if (data.outputs && data.outputs.length) outputUrl = data.outputs[0].url || data.outputs[0];
         else if (data.output) outputUrl = data.output;
         else if (data.url) outputUrl = data.url;
         else if (data.result) outputUrl = data.result;
-        
+
         setTimeout(function(){ realShowResult(outputUrl); }, 500);
       } else if (status === 'failed' || status === 'error') {
         toast('Staging failed. Please try again.', 'error');
-        document.getElementById('realSubmitBtn').disabled = false;
-        document.getElementById('realSubmitBtn').textContent = 'Stage This Photo \u2728';
+        var submitBtn = document.getElementById('realSubmitBtn');
+        if(submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Stage This Photo \u2728';
+        }
         realGoStep(2);
       } else {
         var msgs = ['AI is analyzing the room...','Placing furniture...','Adding finishing touches...','Almost there...'];
-        document.getElementById('processingStatus').textContent = msgs[Math.min(Math.floor(attempts/5), msgs.length-1)];
+        var procStatus = document.getElementById('processingStatus');
+        if(procStatus) procStatus.textContent = msgs[Math.min(Math.floor(attempts/5), msgs.length-1)];
         setTimeout(function(){ realPollResult(jobId, attempts+1); }, 2000);
       }
     })
@@ -2685,23 +2729,34 @@ function realPollResult(jobId, attempts) {
 }
 
 function realShowResult(outputUrl) {
-  document.getElementById('processingView').style.display = 'none';
-  document.getElementById('resultView').style.display = 'block';
-  document.getElementById('beforeImg').src = _realPreviewUrl;
-  document.getElementById('afterImg').src = outputUrl;
-  document.getElementById('downloadBtn').href = outputUrl;
+  var procView = document.getElementById('processingView');
+  var resView = document.getElementById('resultView');
+  var beforeImg = document.getElementById('beforeImg');
+  var afterImg = document.getElementById('afterImg');
+  var dlBtn = document.getElementById('downloadBtn');
+
+  if(procView) procView.style.display = 'none';
+  if(resView) resView.style.display = 'block';
+  if(beforeImg) beforeImg.src = _realPreviewUrl;
+  if(afterImg) afterImg.src = outputUrl;
+  if(dlBtn) dlBtn.href = outputUrl;
   toast('Your staged photo is ready!', 'success');
-  
+
   var btn = document.getElementById('realSubmitBtn');
   if(btn){ btn.disabled = false; btn.textContent = 'Stage This Photo \u2728'; }
 }
 
 function realReset() {
   _realImageUrl = ''; _realPreviewUrl = ''; _realJobId = '';
-  document.getElementById('realUploadZone').style.display = 'block';
-  document.getElementById('uploadPreview').style.display = 'none';
-  document.getElementById('uploadProgress').style.display = 'none';
-  document.getElementById('realFileInput').value = '';
+  var upZone = document.getElementById('realUploadZone');
+  var upPrev = document.getElementById('uploadPreview');
+  var upProg = document.getElementById('uploadProgress');
+  var fileInput = document.getElementById('realFileInput');
+
+  if(upZone) upZone.style.display = 'block';
+  if(upPrev) upPrev.style.display = 'none';
+  if(upProg) upProg.style.display = 'none';
+  if(fileInput) fileInput.value = '';
   realGoStep(1);
 }
 
