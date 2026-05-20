@@ -8,7 +8,7 @@ interface OrderData {
   email: string;
   phone?: string;
   notes?: string;
-  orderType: "staging" | "photography" | "video" | "mixed";
+  orderType: "ai-staging" | "pro-staging" | "video-editing";
   createdAt: string;
 }
 

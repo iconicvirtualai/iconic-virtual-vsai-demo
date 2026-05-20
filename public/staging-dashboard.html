@@ -2357,29 +2357,23 @@ const MODALS = {
     <div id="newOrderStep2" style="display: none;">
       <p style="color: var(--text-muted); margin-bottom: 20px;">Select what type of order you'd like to create:</p>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-        <div class="style-card clickable" onclick="selectOrderType('staging');" id="orderType-staging" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
+      <div style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px;">
+        <div class="style-card clickable" onclick="selectOrderType('ai-staging');" id="orderType-ai-staging" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
           <div style="font-size: 32px; margin-bottom: 8px;">✨</div>
           <div style="font-weight: 600; margin-bottom: 4px;">AI Staging</div>
-          <div style="font-size: 12px; color: var(--text-muted);">Stage rooms with furniture</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Automatic furniture staging</div>
         </div>
 
-        <div class="style-card clickable" onclick="selectOrderType('photography');" id="orderType-photography" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
-          <div style="font-size: 32px; margin-bottom: 8px;">📸</div>
-          <div style="font-weight: 600; margin-bottom: 4px;">Photography</div>
-          <div style="font-size: 12px; color: var(--text-muted);">Professional photos only</div>
+        <div class="style-card clickable" onclick="selectOrderType('pro-staging');" id="orderType-pro-staging" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
+          <div style="font-size: 32px; margin-bottom: 8px;">👔</div>
+          <div style="font-weight: 600; margin-bottom: 4px;">Pro Staging Editing Services</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Professional manual editing</div>
         </div>
 
-        <div class="style-card clickable" onclick="selectOrderType('video');" id="orderType-video" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
-          <div style="font-size: 32px; margin-bottom: 8px;">🎥</div>
-          <div style="font-weight: 600; margin-bottom: 4px;">Video Tour</div>
-          <div style="font-size: 12px; color: var(--text-muted);">Virtual walkthrough</div>
-        </div>
-
-        <div class="style-card clickable" onclick="selectOrderType('mixed');" id="orderType-mixed" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
-          <div style="font-size: 32px; margin-bottom: 8px;">🎨</div>
-          <div style="font-weight: 600; margin-bottom: 4px;">Mixed Package</div>
-          <div style="font-size: 12px; color: var(--text-muted);">Staging + photos + video</div>
+        <div class="style-card clickable" onclick="selectOrderType('video-editing');" id="orderType-video-editing" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
+          <div style="font-size: 32px; margin-bottom: 8px;">🎬</div>
+          <div style="font-weight: 600; margin-bottom: 4px;">Video Editing</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Professional video production</div>
         </div>
       </div>
 
@@ -2869,10 +2863,9 @@ function selectOrderType(type) {
   updateOrderTypeSelection();
 
   var labels = {
-    'staging': 'AI Staging',
-    'photography': 'Professional Photography',
-    'video': 'Video Tour',
-    'mixed': 'Mixed Package (Staging + Photography + Video)'
+    'ai-staging': 'AI Staging',
+    'pro-staging': 'Pro Staging Editing Services',
+    'video-editing': 'Video Editing'
   };
 
   document.getElementById('selectedOrderTypeLabel').textContent = labels[type] || type;
@@ -2880,7 +2873,7 @@ function selectOrderType(type) {
 }
 
 function updateOrderTypeSelection() {
-  var types = ['staging', 'photography', 'video', 'mixed'];
+  var types = ['ai-staging', 'pro-staging', 'video-editing'];
   types.forEach(function(type) {
     var card = document.getElementById('orderType-' + type);
     if (card) {
