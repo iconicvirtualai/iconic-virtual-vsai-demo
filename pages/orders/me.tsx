@@ -62,7 +62,7 @@ export default function DashboardPage() {
             </span>
           </div>
           <nav className="flex items-center gap-4">
-            <a href="/home" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
+            <a href="/home.html" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
               Home
             </a>
             <a href="/" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">

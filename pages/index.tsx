@@ -675,7 +675,7 @@ const handlePurchaseClick = async () => {
             </span>
           </div>
           <nav className="flex items-center gap-4">
-            <a href="/home" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
+            <a href="/home.html" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
               Home
             </a>
             <a href="/orders/me" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
@@ -756,7 +756,7 @@ const handlePurchaseClick = async () => {
 
                     <div className="mt-4 text-center">
                       <a
-                        href="/home"
+                        href="/home.html"
                         className="text-xs font-medium uppercase tracking-[0.3em] text-slate-500 underline"
                       >
                         return to home
@@ -871,7 +871,7 @@ className="h-full w-full object-cover"                      />
                     </div>
 
                     <p className="mt-3 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
-                      <a href="/home" className="underline">
+                      <a href="/home.html" className="underline">
                         return to home
                       </a>
                     </p>

@@ -27,7 +27,7 @@ export default async function handler(
   try {
     // TODO: Get user ID from auth context/token
     // For now, return empty array if Firebase is not configured
-    const { db } = await import("../../lib/firebaseAdmin");
+    const { db } = await import("../../../lib/firebaseAdmin");
 
     try {
       // Attempt to fetch from Firestore
