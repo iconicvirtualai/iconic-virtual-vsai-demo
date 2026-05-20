@@ -23,51 +23,56 @@ export default async function handler(
   }
 
   try {
-    const { db } = await import("../../../lib/firebaseAdmin");
+    // Try to use Firestore if configured
+    try {
+      const { db } = await import("../../../lib/firebaseAdmin");
 
-    // Check if user already exists
-    const usersCollection = db.collection("users");
-    const existingSnapshot = await usersCollection
-      .where("email", "==", email.toLowerCase())
-      .limit(1)
-      .get();
+      // Check if user already exists
+      const usersCollection = db.collection("users");
+      const existingSnapshot = await usersCollection
+        .where("email", "==", email.toLowerCase())
+        .limit(1)
+        .get();
 
-    if (!existingSnapshot.empty) {
-      return res.status(409).json({ ok: false, error: "Email already registered" });
-    }
+      if (!existingSnapshot.empty) {
+        return res.status(409).json({ ok: false, error: "Email already registered" });
+      }
 
-    // Create new user
-    const newUserRef = await usersCollection.add({
-      email: email.toLowerCase(),
-      password, // In production, hash this with bcrypt
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+      // Create new user
+      const newUserRef = await usersCollection.add({
+        email: email.toLowerCase(),
+        password, // In production, hash this with bcrypt
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
 
-    return res.status(201).json({
-      ok: true,
-      data: {
-        userId: newUserRef.id,
-        email,
-        token: Buffer.from(`${newUserRef.id}:${Date.now()}`).toString("base64"),
-      },
-    });
-  } catch (err: any) {
-    console.error("Signup error:", err);
-
-    // If Firestore not configured, still allow demo signup
-    if (err?.message?.includes("Firebase")) {
-      const demoUserId = `user_${email.replace(/[^a-z0-9]/gi, "_")}_${Date.now()}`;
       return res.status(201).json({
         ok: true,
         data: {
-          userId: demoUserId,
-          email,
-          token: Buffer.from(`${demoUserId}:${Date.now()}`).toString("base64"),
+          userId: newUserRef.id,
+          email: email.toLowerCase(),
+          token: Buffer.from(`${newUserRef.id}:${Date.now()}`).toString("base64"),
         },
       });
+    } catch (firebaseErr: any) {
+      // If Firestore is not configured, fall back to demo mode
+      if (firebaseErr?.message?.includes("Firebase") || firebaseErr?.code === "ERR_MODULE_NOT_FOUND") {
+        console.log("Firestore not configured, using demo mode");
+        // Demo mode: allow any email/password combination
+        const demoUserId = `user_${email.replace(/[^a-z0-9]/gi, "_")}_${Date.now()}`;
+        return res.status(201).json({
+          ok: true,
+          data: {
+            userId: demoUserId,
+            email: email.toLowerCase(),
+            token: Buffer.from(`${demoUserId}:${Date.now()}`).toString("base64"),
+          },
+        });
+      }
+      throw firebaseErr;
     }
-
+  } catch (err: any) {
+    console.error("Signup error:", err);
     return res.status(500).json({ ok: false, error: "Signup failed" });
   }
 }
