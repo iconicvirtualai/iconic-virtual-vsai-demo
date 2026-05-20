@@ -10,7 +10,14 @@ export default async function handler(req, res) {
     process.env.VSAI_API_BASE || "https://api.virtualstagingai.app/v1";
 
   if (!VSAI_API_KEY) {
-    return res.status(500).json({ error: "VSAI_API_KEY not configured" });
+    // Return fallback options if API key not configured
+    return res.status(200).json({
+      ok: true,
+      data: {
+        room_types: ["living", "bed", "kitchen", "dining", "home_office"],
+        styles: ["standard", "modern", "scandinavian", "luxury", "coastal", "farmhouse", "bohemian", "industrial"]
+      }
+    });
   }
 
   try {
@@ -30,9 +37,19 @@ export default async function handler(req, res) {
     const data = await resp.json();
     // data: { styles: string[], roomTypes: string[] }
 
-    return res.status(200).json(data);
+    return res.status(200).json({
+      ok: true,
+      data
+    });
   } catch (err) {
     console.error("vsai-options error:", err);
-    return res.status(500).json({ error: "Internal server error" });
+    // Return fallback options on error
+    return res.status(200).json({
+      ok: true,
+      data: {
+        room_types: ["living", "bed", "kitchen", "dining", "home_office"],
+        styles: ["standard", "modern", "scandinavian", "luxury", "coastal", "farmhouse", "bohemian", "industrial"]
+      }
+    });
   }
 }

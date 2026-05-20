@@ -196,28 +196,36 @@ const pendingPurchaseRef = useRef<CartItem | null>(null);
   // Fetch VSAI options
   useEffect(() => {
     const fetchOptions = async () => {
-      try {
-        const resp = await fetch("/api/vsai-options");
-        const json = await resp.json().catch(() => ({}));
+      const fallbackRooms = ["living", "bed", "kitchen", "dining", "home_office"];
+      const fallbackStyles = ["standard", "modern", "scandinavian", "luxury"];
 
-        const data = json?.ok ? json.data : json;
+      try {
+        const resp = await fetch("/api/vsai-options", { signal: AbortSignal.timeout(5000) });
+
+        if (!resp.ok) {
+          console.warn(`VSAI options returned ${resp.status}, using fallbacks`);
+          setRoomTypes(fallbackRooms);
+          setStyles(fallbackStyles);
+          setRoomType(fallbackRooms[0]);
+          setStyle(fallbackStyles[0]);
+          return;
+        }
+
+        const json = await resp.json().catch(() => ({ ok: false }));
+        const data = json?.data || json;
 
         const rt: string[] = data?.room_types || data?.roomTypes || [];
         const st: string[] = data?.styles || data?.style_list || data?.design_styles || [];
 
-        const finalRoomTypes =
-          rt.length > 0 ? rt : ["living", "bed", "kitchen", "dining", "home_office"];
-        const finalStyles =
-          st.length > 0 ? st : ["standard", "modern", "scandinavian", "luxury"];
+        const finalRoomTypes = rt.length > 0 ? rt : fallbackRooms;
+        const finalStyles = st.length > 0 ? st : fallbackStyles;
 
         setRoomTypes(finalRoomTypes);
         setStyles(finalStyles);
         setRoomType(finalRoomTypes[0]);
         setStyle(finalStyles[0]);
       } catch (e) {
-        console.error("Failed to fetch VSAI options", e);
-        const fallbackRooms = ["living", "bed", "kitchen", "dining", "home_office"];
-        const fallbackStyles = ["standard", "modern", "scandinavian", "luxury"];
+        console.warn("Failed to fetch VSAI options, using fallbacks:", e);
         setRoomTypes(fallbackRooms);
         setStyles(fallbackStyles);
         setRoomType(fallbackRooms[0]);

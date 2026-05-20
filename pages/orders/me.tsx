@@ -23,16 +23,22 @@ export default function DashboardPage() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const resp = await fetch("/api/orders/me");
-        const json = await resp.json();
+        const resp = await fetch("/api/orders/me", { signal: AbortSignal.timeout(5000) });
+        const json = await resp.json().catch(() => ({}));
 
-        if (!resp.ok || !json.ok) {
+        if (!resp.ok) {
+          setError(json?.error || `Request failed (${resp.status})`);
+          return;
+        }
+
+        if (!json.ok) {
           setError(json?.error || "Failed to load orders");
           return;
         }
 
         setOrders(json.data || []);
       } catch (err) {
+        console.warn("Error fetching orders:", err);
         setError(err instanceof Error ? err.message : "Failed to load orders");
       } finally {
         setLoading(false);

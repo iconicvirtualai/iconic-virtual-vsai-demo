@@ -1,6 +1,5 @@
 // pages/api/vsai-create.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import { db } from "../../lib/firebaseAdmin";
 
 const VSAI_BASE = "https://api.virtualstagingai.app/v1";
 const VSAI_API_KEY =
@@ -22,7 +21,7 @@ async function callVsai(path: string, init?: RequestInit) {
   const resp = await fetch(`${VSAI_BASE}${path}`, {
     ...init,
     headers: {
-      Authorization: `Api-Key ${VSAI_API_KEY}`, // ✅ consistent
+      Authorization: `Api-Key ${VSAI_API_KEY}`,
       "Content-Type": "application/json",
       ...(init?.headers || {}),
     },
@@ -70,7 +69,6 @@ export default async function handler(
   const rt = room_type || "living";
   const st = style || "standard";
 
-  // ✅ IMPORTANT: watermark disabled here
   const payload: any = {
     image_url: imageUrl,
     room_type: rt,
@@ -89,27 +87,32 @@ export default async function handler(
       json.render_id || json.id || json.renderId || `render-${Date.now()}`;
     const status: string = json.status || "rendering";
 
-    // ✅ Persist the project immediately so it doesn't disappear if user leaves
-    // Collection: jobs (doc id = renderId)
-    await db
-      .collection("jobs")
-      .doc(String(renderId))
-      .set(
-        {
-          id: String(renderId),
-          renderId: String(renderId),
-          userId: String(userId),
-          status,
-          room_type: rt,
-          style: st,
-          source: {
-            publicUrl: String(imageUrl),
+    // Attempt to persist to Firestore, but don't fail if unavailable
+    try {
+      const { db } = await import("../../lib/firebaseAdmin");
+      await db
+        .collection("jobs")
+        .doc(String(renderId))
+        .set(
+          {
+            id: String(renderId),
+            renderId: String(renderId),
+            userId: String(userId),
+            status,
+            room_type: rt,
+            style: st,
+            source: {
+              publicUrl: String(imageUrl),
+            },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
           },
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-        { merge: true }
-      );
+          { merge: true }
+        );
+    } catch (dbErr) {
+      console.warn("[vsai-create] Firebase save failed, continuing:", dbErr);
+      // Continue anyway - the job exists in VSAI, we just won't have local history
+    }
 
     return res.status(200).json({
       ok: true,

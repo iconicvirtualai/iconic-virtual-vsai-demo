@@ -24,16 +24,25 @@ export default async function handler(
     const safeName = String(fileName).replace(/[^a-zA-Z0-9_.-]/g, "_");
     const destPath = `orders/${userId}/${Date.now()}-${safeName}`;
 
-    const { publicUrl, storagePath } = await firebaseUpload(
-      buffer,
-      destPath,
-      "image/jpeg"
-    );
+    try {
+      const { publicUrl, storagePath } = await firebaseUpload(
+        buffer,
+        destPath,
+        "image/jpeg"
+      );
 
-    return res.status(200).json({
-      ok: true,
-      data: { publicUrl, storagePath },
-    });
+      return res.status(200).json({
+        ok: true,
+        data: { publicUrl, storagePath },
+      });
+    } catch (firebaseErr: any) {
+      console.warn("[api/upload] Firebase not configured:", firebaseErr?.message);
+      // Return error to user - they need Firebase configured for uploads
+      return res.status(500).json({
+        ok: false,
+        error: "Upload service not configured. Please contact support.",
+      });
+    }
   } catch (e: any) {
     console.error("[api/upload] error", e);
     return res

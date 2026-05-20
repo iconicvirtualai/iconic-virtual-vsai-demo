@@ -1,30 +1,64 @@
 // lib/firebaseAdmin.ts
 import * as admin from "firebase-admin";
 
-const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
-const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
+let app: admin.app.App | null = null;
+let initialized = false;
+let initError: Error | null = null;
 
-if (!serviceAccountJson) {
-  throw new Error("FIREBASE_SERVICE_ACCOUNT env var is missing");
+function initializeApp() {
+  if (initialized) return;
+  initialized = true;
+
+  try {
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT;
+    const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
+
+    if (!serviceAccountJson) {
+      throw new Error("FIREBASE_SERVICE_ACCOUNT env var is missing");
+    }
+    if (!storageBucket) {
+      throw new Error("FIREBASE_STORAGE_BUCKET env var is missing");
+    }
+
+    const serviceAccount = JSON.parse(serviceAccountJson);
+    app =
+      admin.apps.length > 0
+        ? admin.app()
+        : admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+            storageBucket,
+          });
+  } catch (e) {
+    initError = e instanceof Error ? e : new Error(String(e));
+  }
 }
-if (!storageBucket) {
-  throw new Error("FIREBASE_STORAGE_BUCKET env var is missing");
+
+export function getFirebaseApp(): admin.app.App {
+  if (!initialized) initializeApp();
+  if (initError) throw initError;
+  if (!app) throw new Error("Firebase app failed to initialize");
+  return app;
 }
 
-const serviceAccount = JSON.parse(serviceAccountJson);
+export const db = {
+  collection: (path: string) => {
+    const firebaseApp = getFirebaseApp();
+    return admin.firestore(firebaseApp).collection(path);
+  },
+  runTransaction: (fn: (transaction: admin.firestore.Transaction) => Promise<any>) => {
+    const firebaseApp = getFirebaseApp();
+    return admin.firestore(firebaseApp).runTransaction(fn);
+  },
+} as any;
 
-const app =
-  admin.apps.length > 0
-    ? admin.app()
-    : admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-        storageBucket,
-      });
-
-export const db = admin.firestore(app);
-
-// IMPORTANT: use the configured bucket name explicitly
-export const bucket = admin.storage(app).bucket(storageBucket);
+export const bucket = {
+  file: (path: string) => {
+    const firebaseApp = getFirebaseApp();
+    const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
+    if (!storageBucket) throw new Error("FIREBASE_STORAGE_BUCKET env var is missing");
+    return admin.storage(firebaseApp).bucket(storageBucket).file(path);
+  },
+} as any;
 
 /**
  * Uploads a buffer to Firebase Storage and returns a long-lived signed URL.
@@ -34,7 +68,11 @@ export async function firebaseUpload(
   destPath: string,
   contentType = "image/jpeg"
 ) {
-  const file = bucket.file(destPath);
+  const firebaseApp = getFirebaseApp();
+  const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
+  if (!storageBucket) throw new Error("FIREBASE_STORAGE_BUCKET env var is missing");
+
+  const file = admin.storage(firebaseApp).bucket(storageBucket).file(destPath);
 
   await file.save(buffer, {
     contentType,
