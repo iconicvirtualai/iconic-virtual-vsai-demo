@@ -58,13 +58,27 @@ export async function createRenderJob(
   roomType: string,
   style: string
 ): Promise<{ jobId: string; status: JobStatus }> {
+  const payload = { userId, imageUrl, room_type: roomType, style };
+
+  console.log("[createRenderJob] Sending payload:", payload);
+  console.log("[createRenderJob] Payload values:", {
+    userId: userId || "MISSING",
+    imageUrl: imageUrl || "MISSING",
+    room_type: roomType || "MISSING",
+    style: style || "MISSING",
+  });
+
   const resp = await fetch("/api/vsai-create", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, imageUrl, room_type: roomType, style }),
+    body: JSON.stringify(payload),
   });
 
   const json = await resp.json();
+
+  console.log("[createRenderJob] Response status:", resp.status);
+  console.log("[createRenderJob] Response body:", json);
+
   if (!resp.ok || !json.ok) {
     throw new Error(json.error || "Render start failed");
   }
