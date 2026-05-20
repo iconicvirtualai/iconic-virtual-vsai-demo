@@ -214,3 +214,54 @@ Future AI services may include:
 These services should integrate into the shared credit system.
 
 ---
+
+# UI/UX CONSOLIDATION RULES
+
+The platform should consolidate around 4 primary experiences:
+
+1. Marketing Homepage
+2. Staging Workspace
+3. Checkout Flow
+4. User Dashboard
+
+Avoid generating:
+- duplicate dashboards
+- duplicate portals
+- duplicate upload pages
+- duplicate staging systems
+
+---
+
+# STAGING WORKSPACE RULES
+
+The staging workspace is the core product experience.
+
+Users should be able to:
+- upload images
+- generate renders
+- preview results
+- add renders to cart
+- continue staging additional images
+- checkout once for multiple renders
+
+The platform should support:
+- persistent order/cart sessions
+- return-to-workspace navigation
+- simplified rendering workflow
+
+---
+
+# PRODUCT PHILOSOPHY
+
+The platform should prioritize:
+- speed
+- simplicity
+- low friction
+- conversion optimization
+- reusable systems
+
+Avoid:
+- unnecessary complexity
+- disconnected workflows
+- feature duplication
+- overbuilt dashboard systems
