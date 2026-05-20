@@ -351,3 +351,89 @@ NOT:
 - permanent cloud storage
 
 ---
+
+# STAGING SYSTEM ARCHITECTURE
+
+The staging/render system operates as a centralized reusable application system.
+
+The primary staging experience is:
+
+components/staging/StagingWorkspace.tsx
+
+This component acts as the canonical shared staging workspace across the platform.
+
+The component may be reused across:
+- homepage staging flow
+- guest rendering flow
+- authenticated user dashboard
+- account staging workspace
+
+The platform should NOT create:
+- duplicate staging tools
+- duplicate upload systems
+- duplicate render handlers
+- duplicate API integrations
+
+---
+
+# SHARED STAGING SERVICE
+
+Frontend staging logic is centralized through:
+
+/lib/staging.ts
+
+This service acts as the frontend source of truth for:
+- uploads
+- render creation
+- render polling
+- variation requests
+- cart handling
+- checkout initiation
+
+All frontend pages/components should reuse this service.
+
+Pages should NOT duplicate:
+- fetch logic
+- upload logic
+- polling logic
+- checkout logic
+
+---
+
+# API STABILITY RULES
+
+Existing API routes remain the backend source of truth.
+
+Do NOT unnecessarily rebuild or duplicate:
+- upload endpoints
+- VSAI endpoints
+- Stripe endpoints
+- Firebase integrations
+
+The current production render pipeline should remain stable during UI/UX consolidation.
+
+---
+
+# COMPONENT REUSE RULES
+
+Pages should function primarily as:
+- layout wrappers
+- route containers
+- navigation shells
+
+Business logic should remain centralized in:
+- reusable components
+- shared service layers
+
+---
+
+# IFRAME RULES
+
+Do NOT use iframe-based architecture for internal staging tools.
+
+Reuse React components directly within the application instead.
+
+The platform should behave as:
+- one unified application
+NOT:
+- disconnected embedded applications
