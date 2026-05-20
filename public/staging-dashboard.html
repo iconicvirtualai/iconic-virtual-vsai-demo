@@ -1395,7 +1395,7 @@
             <div class="form-group">
               <label>Room type</label>
               <select>
-                <option>Living Room</option><option>Master Bedroom</option><option>Guest Bedroom</option>
+                <option value="living" onclick="setRoomType('living')">Living Room</option><option>Master Bedroom</option><option>Guest Bedroom</option>
                 <option>Kitchen</option><option>Dining Room</option><option>Bathroom</option>
                 <option>Home Office</option><option>Outdoor / Patio</option>
               </select>
@@ -1439,6 +1439,8 @@
       </div>
 
       </div><!-- end hidden mock wizard -->
+
+      <div id="stagingResult" style="display:none;margin-bottom:24px"></div>
 
       <!-- ============ ORDERS ============ -->
       <div id="sub-orders" class="subnav">
@@ -1887,7 +1889,7 @@
             <h3 style="margin-bottom:24px;">Default Staging Preferences</h3>
             <div class="form-row">
               <div class="form-group"><label>Default style</label><select><option>Modern Minimalist</option><option>Scandinavian</option><option>Coastal</option><option>Luxury</option></select></div>
-              <div class="form-group"><label>Default room type</label><select><option>Auto-detect</option><option>Living Room</option><option>Bedroom</option></select></div>
+              <div class="form-group"><label>Default room type</label><select><option>Auto-detect</option><option value="living" onclick="setRoomType('living')">Living Room</option><option>Bedroom</option></select></div>
             </div>
             <div class="form-row">
               <div class="form-group"><label>Output resolution</label><select><option>4K (3840 × 2160)</option><option>HD (1920 × 1080)</option></select></div>
@@ -2507,18 +2509,12 @@ function toggleBulkMode() {
     toast('Switched to bulk upload');
   }
 }
-function simulateUpload() {
-  toast('Photo uploaded — proceed to choose style');
-  goWizardStep(2);
-}
+// simulateUpload replaced by handleFileSelect in real API integration
 function simulateBulkUpload() {
   document.getElementById('bulkList').style.display = 'block';
   toast('5 files uploaded — choose styles');
 }
-function submitStaging() {
-  toast('Staging started — you will receive an email when ready');
-  setTimeout(() => { showSub('orders'); }, 800);
-}
+// submitStaging replaced by real API version below
 
 // ============ ORDER & PROJECT DETAILS ============
 function openOrderDetail(id) {
@@ -2587,6 +2583,175 @@ function copyRefer() {
   inp.select();
   toast('Referral link copied to clipboard');
 }
+
+// ============ REAL API INTEGRATION ============
+var _uploadedImageUrl = '';
+var _selectedStyle = '';
+var _selectedRoom = 'living';
+var _userId = 'user_' + Date.now();
+
+// Real file upload via drag-drop or browse
+function setupRealUpload() {
+  var zone = document.querySelector('.upload-zone');
+  if (!zone) return;
+  
+  // Create hidden file input
+  var fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'image/jpeg,image/png';
+  fileInput.style.display = 'none';
+  fileInput.id = 'realFileInput';
+  document.body.appendChild(fileInput);
+  
+  zone.onclick = function() { fileInput.click(); };
+  
+  // Drag and drop
+  zone.ondragover = function(e) { e.preventDefault(); zone.style.borderColor = 'var(--primary)'; zone.style.background = 'var(--primary-light)'; };
+  zone.ondragleave = function() { zone.style.borderColor = ''; zone.style.background = ''; };
+  zone.ondrop = function(e) {
+    e.preventDefault();
+    zone.style.borderColor = ''; zone.style.background = '';
+    if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]);
+  };
+  
+  fileInput.onchange = function() {
+    if (fileInput.files.length) handleFileSelect(fileInput.files[0]);
+  };
+}
+
+function handleFileSelect(file) {
+  if (!file.type.match('image.*')) { toast('Please select a JPG or PNG image', 'error'); return; }
+  if (file.size > 10 * 1024 * 1024) { toast('File too large. Max 10MB.', 'error'); return; }
+  
+  var zone = document.querySelector('.upload-zone');
+  zone.innerHTML = '<div class="upload-icon">&#9203;</div><h3>Uploading...</h3><p>' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)</p>';
+  
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var base64 = e.target.result.split(',')[1];
+    
+    fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: _userId,
+        fileName: file.name,
+        fileBase64: base64
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok !== false && (data.publicUrl || data.url || data.imageUrl)) {
+        _uploadedImageUrl = data.publicUrl || data.url || data.imageUrl;
+        zone.innerHTML = '<div class="upload-icon">&#9989;</div><h3>Photo Uploaded!</h3><p>' + file.name + '</p><img src="' + _uploadedImageUrl + '" style="max-height:200px;border-radius:8px;margin-top:12px">';
+        toast('Photo uploaded! Now choose a style.');
+        goWizardStep(2);
+      } else {
+        zone.innerHTML = '<div class="upload-icon">&#10060;</div><h3>Upload Failed</h3><p>' + (data.error || 'Please try again') + '</p>';
+        toast('Upload failed: ' + (data.error || 'Unknown error'), 'error');
+      }
+    })
+    .catch(function(err) {
+      zone.innerHTML = '<div class="upload-icon">&#10060;</div><h3>Upload Error</h3><p>' + err.message + '</p>';
+      toast('Upload error: ' + err.message, 'error');
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+// Real style selection
+function selectStyle(card) {
+  document.querySelectorAll('.style-card').forEach(function(c) { c.classList.remove('selected'); });
+  card.classList.add('selected');
+  _selectedStyle = card.querySelector('.style-name')?.textContent?.toLowerCase() || card.className.match(/modern|scandi|coastal|boho|luxury|farmhouse|industrial/)?.[0] || 'modern';
+  toast('Style selected: ' + _selectedStyle);
+}
+
+// Real staging submission
+function submitStaging() {
+  if (!_uploadedImageUrl) { toast('Please upload a photo first', 'error'); return; }
+  if (!_selectedStyle) { toast('Please select a style first', 'error'); return; }
+  
+  var submitBtn = document.querySelector('[onclick="submitStaging()"]');
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Processing...'; }
+  
+  toast('Starting AI staging...');
+  
+  fetch('/api/vsai-create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: _userId,
+      imageUrl: _uploadedImageUrl,
+      room_type: _selectedRoom,
+      style: _selectedStyle
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok !== false && (data.renderId || data.render_id)) {
+      var renderId = data.renderId || data.render_id;
+      toast('Staging job created! Waiting for AI render...');
+      pollRender(renderId, 0);
+    } else {
+      toast('Staging failed: ' + (data.error || JSON.stringify(data)), 'error');
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit for Staging'; }
+    }
+  })
+  .catch(function(err) {
+    toast('Error: ' + err.message, 'error');
+    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit for Staging'; }
+  });
+}
+
+// Poll for render completion
+function pollRender(renderId, attempts) {
+  if (attempts > 60) { toast('Render is taking longer than expected. Check Orders page.', 'error'); showSub('orders'); return; }
+  
+  fetch('/api/vsai-render?renderId=' + renderId)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var status = data.status || '';
+      if (status === 'completed' || status === 'done' || data.outputs || data.output) {
+        var outputUrl = '';
+        if (data.outputs && data.outputs.length) outputUrl = data.outputs[0];
+        else if (data.output) outputUrl = data.output;
+        else if (data.url) outputUrl = data.url;
+        
+        toast('Staging complete!', 'success');
+        showStagingResult(outputUrl);
+      } else if (status === 'failed' || status === 'error') {
+        toast('Staging failed. Please try again.', 'error');
+        showSub('stage');
+      } else {
+        // Still processing, poll again
+        setTimeout(function() { pollRender(renderId, attempts + 1); }, 3000);
+      }
+    })
+    .catch(function() {
+      setTimeout(function() { pollRender(renderId, attempts + 1); }, 5000);
+    });
+}
+
+// Show the staging result
+function showStagingResult(outputUrl) {
+  goWizardStep(4);
+  var resultArea = document.getElementById('stagingResult');
+  if (resultArea) {
+    resultArea.style.display = 'block';
+    resultArea.innerHTML = '<div class="image-compare"><div class="image-half before-img" style="background-image:url(' + _uploadedImageUrl + ');background-size:cover;background-position:center"><span class="badge">BEFORE</span></div><div class="image-half after-img" style="background-image:url(' + outputUrl + ');background-size:cover;background-position:center"><span class="badge">AFTER</span></div></div><div style="margin-top:16px;display:flex;gap:12px"><a href="' + outputUrl + '" download class="btn btn-primary" target="_blank">Download Staged Image</a><button class="btn btn-secondary" onclick="showSub(\'stage\')">Stage Another</button></div>';
+  } else {
+    showSub('orders');
+  }
+}
+
+// Room type selection
+function setRoomType(type) { _selectedRoom = type; }
+
+// Initialize real upload on page load
+document.addEventListener('DOMContentLoaded', function() { setTimeout(setupRealUpload, 500); });
+if (document.readyState !== 'loading') { setTimeout(setupRealUpload, 500); }
+
 </script>
 </body>
 </html>
