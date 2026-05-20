@@ -681,7 +681,7 @@ const handlePurchaseClick = async () => {
             <a href="/staging-dashboard.html" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
               Dashboard
             </a>
-            <a href="/staging-dashboard.html" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
+            <a href="/login" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
               Account
             </a>
           </nav>

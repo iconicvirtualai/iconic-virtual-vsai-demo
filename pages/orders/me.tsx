@@ -65,10 +65,10 @@ export default function DashboardPage() {
             <a href="/home.html" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
               Home
             </a>
-            <a href="/staging-dashboard.html" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
+            <a href="/" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
               Workspace
             </a>
-            <a href="/staging-dashboard.html" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
+            <a href="/login" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
               Account
             </a>
           </nav>
