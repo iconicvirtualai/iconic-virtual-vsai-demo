@@ -79,20 +79,30 @@ export default function LoginPage() {
   // ✅ NOW the return is inside the component body (fixes your build error)
   if (!supaReady) {
     return (
-      <main className="min-h-screen bg-white text-slate-900">
-        <div className="mx-auto max-w-md px-6 py-16">
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/60">
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-              Iconic Virtual.AI
-            </p>
-            <h1 className="mt-3 text-2xl font-semibold">Login</h1>
-            <p className="mt-4 text-slate-600">{statusText}</p>
+      <main className="min-h-screen bg-slate-50 text-slate-900">
+        <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+          <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-800 to-amber-900 text-white text-xs font-bold">
+                IV
+              </div>
+              <span className="text-sm font-bold tracking-widest hidden sm:block">
+                ICONIC VIRTUAL<span className="text-amber-800">.AI</span>
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <div className="mx-auto max-w-md px-4 py-20 sm:px-6 lg:px-8">
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+            <h1 className="text-2xl font-bold mb-2">Login</h1>
+            <p className="text-slate-600 mb-8">{statusText}</p>
 
             <a
               href="/"
-              className="mt-8 inline-flex w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
+              className="block w-full text-center rounded-lg bg-gradient-to-r from-amber-800 to-amber-900 px-6 py-3 font-semibold text-white hover:shadow-lg transition"
             >
-              Return to staging
+              Back to Staging
             </a>
           </div>
         </div>
@@ -101,22 +111,32 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
-      <div className="mx-auto max-w-md px-6 py-16">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/60">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-            Iconic Virtual.AI
-          </p>
-          <h1 className="mt-3 text-2xl font-semibold">Login</h1>
-          <p className="mt-4 text-slate-600">{statusText}</p>
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-800 to-amber-900 text-white text-xs font-bold">
+              IV
+            </div>
+            <span className="text-sm font-bold tracking-widest hidden sm:block">
+              ICONIC VIRTUAL<span className="text-amber-800">.AI</span>
+            </span>
+          </div>
+        </div>
+      </header>
 
-          <form className="mt-8 space-y-4" onSubmit={handleLogin}>
+      <div className="mx-auto max-w-md px-4 py-20 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          <h1 className="text-2xl font-bold mb-2">Login</h1>
+          <p className="text-slate-600 mb-8">{statusText}</p>
+
+          <form className="space-y-4" onSubmit={handleLogin}>
             <div>
-              <label className="text-xs uppercase tracking-[0.4em] text-slate-500">
+              <label className="text-xs uppercase tracking-widest font-semibold text-slate-700 block mb-2">
                 Email
               </label>
               <input
-                className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
+                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-amber-800 focus:ring-2 focus:ring-amber-100 transition"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
@@ -126,11 +146,11 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="text-xs uppercase tracking-[0.4em] text-slate-500">
+              <label className="text-xs uppercase tracking-widest font-semibold text-slate-700 block mb-2">
                 Password
               </label>
               <input
-                className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
+                className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-amber-800 focus:ring-2 focus:ring-amber-100 transition"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 type="password"
@@ -141,16 +161,16 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:border-slate-900"
+              className="w-full rounded-lg bg-gradient-to-r from-amber-800 to-amber-900 px-6 py-3 font-semibold text-white hover:shadow-lg transition"
             >
               Sign In
             </button>
 
             <a
               href="/"
-              className="block text-center text-xs uppercase tracking-[0.3em] text-slate-500 underline"
+              className="block text-center text-xs uppercase tracking-wider text-slate-500 hover:text-slate-700 font-medium"
             >
-              Return to staging
+              Back to Staging
             </a>
           </form>
         </div>

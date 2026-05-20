@@ -656,6 +656,30 @@ const handlePurchaseClick = async () => {
 
   return (
     <>
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-800 to-amber-900 text-white text-xs font-bold">
+              IV
+            </div>
+            <span className="text-sm font-bold tracking-widest hidden sm:block">
+              ICONIC VIRTUAL<span className="text-amber-800">.AI</span>
+            </span>
+          </div>
+          <nav className="flex items-center gap-4">
+            <a href="/home" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
+              Home
+            </a>
+            <a href="/orders/me" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
+              Dashboard
+            </a>
+            <a href="/login" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
+              Account
+            </a>
+          </nav>
+        </div>
+      </header>
+
       <main className="min-h-screen bg-white text-slate-900">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 lg:px-8 bg-transparent">
           {/* Hero */}
@@ -724,7 +748,7 @@ const handlePurchaseClick = async () => {
 
                     <div className="mt-4 text-center">
                       <a
-                        href="https://www.iconicvirtual.ai"
+                        href="/home"
                         className="text-xs font-medium uppercase tracking-[0.3em] text-slate-500 underline"
                       >
                         return to home
@@ -839,8 +863,8 @@ className="h-full w-full object-cover"                      />
                     </div>
 
                     <p className="mt-3 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
-                      <a href="/" className="underline">
-                        return to main menu
+                      <a href="/home" className="underline">
+                        return to home
                       </a>
                     </p>
                   </div>

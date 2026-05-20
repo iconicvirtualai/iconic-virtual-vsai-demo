@@ -96,57 +96,76 @@ export default function SuccessPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
-      <div className="mx-auto max-w-3xl px-6 py-16">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/60">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-            Payment Successful
-          </p>
+    <main className="min-h-screen bg-slate-50 text-slate-900">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-800 to-amber-900 text-white text-xs font-bold">
+              IV
+            </div>
+            <span className="text-sm font-bold tracking-widest hidden sm:block">
+              ICONIC VIRTUAL<span className="text-amber-800">.AI</span>
+            </span>
+          </div>
+        </div>
+      </header>
 
-          <h1 className="mt-1 text-2xl font-semibold text-slate-900"> Thank you for your purchase</h1>
-          <p className="mt-4 text-slate-600">{statusText}</p>
+      <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center text-2xl">✓</div>
+            <h1 className="text-3xl font-bold">Thank You!</h1>
+          </div>
+          <p className="text-slate-600 mb-8">{statusText}</p>
 
           {downloadUrl && (
-            <div className="mt-8 space-y-4">
-              <div className="overflow-hidden rounded-2xl border border-slate-200">
+            <div className="space-y-6">
+              <div className="overflow-hidden rounded-xl border border-slate-200">
                 <img
                   src={downloadUrl}
                   alt="Purchased staging"
-                  className="w-full max-h-[420px] object-contain bg-white"
+                  className="w-full max-h-[480px] object-contain bg-white"
                 />
               </div>
 
-              <button
-                type="button"
-                onClick={downloadFile}
-                className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:border-slate-900"
-              >
-                Download your image
-              </button>
-
-              {receiptUrl && (
-                <a
-                  href={receiptUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block text-center text-xs uppercase tracking-[0.3em] text-slate-500 underline"
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={downloadFile}
+                  className="w-full rounded-lg bg-gradient-to-r from-amber-800 to-amber-900 px-6 py-3 font-semibold text-white hover:shadow-lg transition"
                 >
-                  View receipt
-                </a>
-              )}
+                  Download Your Image
+                </button>
+
+                {receiptUrl && (
+                  <a
+                    href={receiptUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block text-center text-xs uppercase tracking-wider text-slate-500 hover:text-slate-700 font-medium"
+                  >
+                    View Receipt
+                  </a>
+                )}
+              </div>
             </div>
           )}
 
           {!loading && !downloadUrl && (
-            <div className="mt-8">
-              <a
-                href="/"
-                className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-              >
-                Return to staging
-              </a>
-            </div>
+            <a
+              href="/"
+              className="block w-full text-center rounded-lg bg-gradient-to-r from-amber-800 to-amber-900 px-6 py-3 font-semibold text-white hover:shadow-lg transition"
+            >
+              Back to Staging
+            </a>
           )}
+
+          <div className="mt-8 pt-8 border-t border-slate-200 text-center">
+            <p className="text-sm text-slate-600 mb-4">What's next?</p>
+            <a href="/" className="text-amber-800 hover:text-amber-900 font-medium">
+              Stage another image →
+            </a>
+          </div>
         </div>
       </div>
     </main>

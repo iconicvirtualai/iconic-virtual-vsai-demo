@@ -1,41 +1,19 @@
-// pages/portal.tsx  (OR pages/portal/index.tsx)
-import type { NextPage } from "next";
-import Link from "next/link";
+import { useEffect } from "react";
+import { useRouter } from "next/router";
 
-const PortalPage: NextPage = () => {
+export default function PortalPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace("/orders/me");
+  }, [router]);
+
   return (
-    <main className="min-h-screen bg-white text-slate-900">
-      <div className="mx-auto max-w-3xl px-6 py-16">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/60">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-            Iconic Virtual.AI
-          </p>
-
-          <h1 className="mt-3 text-3xl font-semibold">Client Portal</h1>
-          <p className="mt-4 text-slate-600">
-            Portal is live. Next step: show user orders + download links.
-          </p>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-            >
-              Back to staging
-            </Link>
-
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:border-slate-900"
-            >
-              Login
-            </Link>
-          </div>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="text-center">
+        <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-amber-800 mb-4" />
+        <p className="text-slate-600">Redirecting to dashboard...</p>
       </div>
-    </main>
+    </div>
   );
-};
-
-export default PortalPage;
-
+}
