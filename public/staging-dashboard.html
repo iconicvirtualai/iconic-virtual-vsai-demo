@@ -2375,10 +2375,30 @@ const MODALS = {
 
 function openModal(name) {
   document.getElementById('modalContent').innerHTML = MODALS[name] || '<p>Modal not found</p>';
-  document.getElementById('modal').classList.add('show');
+  const modal = document.getElementById('modal');
+  const app = document.getElementById('app');
+
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  // Mark app content as inert while modal is open (accessible alternative to aria-hidden)
+  if (app) app.inert = true;
+
+  // Focus the first focusable element in modal
+  setTimeout(() => {
+    const input = modal.querySelector('input, button, select, textarea');
+    if (input) input.focus();
+  }, 100);
 }
 function closeModal() {
-  document.getElementById('modal').classList.remove('show');
+  const modal = document.getElementById('modal');
+  const app = document.getElementById('app');
+
+  modal.classList.remove('show');
+  document.body.style.overflow = '';
+
+  // Remove inert from app content
+  if (app) app.inert = false;
 }
 
 // ============ STAGE NOW ============
