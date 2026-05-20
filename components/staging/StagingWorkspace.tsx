@@ -24,6 +24,14 @@ interface StagingWorkspaceProps {
   onCheckoutInitiated?: (url: string) => void;
 }
 
+interface OrderItem {
+  jobId: string;
+  imageUrl: string;
+  stagedUrl: string;
+  roomType: string;
+  style: string;
+}
+
 function formatLabel(value: string) {
   return value
     .replace(/_/g, " ")
@@ -112,6 +120,10 @@ export default function StagingWorkspace({ onCheckoutInitiated }: StagingWorkspa
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [stagedUrl, setStagedUrl] = useState<string | null>(null);
 
+  // Bulk upload state
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [currentUploadIndex, setCurrentUploadIndex] = useState<number>(0);
+
   // Job state
   const [job, setJob] = useState<Job | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
@@ -133,6 +145,9 @@ export default function StagingWorkspace({ onCheckoutInitiated }: StagingWorkspa
   // Variations
   const [variationUrls, setVariationUrls] = useState<string[]>([]);
   const [currentVariationIndex, setCurrentVariationIndex] = useState<number>(0);
+
+  // Order folder state
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
   // Modal state
   const [isRegenerateModalOpen, setIsRegenerateModalOpen] = useState(false);
@@ -349,8 +364,88 @@ export default function StagingWorkspace({ onCheckoutInitiated }: StagingWorkspa
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setIsDragActive(false);
-    const f = event.dataTransfer.files?.[0];
-    if (f) void handleNewFile(f);
+    const files = Array.from(event.dataTransfer.files || []).slice(0, 20 - uploadedFiles.length);
+    if (files.length > 0) {
+      setUploadedFiles((prev) => [...prev, ...files].slice(0, 20));
+      if (uploadedFiles.length === 0) {
+        void handleNewFile(files[0]);
+      }
+    }
+  };
+
+  const handleBulkUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []).slice(0, 20 - uploadedFiles.length);
+    if (files.length > 0) {
+      setUploadedFiles((prev) => [...prev, ...files].slice(0, 20));
+      if (uploadedFiles.length === 0) {
+        void handleNewFile(files[0]);
+      }
+    }
+    event.target.value = "";
+  };
+
+  const handleSelectUploadedFile = (f: File) => {
+    void handleNewFile(f);
+  };
+
+  const handleAddToOrder = async () => {
+    if (!job || !currentFinalUrl) {
+      setStatusText("No staged image to add to order.");
+      return;
+    }
+
+    const newOrderItem: OrderItem = {
+      jobId: job.id,
+      imageUrl: job.source?.publicUrl || "",
+      stagedUrl: currentFinalUrl,
+      roomType: job.room_type,
+      style: job.style,
+    };
+
+    setOrderItems((prev) => [...prev, newOrderItem]);
+    setStatusText("Image added to order!");
+
+    // Move to next uploaded file if available
+    if (currentUploadIndex + 1 < uploadedFiles.length) {
+      setCurrentUploadIndex((prev) => prev + 1);
+      void handleNewFile(uploadedFiles[currentUploadIndex + 1]);
+    }
+  };
+
+  const handleRemoveFromOrder = (index: number) => {
+    setOrderItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCheckoutOrder = async () => {
+    if (orderItems.length === 0) {
+      setStatusText("No items in order.");
+      return;
+    }
+
+    setStatusText("Redirecting to checkout...");
+
+    try {
+      // Use the first item's job ID for now; backend may need adjustment for multi-item orders
+      const checkoutUrl = await initiateCheckout(orderItems[0].jobId, 0);
+
+      if (onCheckoutInitiated) {
+        onCheckoutInitiated(checkoutUrl);
+      } else {
+        try {
+          if (window.top && window.top !== window.self) {
+            window.top.location.href = checkoutUrl;
+            return;
+          }
+        } catch {
+          // ignore
+        }
+
+        window.location.href = checkoutUrl;
+      }
+    } catch (err: any) {
+      console.error("handleCheckoutOrder error", err);
+      setStatusText(err?.message || "Unexpected error during checkout.");
+    }
   };
 
   const startRender = async () => {
@@ -539,6 +634,25 @@ export default function StagingWorkspace({ onCheckoutInitiated }: StagingWorkspa
           "lg:grid-cols-[2fr_1fr]"
         }`}
       >
+        {/* Bulk upload UI - show when no preview selected yet */}
+        {uploadedFiles.length > 0 && !previewUrl && (
+          <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-6 shadow-lg">
+            <p className="mb-4 text-sm font-semibold text-slate-900">
+              {uploadedFiles.length} image{uploadedFiles.length !== 1 ? "s" : ""} uploaded (max 20)
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {uploadedFiles.map((f, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSelectUploadedFile(f)}
+                  className="rounded-xl border-2 border-slate-300 px-4 py-2 text-sm font-medium text-slate-900 transition hover:border-slate-500 hover:bg-slate-50"
+                >
+                  {f.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         {/* Left */}
         <section className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-lg shadow-slate-200/60">
           <div className="space-y-6">
@@ -567,7 +681,7 @@ export default function StagingWorkspace({ onCheckoutInitiated }: StagingWorkspa
                   <p className="text-2xl font-semibold leading-snug text-slate-900">
                     Drag &amp; Drop
                     <span className="block text-base text-slate-500">
-                      or upload files (limited to 10MB)
+                      or upload files (up to 20 images, 10MB each)
                     </span>
                   </p>
                   <span className="rounded-full border border-slate-400 px-5 py-2 text-sm font-medium text-slate-900">
@@ -576,8 +690,9 @@ export default function StagingWorkspace({ onCheckoutInitiated }: StagingWorkspa
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     className="hidden"
-                    onChange={handleFileCapture}
+                    onChange={handleBulkUpload}
                   />
                 </label>
               </div>
@@ -669,11 +784,11 @@ export default function StagingWorkspace({ onCheckoutInitiated }: StagingWorkspa
 
                   <button
                     type="button"
-                    onClick={handlePurchaseClick}
+                    onClick={handleAddToOrder}
                     disabled={isProcessing || !job}
-                    className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:bg-slate-800 hover:border-slate-900 disabled:opacity-50"
+                    className="inline-flex items-center justify-center rounded-2xl border border-slate-700 bg-blue-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:bg-blue-800 hover:border-blue-900 disabled:opacity-50"
                   >
-                    Purchase Staging – $5
+                    Add to Order
                   </button>
                 </div>
               </div>
@@ -778,43 +893,129 @@ export default function StagingWorkspace({ onCheckoutInitiated }: StagingWorkspa
               Use the arrows &amp; slider to explore staged variations.
             </div>
           )}
+
+          {/* Image ribbon */}
+          {uploadedFiles.length > 1 && previewUrl && (
+            <div className="space-y-3">
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                Uploaded Images ({uploadedFiles.length})
+              </p>
+              <div className="flex gap-2 overflow-x-auto pb-2">
+                {uploadedFiles.map((f, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSelectUploadedFile(f)}
+                    className={`flex-shrink-0 rounded-lg border-2 overflow-hidden transition ${
+                      file === f
+                        ? "border-slate-900 ring-2 ring-slate-900"
+                        : "border-slate-300 hover:border-slate-500"
+                    }`}
+                  >
+                    <img
+                      src={URL.createObjectURL(f)}
+                      alt={f.name}
+                      className="h-20 w-20 object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Right */}
         <aside className="space-y-5 rounded-3xl border border-slate-200 bg-white/80 p-6 shadow-lg shadow-slate-200/60">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-            Key Features
-          </p>
-          <ul className="space-y-2 text-sm text-slate-700">
-            <li className="flex items-start gap-2">
-              <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
-              <span>AI staged photos in 1–3 minutes.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
-              <span>
-                File size impacts render speed{" "}
-                <span className="text-slate-500">
-                  (files over 10MB will be automatically resized for optimal use).
-                </span>
-              </span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
-              <span>Real-time Before &amp; After Reveal.</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
-              <span>Different Style Variations.</span>
-            </li>
-          </ul>
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
-            <p className="font-semibold text-slate-900">Tips</p>
-            <p className="mt-1 text-slate-600">
-              Use high-resolution photos with neutral/bright lighting for best results.
-            </p>
-            <p className="mt-1 text-slate-600">For fastest results, limit file sizes to 10MB.</p>
-          </div>
+          {orderItems.length === 0 ? (
+            <>
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                Key Features
+              </p>
+              <ul className="space-y-2 text-sm text-slate-700">
+                <li className="flex items-start gap-2">
+                  <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
+                  <span>AI staged photos in 1–3 minutes.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
+                  <span>
+                    File size impacts render speed{" "}
+                    <span className="text-slate-500">
+                      (files over 10MB will be automatically resized for optimal use).
+                    </span>
+                  </span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
+                  <span>Real-time Before &amp; After Reveal.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Sparkles className="mt-1 h-4 w-4 text-slate-500" />
+                  <span>Different Style Variations.</span>
+                </li>
+              </ul>
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 text-sm">
+                <p className="font-semibold text-slate-900">Tips</p>
+                <p className="mt-1 text-slate-600">
+                  Use high-resolution photos with neutral/bright lighting for best results.
+                </p>
+                <p className="mt-1 text-slate-600">For fastest results, limit file sizes to 10MB.</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+                Order Folder ({orderItems.length})
+              </p>
+              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                {orderItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="rounded-xl border border-slate-300 bg-white p-3 space-y-2"
+                  >
+                    <div className="flex gap-2">
+                      <img
+                        src={item.stagedUrl}
+                        alt={`Order item ${idx + 1}`}
+                        className="h-16 w-16 rounded object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-slate-900 truncate">
+                          Item {idx + 1}
+                        </p>
+                        <p className="text-xs text-slate-600">
+                          {item.roomType} - {item.style}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveFromOrder(idx)}
+                      type="button"
+                      className="w-full rounded-lg border border-red-300 bg-red-50 px-2 py-1 text-xs font-medium text-red-700 transition hover:border-red-400 hover:bg-red-100"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
+                <p className="font-semibold text-slate-900 text-sm">
+                  Total: {orderItems.length} HD image{orderItems.length !== 1 ? "s" : ""}
+                </p>
+                <button
+                  onClick={handleCheckoutOrder}
+                  disabled={orderItems.length === 0 || isProcessing}
+                  type="button"
+                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:bg-slate-800 disabled:opacity-50"
+                >
+                  Checkout & Download HD
+                </button>
+                <p className="text-xs text-slate-600 text-center">
+                  ${orderItems.length * 5} total
+                </p>
+              </div>
+            </>
+          )}
         </aside>
       </div>
 
