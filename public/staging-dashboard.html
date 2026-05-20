@@ -1327,120 +1327,117 @@
       <!-- ============ STAGE NOW ============ -->
       <div id="sub-stage" class="subnav">
         <div class="page-title">Stage Now</div>
-        <div class="page-subtitle">Upload your photo, pick a style, and let AI do the rest.</div>
+        <div class="page-subtitle">Upload a photo, pick a style, and get your AI-staged image.</div>
 
-        <div class="panel">
-          <div class="wizard-steps">
-            <div class="wstep active" id="ws-1" onclick="goWizardStep(1)"><div class="circle">1</div><div class="label">Upload</div></div>
-            <div class="wstep" id="ws-2" onclick="goWizardStep(2)"><div class="circle">2</div><div class="label">Room Type</div></div>
-            <div class="wstep" id="ws-3" onclick="goWizardStep(3)"><div class="circle">3</div><div class="label">Style</div></div>
-            <div class="wstep" id="ws-4" onclick="goWizardStep(4)"><div class="circle">4</div><div class="label">Options</div></div>
-            <div class="wstep" id="ws-5" onclick="goWizardStep(5)"><div class="circle">5</div><div class="label">Review</div></div>
+        <!-- REAL STAGING TOOL -->
+        <div id="stageToolContainer">
+
+          <!-- Step indicator -->
+          <div id="stageStep" style="display:flex;gap:8px;margin-bottom:24px">
+            <span id="step-ind-1" style="flex:1;height:4px;border-radius:4px;background:var(--primary)"></span>
+            <span id="step-ind-2" style="flex:1;height:4px;border-radius:4px;background:var(--border)"></span>
+            <span id="step-ind-3" style="flex:1;height:4px;border-radius:4px;background:var(--border)"></span>
           </div>
 
-          <!-- Single mode -->
-          <div id="singleMode">
-            <h3 style="margin-bottom: 16px;">Step 1: Upload your photo</h3>
-            <div class="upload-zone" onclick="simulateUpload()">
-              <div class="upload-icon">📤</div>
+          <!-- STEP 1: Upload -->
+          <div id="realStep1">
+            <h3 style="margin-bottom:16px">Step 1: Upload your photo</h3>
+            <div id="realUploadZone" style="border:2px dashed var(--border);border-radius:16px;padding:64px 24px;text-align:center;background:white;cursor:pointer;transition:all .2s">
+              <div style="font-size:48px;margin-bottom:16px">&#128247;</div>
               <h3>Drag & drop your photo here</h3>
-              <p style="color: var(--text-muted); margin-top: 8px;">or click to browse — JPG, PNG up to 50MB</p>
-              <button class="btn btn-primary" style="margin-top: 24px;">Choose File</button>
+              <p style="color:var(--text-muted);margin:8px 0 16px">or click to browse — JPG, PNG up to 10MB</p>
+              <button class="btn btn-primary" type="button">Choose File</button>
             </div>
-            <div style="margin-top: 24px; display: flex; justify-content: space-between; padding: 16px; background: var(--bg); border-radius: 10px; flex-wrap: wrap; gap: 12px;">
-              <div><strong>📦 Bulk upload?</strong><span style="color: var(--text-muted); margin-left: 8px;">Process up to 30 images at once</span></div>
-              <button class="btn btn-secondary" onclick="toggleBulkMode()">Switch to Bulk Mode</button>
+            <input type="file" id="realFileInput" accept="image/jpeg,image/png" style="display:none">
+            <div id="uploadPreview" style="display:none;margin-top:16px;text-align:center">
+              <img id="uploadPreviewImg" style="max-height:300px;border-radius:12px;margin-bottom:12px">
+              <p id="uploadFileName" style="color:var(--text-muted);font-size:13px"></p>
+            </div>
+            <div id="uploadProgress" style="display:none;margin-top:16px;text-align:center">
+              <div style="font-size:32px;margin-bottom:8px">&#9203;</div>
+              <p>Uploading your photo...</p>
+              <div style="background:var(--border);height:6px;border-radius:6px;margin-top:12px;overflow:hidden"><div id="uploadBar" style="background:var(--primary);height:100%;width:0%;transition:width .3s;border-radius:6px"></div></div>
             </div>
           </div>
 
-          <!-- Bulk mode -->
-          <div id="bulkMode" style="display:none;">
-            <h3 style="margin-bottom: 16px;">Bulk Upload <span style="font-size:14px;color:var(--text-muted);font-weight:400">— up to 30 images</span></h3>
-            <div class="upload-zone" onclick="simulateBulkUpload()">
-              <div class="upload-icon">📦</div>
-              <h3>Drag & drop multiple photos</h3>
-              <p style="color: var(--text-muted); margin-top: 8px;">Select up to 30 images — JPG, PNG up to 50MB each</p>
-              <button class="btn btn-primary" style="margin-top: 24px;">Select Files</button>
-            </div>
-            <div id="bulkList" style="display:none; margin-top:24px;">
-              <h4 style="margin-bottom:12px;">Selected Files (<span id="bulkCount">5</span>)</h4>
-              <div class="bulk-upload-list">
-                <div class="bulk-item"><div class="bulk-item-thumb"></div><div class="bulk-item-name">living_room_main.jpg</div><div class="bulk-item-size">3.2 MB</div><span class="bulk-item-remove" onclick="this.parentElement.remove()">✕</span></div>
-                <div class="bulk-item"><div class="bulk-item-thumb"></div><div class="bulk-item-name">master_bedroom.jpg</div><div class="bulk-item-size">2.8 MB</div><span class="bulk-item-remove" onclick="this.parentElement.remove()">✕</span></div>
-                <div class="bulk-item"><div class="bulk-item-thumb"></div><div class="bulk-item-name">kitchen_wide.jpg</div><div class="bulk-item-size">4.1 MB</div><span class="bulk-item-remove" onclick="this.parentElement.remove()">✕</span></div>
-                <div class="bulk-item"><div class="bulk-item-thumb"></div><div class="bulk-item-name">dining_area.jpg</div><div class="bulk-item-size">2.5 MB</div><span class="bulk-item-remove" onclick="this.parentElement.remove()">✕</span></div>
-                <div class="bulk-item"><div class="bulk-item-thumb"></div><div class="bulk-item-name">guest_bedroom.jpg</div><div class="bulk-item-size">3.0 MB</div><span class="bulk-item-remove" onclick="this.parentElement.remove()">✕</span></div>
+          <!-- STEP 2: Room & Style -->
+          <div id="realStep2" style="display:none">
+            <h3 style="margin-bottom:16px">Step 2: Choose room type & style</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
+              <div class="form-group">
+                <label style="font-weight:600;margin-bottom:8px;display:block">Room Type</label>
+                <select id="realRoomType" style="width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit">
+                  <option value="living">Living Room</option>
+                  <option value="bedroom">Bedroom</option>
+                  <option value="kitchen">Kitchen</option>
+                  <option value="dining">Dining Room</option>
+                  <option value="bathroom">Bathroom</option>
+                  <option value="office">Home Office</option>
+                  <option value="outdoor">Outdoor/Patio</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label style="font-weight:600;margin-bottom:8px;display:block">Design Style</label>
+                <select id="realStyle" style="width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit">
+                  <option value="modern">Modern</option>
+                  <option value="scandinavian">Scandinavian</option>
+                  <option value="coastal">Coastal</option>
+                  <option value="luxury">Luxury</option>
+                  <option value="farmhouse">Farmhouse</option>
+                  <option value="industrial">Industrial</option>
+                  <option value="bohemian">Bohemian</option>
+                  <option value="contemporary">Contemporary</option>
+                  <option value="traditional">Traditional</option>
+                  <option value="minimalist">Minimalist</option>
+                </select>
               </div>
             </div>
-            <div style="margin-top: 24px; display: flex; justify-content: space-between; padding: 16px; background: var(--bg); border-radius: 10px; flex-wrap: wrap; gap: 12px;">
-              <div><strong>Single image?</strong><span style="color: var(--text-muted); margin-left: 8px;">Switch back to single upload mode</span></div>
-              <button class="btn btn-secondary" onclick="toggleBulkMode()">Switch to Single</button>
+            <div id="realUploadedThumb" style="background:var(--bg);padding:16px;border-radius:12px;display:flex;align-items:center;gap:16px;margin-bottom:24px">
+              <img id="realThumbImg" style="width:80px;height:60px;object-fit:cover;border-radius:8px">
+              <div>
+                <div style="font-weight:600" id="realThumbName">photo.jpg</div>
+                <div style="color:var(--text-muted);font-size:13px">Ready to stage</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:12px">
+              <button class="btn btn-secondary" onclick="realGoStep(1)">Back</button>
+              <button class="btn btn-primary" id="realSubmitBtn" onclick="realSubmitStaging()" style="flex:1;justify-content:center">Stage This Photo &#10024;</button>
             </div>
           </div>
 
-          <h3 style="margin-top: 40px; margin-bottom: 16px;">Choose a style</h3>
-          <div class="style-grid">
-            <div class="style-card modern selected" onclick="selectStyle(this)"><div class="style-preview">Modern</div><div class="style-info"><div class="style-name">Modern Minimalist</div><div class="style-cost">1 credit</div></div></div>
-            <div class="style-card scandi" onclick="selectStyle(this)"><div class="style-preview">Scandi</div><div class="style-info"><div class="style-name">Scandinavian</div><div class="style-cost">1 credit</div></div></div>
-            <div class="style-card coastal" onclick="selectStyle(this)"><div class="style-preview">Coastal</div><div class="style-info"><div class="style-name">Coastal</div><div class="style-cost">1 credit</div></div></div>
-            <div class="style-card boho" onclick="selectStyle(this)"><div class="style-preview">Boho</div><div class="style-info"><div class="style-name">Bohemian</div><div class="style-cost">1 credit</div></div></div>
-            <div class="style-card luxury" onclick="selectStyle(this)"><div class="style-preview">Luxury</div><div class="style-info"><div class="style-name">Luxury</div><div class="style-cost">2 credits</div></div></div>
-            <div class="style-card farmhouse" onclick="selectStyle(this)"><div class="style-preview">Farmhouse</div><div class="style-info"><div class="style-name">Farmhouse</div><div class="style-cost">1 credit</div></div></div>
-            <div class="style-card industrial" onclick="selectStyle(this)"><div class="style-preview">Industrial</div><div class="style-info"><div class="style-name">Industrial</div><div class="style-cost">1 credit</div></div></div>
-            <div class="style-card" onclick="selectStyle(this)"><div class="style-preview">Custom</div><div class="style-info"><div class="style-name">Custom (AI)</div><div class="style-cost">3 credits</div></div></div>
+          <!-- STEP 3: Processing & Result -->
+          <div id="realStep3" style="display:none">
+            <div id="processingView">
+              <div style="text-align:center;padding:48px 0">
+                <div style="font-size:48px;margin-bottom:16px;animation:spin 2s linear infinite">&#9881;</div>
+                <h3>AI is staging your room...</h3>
+                <p style="color:var(--text-muted);margin-top:8px" id="processingStatus">This usually takes 30-60 seconds</p>
+                <div style="background:var(--border);height:6px;border-radius:6px;margin-top:24px;max-width:400px;margin-left:auto;margin-right:auto;overflow:hidden"><div id="renderBar" style="background:var(--primary);height:100%;width:10%;transition:width .5s;border-radius:6px"></div></div>
+              </div>
+            </div>
+            <div id="resultView" style="display:none">
+              <h3 style="margin-bottom:16px">Your staged photo is ready!</h3>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;border-radius:12px;overflow:hidden;margin-bottom:24px">
+                <div style="position:relative">
+                  <img id="beforeImg" style="width:100%;aspect-ratio:4/3;object-fit:cover">
+                  <span style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);color:white;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:700">BEFORE</span>
+                </div>
+                <div style="position:relative">
+                  <img id="afterImg" style="width:100%;aspect-ratio:4/3;object-fit:cover">
+                  <span style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);color:white;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:700">AFTER</span>
+                </div>
+              </div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <a id="downloadBtn" class="btn btn-primary" download target="_blank">Download Staged Image</a>
+                <button class="btn btn-secondary" onclick="realReset()">Stage Another Photo</button>
+                <button class="btn btn-secondary" onclick="realRegenerate()">Try Different Style</button>
+              </div>
+            </div>
           </div>
 
-          <h3 style="margin-bottom: 16px;">Advanced options</h3>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Room type</label>
-              <select>
-                <option value="living" onclick="setRoomType('living')">Living Room</option><option>Master Bedroom</option><option>Guest Bedroom</option>
-                <option>Kitchen</option><option>Dining Room</option><option>Bathroom</option>
-                <option>Home Office</option><option>Outdoor / Patio</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Output resolution</label>
-              <select>
-                <option>4K (3840 × 2160) — included</option>
-                <option>HD (1920 × 1080) — included</option>
-                <option>8K — +1 credit</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Special instructions (optional)</label>
-            <textarea rows="3" placeholder="e.g., 'Add a large sectional sofa, neutral palette, plants near window'"></textarea>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Project (optional)</label>
-              <select>
-                <option>None — standalone</option>
-                <option>1247 Oak Street</option>
-                <option>882 Pine Avenue</option>
-                <option>33 Maple Boulevard</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Add virtual staging disclosure</label>
-              <select>
-                <option>Yes — small badge bottom-right</option>
-                <option>No badge</option>
-              </select>
-            </div>
-          </div>
-          <div style="display: flex; gap: 16px; margin-top: 20px; flex-wrap: wrap;">
-            <button class="btn btn-secondary" onclick="showSub('home')">← Cancel</button>
-            <button class="btn btn-primary" style="margin-left: auto;" onclick="submitStaging()">Generate Staging (1 credit) →</button>
-          </div>
         </div>
+        <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
       </div>
-
-      </div><!-- end hidden mock wizard -->
-
-      <div id="stagingResult" style="display:none;margin-bottom:24px"></div>
 
       <!-- ============ ORDERS ============ -->
       <div id="sub-orders" class="subnav">
@@ -1889,7 +1886,7 @@
             <h3 style="margin-bottom:24px;">Default Staging Preferences</h3>
             <div class="form-row">
               <div class="form-group"><label>Default style</label><select><option>Modern Minimalist</option><option>Scandinavian</option><option>Coastal</option><option>Luxury</option></select></div>
-              <div class="form-group"><label>Default room type</label><select><option>Auto-detect</option><option value="living" onclick="setRoomType('living')">Living Room</option><option>Bedroom</option></select></div>
+              <div class="form-group"><label>Default room type</label><select><option>Auto-detect</option><option>Living Room</option><option>Bedroom</option></select></div>
             </div>
             <div class="form-row">
               <div class="form-group"><label>Output resolution</label><select><option>4K (3840 × 2160)</option><option>HD (1920 × 1080)</option></select></div>
@@ -2509,12 +2506,18 @@ function toggleBulkMode() {
     toast('Switched to bulk upload');
   }
 }
-// simulateUpload replaced by handleFileSelect in real API integration
+function simulateUpload() {
+  toast('Photo uploaded — proceed to choose style');
+  goWizardStep(2);
+}
 function simulateBulkUpload() {
   document.getElementById('bulkList').style.display = 'block';
   toast('5 files uploaded — choose styles');
 }
-// submitStaging replaced by real API version below
+function submitStaging() {
+  toast('Staging started — you will receive an email when ready');
+  setTimeout(() => { showSub('orders'); }, 800);
+}
 
 // ============ ORDER & PROJECT DETAILS ============
 function openOrderDetail(id) {
@@ -2584,173 +2587,207 @@ function copyRefer() {
   toast('Referral link copied to clipboard');
 }
 
-// ============ REAL API INTEGRATION ============
-var _uploadedImageUrl = '';
-var _selectedStyle = '';
-var _selectedRoom = 'living';
+// ============ REAL STAGING API ============
+var _realImageUrl = '';
+var _realPreviewUrl = '';
+var _realJobId = '';
 var _userId = 'user_' + Date.now();
 
-// Real file upload via drag-drop or browse
-function setupRealUpload() {
-  var zone = document.querySelector('.upload-zone');
-  if (!zone) return;
-  
-  // Create hidden file input
-  var fileInput = document.createElement('input');
-  fileInput.type = 'file';
-  fileInput.accept = 'image/jpeg,image/png';
-  fileInput.style.display = 'none';
-  fileInput.id = 'realFileInput';
-  document.body.appendChild(fileInput);
-  
-  zone.onclick = function() { fileInput.click(); };
-  
-  // Drag and drop
-  zone.ondragover = function(e) { e.preventDefault(); zone.style.borderColor = 'var(--primary)'; zone.style.background = 'var(--primary-light)'; };
-  zone.ondragleave = function() { zone.style.borderColor = ''; zone.style.background = ''; };
-  zone.ondrop = function(e) {
-    e.preventDefault();
-    zone.style.borderColor = ''; zone.style.background = '';
-    if (e.dataTransfer.files.length) handleFileSelect(e.dataTransfer.files[0]);
-  };
-  
-  fileInput.onchange = function() {
-    if (fileInput.files.length) handleFileSelect(fileInput.files[0]);
-  };
-}
+// Fetch real options from API on load
+(function() {
+  fetch('/api/vsai-options').then(function(r){return r.json()}).then(function(data) {
+    if (data.roomTypes) {
+      var sel = document.getElementById('realRoomType');
+      if (sel) { sel.innerHTML = ''; data.roomTypes.forEach(function(rt){ var o=document.createElement('option'); o.value=rt.value||rt; o.textContent=rt.label||rt; sel.appendChild(o); }); }
+    }
+    if (data.styles) {
+      var sel = document.getElementById('realStyle');
+      if (sel) { sel.innerHTML = ''; data.styles.forEach(function(s){ var o=document.createElement('option'); o.value=s.value||s; o.textContent=s.label||s; sel.appendChild(o); }); }
+    }
+  }).catch(function(){});
+})();
 
-function handleFileSelect(file) {
+// Upload zone setup
+(function() {
+  var zone = document.getElementById('realUploadZone');
+  var input = document.getElementById('realFileInput');
+  if (!zone || !input) return;
+  
+  zone.addEventListener('click', function(){ input.click(); });
+  zone.addEventListener('dragover', function(e){ e.preventDefault(); zone.style.borderColor='var(--primary)'; zone.style.background='var(--primary-light)'; });
+  zone.addEventListener('dragleave', function(){ zone.style.borderColor=''; zone.style.background='white'; });
+  zone.addEventListener('drop', function(e){ e.preventDefault(); zone.style.borderColor=''; zone.style.background='white'; if(e.dataTransfer.files.length) realHandleFile(e.dataTransfer.files[0]); });
+  input.addEventListener('change', function(){ if(input.files.length) realHandleFile(input.files[0]); });
+})();
+
+function realHandleFile(file) {
   if (!file.type.match('image.*')) { toast('Please select a JPG or PNG image', 'error'); return; }
-  if (file.size > 10 * 1024 * 1024) { toast('File too large. Max 10MB.', 'error'); return; }
-  
-  var zone = document.querySelector('.upload-zone');
-  zone.innerHTML = '<div class="upload-icon">&#9203;</div><h3>Uploading...</h3><p>' + file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)</p>';
-  
+  if (file.size > 10*1024*1024) { toast('File too large. Max 10MB.', 'error'); return; }
+
+  // Show preview
   var reader = new FileReader();
   reader.onload = function(e) {
-    var base64 = e.target.result.split(',')[1];
+    _realPreviewUrl = e.target.result;
+    document.getElementById('realUploadZone').style.display = 'none';
+    document.getElementById('uploadPreview').style.display = 'none';
+    document.getElementById('uploadProgress').style.display = 'block';
+    
+    var bar = document.getElementById('uploadBar');
+    bar.style.width = '30%';
+    
+    // Extract base64 and upload
+    var b64 = e.target.result.split(',')[1];
     
     fetch('/api/upload', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: _userId,
-        fileName: file.name,
-        fileBase64: base64
-      })
-    })
-    .then(function(r) { return r.json(); })
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ userId: _userId, fileName: file.name, fileBase64: b64 })
+    }).then(function(r){ bar.style.width='70%'; return r.json(); })
     .then(function(data) {
-      if (data.ok !== false && (data.publicUrl || data.url || data.imageUrl)) {
-        _uploadedImageUrl = data.publicUrl || data.url || data.imageUrl;
-        zone.innerHTML = '<div class="upload-icon">&#9989;</div><h3>Photo Uploaded!</h3><p>' + file.name + '</p><img src="' + _uploadedImageUrl + '" style="max-height:200px;border-radius:8px;margin-top:12px">';
-        toast('Photo uploaded! Now choose a style.');
-        goWizardStep(2);
+      bar.style.width = '100%';
+      _realImageUrl = data.publicUrl || data.url || data.imageUrl || '';
+      if (_realImageUrl || data.ok !== false) {
+        setTimeout(function(){
+          document.getElementById('uploadProgress').style.display = 'none';
+          document.getElementById('uploadPreview').style.display = 'block';
+          document.getElementById('uploadPreviewImg').src = _realPreviewUrl;
+          document.getElementById('uploadFileName').textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB) — Uploaded!';
+          toast('Photo uploaded! Click Next to choose style.');
+          
+          // Auto-advance to step 2 after a beat
+          setTimeout(function(){ realGoStep(2); }, 800);
+        }, 400);
       } else {
-        zone.innerHTML = '<div class="upload-icon">&#10060;</div><h3>Upload Failed</h3><p>' + (data.error || 'Please try again') + '</p>';
-        toast('Upload failed: ' + (data.error || 'Unknown error'), 'error');
+        document.getElementById('uploadProgress').style.display = 'none';
+        document.getElementById('realUploadZone').style.display = 'block';
+        toast('Upload failed: ' + (data.error || 'Please try again'), 'error');
       }
-    })
-    .catch(function(err) {
-      zone.innerHTML = '<div class="upload-icon">&#10060;</div><h3>Upload Error</h3><p>' + err.message + '</p>';
+    }).catch(function(err) {
+      document.getElementById('uploadProgress').style.display = 'none';
+      document.getElementById('realUploadZone').style.display = 'block';
       toast('Upload error: ' + err.message, 'error');
     });
   };
   reader.readAsDataURL(file);
 }
 
-// Real style selection
-function selectStyle(card) {
-  document.querySelectorAll('.style-card').forEach(function(c) { c.classList.remove('selected'); });
-  card.classList.add('selected');
-  _selectedStyle = card.querySelector('.style-name')?.textContent?.toLowerCase() || card.className.match(/modern|scandi|coastal|boho|luxury|farmhouse|industrial/)?.[0] || 'modern';
-  toast('Style selected: ' + _selectedStyle);
-}
-
-// Real staging submission
-function submitStaging() {
-  if (!_uploadedImageUrl) { toast('Please upload a photo first', 'error'); return; }
-  if (!_selectedStyle) { toast('Please select a style first', 'error'); return; }
+function realGoStep(step) {
+  document.getElementById('realStep1').style.display = step===1?'block':'none';
+  document.getElementById('realStep2').style.display = step===2?'block':'none';
+  document.getElementById('realStep3').style.display = step===3?'block':'none';
   
-  var submitBtn = document.querySelector('[onclick="submitStaging()"]');
-  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Processing...'; }
+  for(var i=1;i<=3;i++){
+    var ind = document.getElementById('step-ind-'+i);
+    if(ind) ind.style.background = i<=step?'var(--primary)':'var(--border)';
+  }
   
-  toast('Starting AI staging...');
-  
-  fetch('/api/vsai-create', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      userId: _userId,
-      imageUrl: _uploadedImageUrl,
-      room_type: _selectedRoom,
-      style: _selectedStyle
-    })
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.ok !== false && (data.renderId || data.render_id)) {
-      var renderId = data.renderId || data.render_id;
-      toast('Staging job created! Waiting for AI render...');
-      pollRender(renderId, 0);
-    } else {
-      toast('Staging failed: ' + (data.error || JSON.stringify(data)), 'error');
-      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit for Staging'; }
-    }
-  })
-  .catch(function(err) {
-    toast('Error: ' + err.message, 'error');
-    if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit for Staging'; }
-  });
-}
-
-// Poll for render completion
-function pollRender(renderId, attempts) {
-  if (attempts > 60) { toast('Render is taking longer than expected. Check Orders page.', 'error'); showSub('orders'); return; }
-  
-  fetch('/api/vsai-render?renderId=' + renderId)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      var status = data.status || '';
-      if (status === 'completed' || status === 'done' || data.outputs || data.output) {
-        var outputUrl = '';
-        if (data.outputs && data.outputs.length) outputUrl = data.outputs[0];
-        else if (data.output) outputUrl = data.output;
-        else if (data.url) outputUrl = data.url;
-        
-        toast('Staging complete!', 'success');
-        showStagingResult(outputUrl);
-      } else if (status === 'failed' || status === 'error') {
-        toast('Staging failed. Please try again.', 'error');
-        showSub('stage');
-      } else {
-        // Still processing, poll again
-        setTimeout(function() { pollRender(renderId, attempts + 1); }, 3000);
-      }
-    })
-    .catch(function() {
-      setTimeout(function() { pollRender(renderId, attempts + 1); }, 5000);
-    });
-}
-
-// Show the staging result
-function showStagingResult(outputUrl) {
-  goWizardStep(4);
-  var resultArea = document.getElementById('stagingResult');
-  if (resultArea) {
-    resultArea.style.display = 'block';
-    resultArea.innerHTML = '<div class="image-compare"><div class="image-half before-img" style="background-image:url(' + _uploadedImageUrl + ');background-size:cover;background-position:center"><span class="badge">BEFORE</span></div><div class="image-half after-img" style="background-image:url(' + outputUrl + ');background-size:cover;background-position:center"><span class="badge">AFTER</span></div></div><div style="margin-top:16px;display:flex;gap:12px"><a href="' + outputUrl + '" download class="btn btn-primary" target="_blank">Download Staged Image</a><button class="btn btn-secondary" onclick="showSub(\'stage\')">Stage Another</button></div>';
-  } else {
-    showSub('orders');
+  if (step===2) {
+    document.getElementById('realThumbImg').src = _realPreviewUrl;
+    document.getElementById('realThumbName').textContent = 'Your uploaded photo';
   }
 }
 
-// Room type selection
-function setRoomType(type) { _selectedRoom = type; }
+function realSubmitStaging() {
+  if (!_realImageUrl) { toast('Please upload a photo first', 'error'); return; }
+  
+  var roomType = document.getElementById('realRoomType').value;
+  var style = document.getElementById('realStyle').value;
+  var btn = document.getElementById('realSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Processing...';
+  
+  realGoStep(3);
+  document.getElementById('processingView').style.display = 'block';
+  document.getElementById('resultView').style.display = 'none';
+  
+  var renderBar = document.getElementById('renderBar');
+  renderBar.style.width = '15%';
+  
+  fetch('/api/vsai-create', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ userId: _userId, imageUrl: _realImageUrl, room_type: roomType, style: style })
+  }).then(function(r){ renderBar.style.width='30%'; return r.json(); })
+  .then(function(data) {
+    if (data.ok !== false && (data.renderId || data.render_id || data.jobId || data.id)) {
+      _realJobId = data.renderId || data.render_id || data.jobId || data.id;
+      renderBar.style.width = '40%';
+      document.getElementById('processingStatus').textContent = 'AI is working its magic...';
+      realPollResult(_realJobId, 0);
+    } else {
+      toast('Staging failed: ' + (data.error || 'Unknown error'), 'error');
+      btn.disabled = false; btn.textContent = 'Stage This Photo \u2728';
+      realGoStep(2);
+    }
+  }).catch(function(err) {
+    toast('Error: ' + err.message, 'error');
+    btn.disabled = false; btn.textContent = 'Stage This Photo \u2728';
+    realGoStep(2);
+  });
+}
 
-// Initialize real upload on page load
-document.addEventListener('DOMContentLoaded', function() { setTimeout(setupRealUpload, 500); });
-if (document.readyState !== 'loading') { setTimeout(setupRealUpload, 500); }
+function realPollResult(jobId, attempts) {
+  if (attempts > 90) {
+    document.getElementById('processingStatus').textContent = 'Taking longer than expected. Check back shortly.';
+    return;
+  }
+  
+  var renderBar = document.getElementById('renderBar');
+  renderBar.style.width = Math.min(40 + attempts * 1, 90) + '%';
+  
+  fetch('/api/vsai-render?renderId=' + jobId)
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var status = (data.status || '').toLowerCase();
+      if (status === 'completed' || status === 'done' || data.outputs || data.output) {
+        renderBar.style.width = '100%';
+        var outputUrl = '';
+        if (data.outputs && data.outputs.length) outputUrl = data.outputs[0].url || data.outputs[0];
+        else if (data.output) outputUrl = data.output;
+        else if (data.url) outputUrl = data.url;
+        else if (data.result) outputUrl = data.result;
+        
+        setTimeout(function(){ realShowResult(outputUrl); }, 500);
+      } else if (status === 'failed' || status === 'error') {
+        toast('Staging failed. Please try again.', 'error');
+        document.getElementById('realSubmitBtn').disabled = false;
+        document.getElementById('realSubmitBtn').textContent = 'Stage This Photo \u2728';
+        realGoStep(2);
+      } else {
+        var msgs = ['AI is analyzing the room...','Placing furniture...','Adding finishing touches...','Almost there...'];
+        document.getElementById('processingStatus').textContent = msgs[Math.min(Math.floor(attempts/5), msgs.length-1)];
+        setTimeout(function(){ realPollResult(jobId, attempts+1); }, 2000);
+      }
+    })
+    .catch(function() {
+      setTimeout(function(){ realPollResult(jobId, attempts+1); }, 3000);
+    });
+}
+
+function realShowResult(outputUrl) {
+  document.getElementById('processingView').style.display = 'none';
+  document.getElementById('resultView').style.display = 'block';
+  document.getElementById('beforeImg').src = _realPreviewUrl;
+  document.getElementById('afterImg').src = outputUrl;
+  document.getElementById('downloadBtn').href = outputUrl;
+  toast('Your staged photo is ready!', 'success');
+  
+  var btn = document.getElementById('realSubmitBtn');
+  if(btn){ btn.disabled = false; btn.textContent = 'Stage This Photo \u2728'; }
+}
+
+function realReset() {
+  _realImageUrl = ''; _realPreviewUrl = ''; _realJobId = '';
+  document.getElementById('realUploadZone').style.display = 'block';
+  document.getElementById('uploadPreview').style.display = 'none';
+  document.getElementById('uploadProgress').style.display = 'none';
+  document.getElementById('realFileInput').value = '';
+  realGoStep(1);
+}
+
+function realRegenerate() {
+  if (!_realImageUrl) { toast('No image to regenerate', 'error'); return; }
+  realGoStep(2);
+}
 
 </script>
 </body>
