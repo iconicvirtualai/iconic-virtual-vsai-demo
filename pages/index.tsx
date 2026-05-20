@@ -675,10 +675,18 @@ const handlePurchaseClick = async () => {
             </span>
           </div>
           <nav className="flex items-center gap-4">
-            <a href="/home.html" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
+            <a
+              href="/home.html"
+              onClick={(e) => { e.preventDefault(); window.location.href = '/home.html'; }}
+              className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider cursor-pointer"
+            >
               Home
             </a>
-            <a href="/staging-dashboard.html" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
+            <a
+              href="/staging-dashboard.html"
+              onClick={(e) => { e.preventDefault(); window.location.href = '/staging-dashboard.html'; }}
+              className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider cursor-pointer"
+            >
               Dashboard
             </a>
             <a href="/login" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
@@ -757,7 +765,8 @@ const handlePurchaseClick = async () => {
                     <div className="mt-4 text-center">
                       <a
                         href="/home.html"
-                        className="text-xs font-medium uppercase tracking-[0.3em] text-slate-500 underline"
+                        onClick={(e) => { e.preventDefault(); window.location.href = '/home.html'; }}
+                        className="text-xs font-medium uppercase tracking-[0.3em] text-slate-500 underline cursor-pointer"
                       >
                         return to home
                       </a>
@@ -871,7 +880,11 @@ className="h-full w-full object-cover"                      />
                     </div>
 
                     <p className="mt-3 text-center text-xs uppercase tracking-[0.4em] text-slate-500">
-                      <a href="/home.html" className="underline">
+                      <a
+                        href="/home.html"
+                        onClick={(e) => { e.preventDefault(); window.location.href = '/home.html'; }}
+                        className="underline cursor-pointer"
+                      >
                         return to home
                       </a>
                     </p>

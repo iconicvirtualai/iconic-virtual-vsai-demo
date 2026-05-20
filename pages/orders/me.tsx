@@ -62,7 +62,11 @@ export default function DashboardPage() {
             </span>
           </div>
           <nav className="flex items-center gap-4">
-            <a href="/home.html" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">
+            <a
+              href="/home.html"
+              onClick={(e) => { e.preventDefault(); window.location.href = '/home.html'; }}
+              className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider cursor-pointer"
+            >
               Home
             </a>
             <a href="/" className="text-xs font-medium text-slate-600 hover:text-slate-900 uppercase tracking-wider">

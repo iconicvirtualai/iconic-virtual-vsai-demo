@@ -49,16 +49,16 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4">
+    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4" suppressHydrationWarning>
       <div className="w-full max-w-md">
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
           {/* Header */}
           <div className="mb-8 text-center">
-            <Link href="/home.html">
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-amber-800 to-amber-900 text-white font-bold mb-4">
+            <a href="/home.html" onClick={(e) => { e.preventDefault(); window.location.href = '/home.html'; }}>
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-amber-800 to-amber-900 text-white font-bold mb-4 cursor-pointer">
                 IV
               </div>
-            </Link>
+            </a>
             <h1 className="text-2xl font-bold text-slate-900 mb-2">
               {isSignUp ? "Create Account" : "Sign In"}
             </h1>
@@ -78,7 +78,7 @@ export default function LoginPage() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" suppressHydrationWarning>
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
                 Email Address
@@ -160,9 +160,13 @@ export default function LoginPage() {
 
           {/* Back to Home */}
           <div className="mt-8 pt-6 border-t border-slate-200 text-center">
-            <Link href="/home.html" className="text-sm text-slate-600 hover:text-slate-900 font-medium">
+            <a
+              href="/home.html"
+              onClick={(e) => { e.preventDefault(); window.location.href = '/home.html'; }}
+              className="text-sm text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
+            >
               ← Back to Home
-            </Link>
+            </a>
           </div>
         </div>
 
