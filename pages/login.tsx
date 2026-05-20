@@ -55,7 +55,7 @@ export default function LoginPage() {
           {/* Header */}
           <div className="mb-8 text-center">
             <a href="/home.html" onClick={(e) => { e.preventDefault(); window.location.href = '/home.html'; }}>
-              <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-amber-800 to-amber-900 text-white font-bold mb-4 cursor-pointer">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 text-white font-bold mb-4 cursor-pointer">
                 IV
               </div>
             </a>
@@ -90,7 +90,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-500 outline-none focus:border-amber-800 focus:ring-2 focus:ring-amber-100 transition"
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-500 outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-200 transition"
               />
             </div>
 
@@ -105,14 +105,14 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-500 outline-none focus:border-amber-800 focus:ring-2 focus:ring-amber-100 transition"
+                className="w-full px-4 py-3 rounded-lg border border-slate-300 text-slate-900 placeholder-slate-500 outline-none focus:border-slate-800 focus:ring-2 focus:ring-slate-200 transition"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-lg bg-gradient-to-r from-amber-800 to-amber-900 text-white font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 rounded-lg bg-gradient-to-r from-slate-800 to-slate-900 text-white font-semibold hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -137,7 +137,7 @@ export default function LoginPage() {
                     setIsSignUp(false);
                     setError("");
                   }}
-                  className="text-amber-800 hover:text-amber-900 font-semibold"
+                  className="text-slate-800 hover:text-slate-900 font-semibold"
                 >
                   Sign In
                 </button>
@@ -150,7 +150,7 @@ export default function LoginPage() {
                     setIsSignUp(true);
                     setError("");
                   }}
-                  className="text-amber-800 hover:text-amber-900 font-semibold"
+                  className="text-slate-800 hover:text-slate-900 font-semibold"
                 >
                   Create one
                 </button>
