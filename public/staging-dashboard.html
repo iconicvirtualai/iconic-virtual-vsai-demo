@@ -1362,7 +1362,7 @@
             <option>All Styles</option><option>Modern</option><option>Scandinavian</option><option>Luxury</option>
           </select>
           <button class="btn btn-secondary" style="margin-left: auto;" onclick="toast('CSV downloaded')">📤 Export CSV</button>
-          <button class="btn btn-primary" onclick="showSub('stage')">+ New Order</button>
+          <button class="btn btn-primary" onclick="openModal('newOrder')">+ New Order</button>
         </div>
 
         <div class="panel" style="padding: 0;">
@@ -2338,6 +2338,58 @@ const MODALS = {
     <div class="form-group"><input type="text" placeholder="Type DELETE"></div>
     <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-danger" onclick="closeModal(); goto('landing'); toast('Account deleted')">Delete Permanently</button></div>
   `,
+  newOrder: `
+    <h3>Create New Order</h3>
+    <p class="modal-subtitle" id="newOrderStep">Step 1 of 2: Order Information</p>
+
+    <div id="newOrderStep1" style="display: block;">
+      <div class="form-group"><label>Property Address</label><input type="text" id="newOrderAddress" placeholder="e.g., 1247 Oak Street, Brooklyn, NY"></div>
+      <div class="form-row">
+        <div class="form-group"><label>First Name</label><input type="text" id="newOrderFirstName" placeholder="John"></div>
+        <div class="form-group"><label>Last Name</label><input type="text" id="newOrderLastName" placeholder="Doe"></div>
+      </div>
+      <div class="form-group"><label>Email</label><input type="email" id="newOrderEmail" placeholder="john@example.com"></div>
+      <div class="form-group"><label>Phone (optional)</label><input type="tel" id="newOrderPhone" placeholder="(555) 123-4567"></div>
+      <div class="form-group"><label>Notes (optional)</label><textarea id="newOrderNotes" rows="2" placeholder="Any special requests..."></textarea></div>
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="proceedToOrderType()">Next: Choose Order Type</button></div>
+    </div>
+
+    <div id="newOrderStep2" style="display: none;">
+      <p style="color: var(--text-muted); margin-bottom: 20px;">Select what type of order you'd like to create:</p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+        <div class="style-card clickable" onclick="selectOrderType('staging');" id="orderType-staging" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
+          <div style="font-size: 32px; margin-bottom: 8px;">✨</div>
+          <div style="font-weight: 600; margin-bottom: 4px;">AI Staging</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Stage rooms with furniture</div>
+        </div>
+
+        <div class="style-card clickable" onclick="selectOrderType('photography');" id="orderType-photography" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
+          <div style="font-size: 32px; margin-bottom: 8px;">📸</div>
+          <div style="font-weight: 600; margin-bottom: 4px;">Photography</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Professional photos only</div>
+        </div>
+
+        <div class="style-card clickable" onclick="selectOrderType('video');" id="orderType-video" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
+          <div style="font-size: 32px; margin-bottom: 8px;">🎥</div>
+          <div style="font-weight: 600; margin-bottom: 4px;">Video Tour</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Virtual walkthrough</div>
+        </div>
+
+        <div class="style-card clickable" onclick="selectOrderType('mixed');" id="orderType-mixed" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
+          <div style="font-size: 32px; margin-bottom: 8px;">🎨</div>
+          <div style="font-weight: 600; margin-bottom: 4px;">Mixed Package</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Staging + photos + video</div>
+        </div>
+      </div>
+
+      <div style="background: var(--bg); padding: 16px; border-radius: 10px; margin-bottom: 16px;">
+        <p style="font-size: 13px; color: var(--text-muted);"><strong id="selectedOrderTypeLabel">Select a type</strong> to continue</p>
+      </div>
+
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="goBackOrderStep1()">Back</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="confirmNewOrder()" id="confirmOrderBtn" disabled>Create Order</button></div>
+    </div>
+  `,
   playVideo: `
     <h3>Tutorial</h3>
     <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); height:320px; border-radius:12px; display:flex;align-items:center;justify-content:center;color:white;font-size:64px;margin-bottom:16px;">▶️</div>
@@ -2763,6 +2815,135 @@ function realReset() {
 function realRegenerate() {
   if (!_realImageUrl) { toast('No image to regenerate', 'error'); return; }
   realGoStep(2);
+}
+
+// ============ NEW ORDER MODAL ============
+var _newOrderData = {};
+var _selectedOrderType = null;
+
+function proceedToOrderType() {
+  var address = document.getElementById('newOrderAddress').value.trim();
+  var firstName = document.getElementById('newOrderFirstName').value.trim();
+  var lastName = document.getElementById('newOrderLastName').value.trim();
+  var email = document.getElementById('newOrderEmail').value.trim();
+  var phone = document.getElementById('newOrderPhone').value.trim();
+  var notes = document.getElementById('newOrderNotes').value.trim();
+
+  if (!address || !firstName || !lastName || !email) {
+    toast('Please fill in all required fields', 'error');
+    return;
+  }
+
+  var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    toast('Please enter a valid email address', 'error');
+    return;
+  }
+
+  _newOrderData = {
+    address: address,
+    firstName: firstName,
+    lastName: lastName,
+    email: email,
+    phone: phone,
+    notes: notes,
+    createdAt: new Date().toISOString()
+  };
+
+  document.getElementById('newOrderStep1').style.display = 'none';
+  document.getElementById('newOrderStep2').style.display = 'block';
+  document.getElementById('newOrderStep').textContent = 'Step 2 of 2: Choose Order Type';
+  _selectedOrderType = null;
+  updateOrderTypeSelection();
+}
+
+function goBackOrderStep1() {
+  document.getElementById('newOrderStep1').style.display = 'block';
+  document.getElementById('newOrderStep2').style.display = 'none';
+  document.getElementById('newOrderStep').textContent = 'Step 1 of 2: Order Information';
+  _selectedOrderType = null;
+}
+
+function selectOrderType(type) {
+  _selectedOrderType = type;
+  updateOrderTypeSelection();
+
+  var labels = {
+    'staging': 'AI Staging',
+    'photography': 'Professional Photography',
+    'video': 'Video Tour',
+    'mixed': 'Mixed Package (Staging + Photography + Video)'
+  };
+
+  document.getElementById('selectedOrderTypeLabel').textContent = labels[type] || type;
+  document.getElementById('confirmOrderBtn').disabled = false;
+}
+
+function updateOrderTypeSelection() {
+  var types = ['staging', 'photography', 'video', 'mixed'];
+  types.forEach(function(type) {
+    var card = document.getElementById('orderType-' + type);
+    if (card) {
+      if (_selectedOrderType === type) {
+        card.style.borderColor = 'var(--primary)';
+        card.style.backgroundColor = 'var(--primary-light)';
+      } else {
+        card.style.borderColor = 'var(--border)';
+        card.style.backgroundColor = 'transparent';
+      }
+    }
+  });
+}
+
+function confirmNewOrder() {
+  if (!_selectedOrderType) {
+    toast('Please select an order type', 'error');
+    return;
+  }
+
+  _newOrderData.orderType = _selectedOrderType;
+  saveOrderToFirestore(_newOrderData);
+}
+
+function saveOrderToFirestore(orderData) {
+  var btn = document.getElementById('confirmOrderBtn');
+  if (btn) btn.disabled = true;
+
+  fetch('/api/orders/create', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(orderData)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok || data.orderId) {
+      var orderId = data.orderId || data.data?.orderId || 'NEW-' + Date.now();
+      toast('Order created successfully (ID: ' + orderId + ')');
+      closeModal();
+
+      setTimeout(function() {
+        showSub('orders');
+        document.getElementById('newOrderStep1').style.display = 'block';
+        document.getElementById('newOrderStep2').style.display = 'none';
+        document.getElementById('newOrderStep').textContent = 'Step 1 of 2: Order Information';
+        document.getElementById('newOrderAddress').value = '';
+        document.getElementById('newOrderFirstName').value = '';
+        document.getElementById('newOrderLastName').value = '';
+        document.getElementById('newOrderEmail').value = '';
+        document.getElementById('newOrderPhone').value = '';
+        document.getElementById('newOrderNotes').value = '';
+        _newOrderData = {};
+        _selectedOrderType = null;
+      }, 800);
+    } else {
+      toast('Failed to create order: ' + (data.error || 'Unknown error'), 'error');
+      if (btn) btn.disabled = false;
+    }
+  })
+  .catch(function(err) {
+    toast('Error creating order: ' + err.message, 'error');
+    if (btn) btn.disabled = false;
+  });
 }
 
 </script>
