@@ -5,7 +5,7 @@ export default function PortalPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/orders/me");
+    router.replace("/");
   }, [router]);
 
   return (
