@@ -1701,7 +1701,7 @@
           <div class="credit-pack" onclick="buyCredits(85)"><div class="pack-credits">85</div><div class="pack-label">credits</div><div class="pack-price">$255</div><div class="pack-per">$3.00 / image</div><button class="btn btn-secondary">Buy</button></div>
         </div>
 
-        <h3 style="margin: 48px 0 16px;">Or switch to a subscription</h3>
+        <h3 style="margin: 48px 0 16px;">AI Monthly Subscriptions</h3>
         <div class="pricing-grid">
           <div class="price-card">
             <h3>AI Starter</h3><div class="price-desc">10 credits/mo</div>
@@ -1716,6 +1716,44 @@
           <div class="price-card">
             <h3>AI Pro</h3><div class="price-desc">160 credits/mo</div>
             <div class="price-amount"><span class="num">$199</span><span class="unit">/mo</span></div>
+            <button class="btn btn-secondary" onclick="openModal('confirmUpgrade')">Upgrade</button>
+          </div>
+        </div>
+
+        <h3 style="margin: 48px 0 16px;">Professional Staging — One-Time</h3>
+        <div class="pricing-grid">
+          <div class="price-card">
+            <h3>Single Room</h3><div class="price-desc">1 professionally staged image</div>
+            <div class="price-amount"><span class="num">$15</span></div>
+            <button class="btn btn-secondary" onclick="toast('Redirecting to pro staging...')">Order Now</button>
+          </div>
+          <div class="price-card featured">
+            <h3>Small Property</h3><div class="price-desc">$12.50/image • 10 images</div>
+            <div class="price-amount"><span class="num">$125</span></div>
+            <button class="btn btn-primary" onclick="toast('Redirecting to pro staging...')">Order Now</button>
+          </div>
+          <div class="price-card">
+            <h3>Large Property</h3><div class="price-desc">$10.00/image • 20 images</div>
+            <div class="price-amount"><span class="num">$200</span></div>
+            <button class="btn btn-secondary" onclick="toast('Redirecting to pro staging...')">Order Now</button>
+          </div>
+        </div>
+
+        <h3 style="margin: 48px 0 16px;">Professional Staging — Monthly Subscriptions</h3>
+        <div class="pricing-grid">
+          <div class="price-card">
+            <h3>T Starter</h3><div class="price-desc">10 images/mo</div>
+            <div class="price-amount"><span class="num">$99</span><span class="unit">/mo</span></div>
+            <button class="btn btn-secondary" onclick="openModal('confirmUpgrade')">Upgrade</button>
+          </div>
+          <div class="price-card featured">
+            <h3>T Premium</h3><div class="price-desc">20 images/mo</div>
+            <div class="price-amount"><span class="num">$149</span><span class="unit">/mo</span></div>
+            <button class="btn btn-primary" onclick="openModal('confirmUpgrade')">Upgrade</button>
+          </div>
+          <div class="price-card">
+            <h3>T Pro</h3><div class="price-desc">50 images/mo</div>
+            <div class="price-amount"><span class="num">$299</span><span class="unit">/mo</span></div>
             <button class="btn btn-secondary" onclick="openModal('confirmUpgrade')">Upgrade</button>
           </div>
         </div>
