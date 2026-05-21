@@ -1369,79 +1369,29 @@
         <div style="background: linear-gradient(135deg, #2C2420, #4A3F37); border-radius: 16px; padding: 48px 40px; margin-bottom: 32px; color: white;">
           <div style="max-width: 600px;">
             <div style="font-size: 14px; font-weight: 700; letter-spacing: 1px; opacity: 0.8; margin-bottom: 12px;">PROFESSIONAL SERVICES</div>
-            <h1 style="font-size: 36px; font-weight: 700; margin-bottom: 16px; line-height: 1.2;">Elevate Your Listings</h1>
-            <p style="font-size: 16px; opacity: 0.9; line-height: 1.6;">Submit your photos for expert manual staging, professional photo editing, or cinematic video production. Our team delivers results that sell.</p>
+            <h1 style="font-size: 36px; font-weight: 700; margin-bottom: 16px; line-height: 1.2;">Pro Staging Submit</h1>
+            <p style="font-size: 16px; opacity: 0.9; line-height: 1.6;">Upload your photos and specify the room for each one. Our team will professionally stage them to maximize your listing appeal.</p>
           </div>
         </div>
 
         <div class="panel" style="max-width: 900px; padding: 40px;">
           <form id="proStagingForm" onsubmit="submitProStagingForm(event)">
 
-          <!-- Property & Room -->
-          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
-            <div>
-              <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px;">Property Address</label>
-              <input type="text" id="proAddress" placeholder="123 Main Street, Brooklyn, NY 11201" required style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 15px; background: white;">
-            </div>
-            <div>
-              <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px;">Room Type</label>
-              <select id="proRoomType" required style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 15px; background: white;">
-                <option value="">Select room</option>
-                <option value="living">Living Room</option>
-                <option value="bedroom">Bedroom</option>
-                <option value="kitchen">Kitchen</option>
-                <option value="dining">Dining Room</option>
-                <option value="bathroom">Bathroom</option>
-                <option value="office">Home Office</option>
-                <option value="outdoor">Outdoor/Patio</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
+          <!-- Property Info -->
+          <div style="margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
+            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px;">Property Address</label>
+            <input type="text" id="proAddress" placeholder="123 Main Street, Brooklyn, NY 11201" required style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 15px; background: white;">
           </div>
 
-          <!-- Design Style -->
-          <div style="margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
-            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 16px;">Design Style</label>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-              <label style="position: relative; cursor: pointer;">
-                <input type="radio" name="proStyle" value="modern" required style="position: absolute; opacity: 0;">
-                <div style="padding: 16px; border: 2px solid var(--border); border-radius: 12px; text-align: center; transition: all 0.2s; background: white;">
-                  <div style="font-size: 24px; margin-bottom: 8px;">🏢</div>
-                  <div style="font-size: 13px; font-weight: 600; color: var(--text);">Modern</div>
-                </div>
-              </label>
-              <label style="position: relative; cursor: pointer;">
-                <input type="radio" name="proStyle" value="scandinavian" style="position: absolute; opacity: 0;">
-                <div style="padding: 16px; border: 2px solid var(--border); border-radius: 12px; text-align: center; transition: all 0.2s; background: white;">
-                  <div style="font-size: 24px; margin-bottom: 8px;">🌿</div>
-                  <div style="font-size: 13px; font-weight: 600; color: var(--text);">Scandi</div>
-                </div>
-              </label>
-              <label style="position: relative; cursor: pointer;">
-                <input type="radio" name="proStyle" value="luxury" style="position: absolute; opacity: 0;">
-                <div style="padding: 16px; border: 2px solid var(--border); border-radius: 12px; text-align: center; transition: all 0.2s; background: white;">
-                  <div style="font-size: 24px; margin-bottom: 8px;">✨</div>
-                  <div style="font-size: 13px; font-weight: 600; color: var(--text);">Luxury</div>
-                </div>
-              </label>
-              <label style="position: relative; cursor: pointer;">
-                <input type="radio" name="proStyle" value="farmhouse" style="position: absolute; opacity: 0;">
-                <div style="padding: 16px; border: 2px solid var(--border); border-radius: 12px; text-align: center; transition: all 0.2s; background: white;">
-                  <div style="font-size: 24px; margin-bottom: 8px;">🌾</div>
-                  <div style="font-size: 13px; font-weight: 600; color: var(--text);">Farmhouse</div>
-                </div>
-              </label>
-            </div>
-          </div>
 
           <!-- Photos Upload -->
           <div style="margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
-            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 16px;">Upload Photos</label>
+            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 16px;">Upload & Label Photos</label>
 
             <div id="proPhotoUploadZone" style="border: 2px dashed var(--border); border-radius: 16px; padding: 48px 24px; text-align: center; cursor: pointer; background: linear-gradient(135deg, rgba(249,250,251,0.5), rgba(241,245,249,0.5)); transition: all 0.3s;" ondragover="event.preventDefault(); this.style.borderColor='#8B7355'; this.style.background='linear-gradient(135deg, rgba(249,250,251,1), rgba(241,245,249,1))';" ondragleave="this.style.borderColor='var(--border)'; this.style.background='linear-gradient(135deg, rgba(249,250,251,0.5), rgba(241,245,249,0.5))';" ondrop="handleProPhotoDrop(event)">
               <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.8;">📸</div>
               <p style="font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text);">Drag photos here or click to browse</p>
-              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Up to 20 high-resolution images. JPG, PNG supported.</p>
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Up to 20 high-resolution images. Specify room type for each photo. JPG, PNG supported.</p>
               <input type="file" id="proPhotoInput" multiple accept="image/*" style="display: none;" onchange="handleProPhotoSelect(event)">
               <button type="button" class="btn btn-secondary" onclick="document.getElementById('proPhotoInput').click()">Select Files</button>
             </div>
@@ -1451,7 +1401,7 @@
 
           <!-- Service Selection -->
           <div style="margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
-            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 16px;">Select Service</label>
+            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 16px;">Service Type</label>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
               <label style="position: relative; cursor: pointer;">
                 <input type="radio" name="proService" value="staging" required style="position: absolute; opacity: 0;">
@@ -1463,26 +1413,10 @@
               </label>
               <label style="position: relative; cursor: pointer;">
                 <input type="radio" name="proService" value="editing" style="position: absolute; opacity: 0;">
-                <div style="padding: 20px; border: 2px solid var(--border); border-radius: 12px; background: white; transition: all 0.2s;">
-                  <div style="font-weight: 600; color: var(--text); margin-bottom: 4px;">Editing Services</div>
-                  <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Photo color & enhancement</div>
-                  <div style="font-size: 14px; font-weight: 700; color: #8B7355;">1 token</div>
-                </div>
-              </label>
-              <label style="position: relative; cursor: pointer;">
-                <input type="radio" name="proService" value="video" style="position: absolute; opacity: 0;">
-                <div style="padding: 20px; border: 2px solid var(--border); border-radius: 12px; background: white; transition: all 0.2s;">
-                  <div style="font-weight: 600; color: var(--text); margin-bottom: 4px;">Video Production</div>
-                  <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Cinematic walkthrough</div>
-                  <div style="font-size: 14px; font-weight: 700; color: #8B7355;">3 tokens</div>
-                </div>
-              </label>
-              <label style="position: relative; cursor: pointer;">
-                <input type="radio" name="proService" value="mixed" style="position: absolute; opacity: 0;">
                 <div style="padding: 20px; border: 2px solid var(--border); border-radius: 12px; background: white; transition: all 0.2s; border-color: #8B7355; box-shadow: 0 0 0 1px rgba(139, 115, 85, 0.1);">
-                  <div style="font-weight: 600; color: var(--text); margin-bottom: 4px;">Complete Package</div>
-                  <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">All services included</div>
-                  <div style="font-size: 14px; font-weight: 700; color: #8B7355;">5 tokens</div>
+                  <div style="font-weight: 600; color: var(--text); margin-bottom: 4px;">Photo Editing</div>
+                  <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Color & enhancement only</div>
+                  <div style="font-size: 14px; font-weight: 700; color: #8B7355;">1 token</div>
                 </div>
               </label>
             </div>
@@ -1497,11 +1431,11 @@
           <!-- Cost Summary -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; padding: 24px; background: linear-gradient(135deg, rgba(139,115,85,0.05), rgba(160,137,110,0.05)); border-radius: 12px; border: 1px solid rgba(139,115,85,0.1);">
             <div>
-              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Token Cost</p>
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Cost Per Photo</p>
               <p style="font-size: 28px; font-weight: 700; color: #8B7355;"><span id="proTokenCost">2</span><span style="font-size: 16px; margin-left: 4px;">tokens</span></p>
             </div>
             <div style="text-align: right;">
-              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Available Balance</p>
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Your Balance</p>
               <p style="font-size: 28px; font-weight: 700; color: var(--text);"><span id="proTokenBalance">42</span><span style="font-size: 16px; margin-left: 4px;">tokens</span></p>
             </div>
           </div>
@@ -3149,9 +3083,10 @@ function renderProPhotoList() {
 
   _proPhotoFiles.forEach(function(file, idx) {
     var itemDiv = document.createElement('div');
-    itemDiv.style.display = 'flex';
+    itemDiv.style.display = 'grid';
+    itemDiv.style.gridTemplateColumns = '60px 1fr 140px 40px';
     itemDiv.style.gap = '12px';
-    itemDiv.style.padding = '12px';
+    itemDiv.style.padding = '14px';
     itemDiv.style.border = '1px solid var(--border)';
     itemDiv.style.borderRadius = '10px';
     itemDiv.style.marginBottom = '12px';
@@ -3166,13 +3101,22 @@ function renderProPhotoList() {
 
     var labelInput = document.createElement('input');
     labelInput.type = 'text';
-    labelInput.placeholder = 'e.g., Master Bedroom - Before';
-    labelInput.style.flex = '1';
+    labelInput.placeholder = 'Photo label (optional)';
     labelInput.style.padding = '8px 12px';
     labelInput.style.border = '1px solid var(--border)';
     labelInput.style.borderRadius = '8px';
     labelInput.style.fontSize = '13px';
+    labelInput.style.width = '100%';
     labelInput.id = 'proPhotoLabel-' + idx;
+
+    var roomSelect = document.createElement('select');
+    roomSelect.style.padding = '8px 12px';
+    roomSelect.style.border = '1px solid var(--border)';
+    roomSelect.style.borderRadius = '8px';
+    roomSelect.style.fontSize = '13px';
+    roomSelect.style.width = '100%';
+    roomSelect.id = 'proPhotoRoom-' + idx;
+    roomSelect.innerHTML = '<option value="">Select room</option><option value="living">Living Room</option><option value="bedroom">Bedroom</option><option value="kitchen">Kitchen</option><option value="dining">Dining</option><option value="bathroom">Bathroom</option><option value="office">Office</option><option value="outdoor">Outdoor</option><option value="other">Other</option>';
 
     var removeBtn = document.createElement('button');
     removeBtn.type = 'button';
@@ -3184,6 +3128,8 @@ function renderProPhotoList() {
     removeBtn.style.cursor = 'pointer';
     removeBtn.style.color = '#dc2626';
     removeBtn.style.fontWeight = 'bold';
+    removeBtn.style.width = '40px';
+    removeBtn.style.height = '36px';
     removeBtn.onclick = function() {
       _proPhotoFiles.splice(idx, 1);
       renderProPhotoList();
@@ -3191,6 +3137,7 @@ function renderProPhotoList() {
 
     itemDiv.appendChild(preview);
     itemDiv.appendChild(labelInput);
+    itemDiv.appendChild(roomSelect);
     itemDiv.appendChild(removeBtn);
     container.appendChild(itemDiv);
   });
@@ -3198,11 +3145,12 @@ function renderProPhotoList() {
   if (_proPhotoFiles.length > 0) {
     var summaryDiv = document.createElement('div');
     summaryDiv.style.padding = '12px';
-    summaryDiv.style.background = 'var(--primary-light)';
+    summaryDiv.style.background = 'rgba(139, 115, 85, 0.1)';
     summaryDiv.style.borderRadius = '8px';
     summaryDiv.style.fontSize = '13px';
-    summaryDiv.style.color = 'var(--primary)';
-    summaryDiv.textContent = _proPhotoFiles.length + ' photo(s) selected (max 20)';
+    summaryDiv.style.color = '#8B7355';
+    summaryDiv.style.marginTop = '12px';
+    summaryDiv.textContent = _proPhotoFiles.length + ' photo(s) ready • Cost: ' + (_proPhotoFiles.length * 2) + ' tokens';
     container.appendChild(summaryDiv);
   }
 }
@@ -3238,13 +3186,34 @@ function submitProStagingForm(e) {
   }
 
   var address = document.getElementById('proAddress').value.trim();
-  var roomType = document.getElementById('proRoomType').value;
-  var style = document.querySelector('input[name="proStyle"]:checked').value;
   var notes = document.getElementById('proNotes').value.trim();
   var service = document.querySelector('input[name="proService"]:checked').value;
 
-  if (!address || !roomType || !style || !service) {
+  if (!address || !service) {
     toast('Please fill in all required fields', 'error');
+    return;
+  }
+
+  // Validate that each photo has a room type
+  var allRoomsSelected = true;
+  var photos = [];
+  _proPhotoFiles.forEach(function(file, idx) {
+    var roomType = document.getElementById('proPhotoRoom-' + idx).value;
+    var label = document.getElementById('proPhotoLabel-' + idx).value.trim();
+
+    if (!roomType) {
+      allRoomsSelected = false;
+    }
+
+    photos.push({
+      index: idx,
+      label: label || ('Photo ' + (idx + 1)),
+      room: roomType
+    });
+  });
+
+  if (!allRoomsSelected) {
+    toast('Please select a room type for each photo', 'error');
     return;
   }
 
@@ -3252,25 +3221,18 @@ function submitProStagingForm(e) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting...';
 
-  // Collect photo labels
-  var photoLabels = [];
-  _proPhotoFiles.forEach(function(_, idx) {
-    var label = document.getElementById('proPhotoLabel-' + idx).value.trim();
-    photoLabels.push(label || ('Photo ' + (idx + 1)));
-  });
-
   // For now, create form data with file references
   var formData = new FormData();
   formData.append('address', address);
-  formData.append('roomType', roomType);
-  formData.append('style', style);
   formData.append('notes', notes);
   formData.append('service', service);
   formData.append('photoCount', _proPhotoFiles.length);
 
   _proPhotoFiles.forEach(function(file, idx) {
     formData.append('photos', file);
-    formData.append('photoLabels[' + idx + ']', photoLabels[idx]);
+    var photoMeta = photos[idx];
+    formData.append('photoLabels[' + idx + ']', photoMeta.label);
+    formData.append('photoRooms[' + idx + ']', photoMeta.room);
   });
 
   fetch('/api/pro-staging/submit', {
