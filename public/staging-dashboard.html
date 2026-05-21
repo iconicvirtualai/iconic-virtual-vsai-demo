@@ -657,6 +657,19 @@
     flex: 1; font-family: 'SF Mono', Monaco, monospace; font-size: 13px;
     min-width: 200px;
   }
+  /* Pro Staging Radio Styles */
+  input[type="radio"][name="proStyle"]:checked + div,
+  input[type="radio"][name="proService"]:checked + div {
+    border-color: #8B7355;
+    background: linear-gradient(135deg, rgba(139,115,85,0.05), rgba(160,137,110,0.05));
+    box-shadow: 0 0 0 3px rgba(139,115,85,0.1);
+  }
+
+  input[type="radio"][name="proStyle"]:checked + div div:first-child,
+  input[type="radio"][name="proService"]:checked + div div:first-child {
+    color: #8B7355;
+  }
+
   .tutorial-card {
     background: white; border: 1px solid var(--border); border-radius: 12px;
     overflow: hidden; cursor: pointer; transition: all 0.2s;
@@ -1353,112 +1366,151 @@
 
       <!-- ============ PRO STAGING INTAKE ============ -->
       <div id="sub-pro-staging" class="subnav">
-        <div class="page-title">Submit for Pro Staging</div>
-        <div class="page-subtitle">Submit your photos for professional manual staging, editing, or video production. Get expert results with token-based pricing.</div>
+        <div style="background: linear-gradient(135deg, #2C2420, #4A3F37); border-radius: 16px; padding: 48px 40px; margin-bottom: 32px; color: white;">
+          <div style="max-width: 600px;">
+            <div style="font-size: 14px; font-weight: 700; letter-spacing: 1px; opacity: 0.8; margin-bottom: 12px;">PROFESSIONAL SERVICES</div>
+            <h1 style="font-size: 36px; font-weight: 700; margin-bottom: 16px; line-height: 1.2;">Elevate Your Listings</h1>
+            <p style="font-size: 16px; opacity: 0.9; line-height: 1.6;">Submit your photos for expert manual staging, professional photo editing, or cinematic video production. Our team delivers results that sell.</p>
+          </div>
+        </div>
 
-        <div class="panel" style="max-width: 800px; padding: 32px;">
-          <form id="proStagingForm" onsubmit="submitProStagingForm(event)" class="space-y-6">
+        <div class="panel" style="max-width: 900px; padding: 40px;">
+          <form id="proStagingForm" onsubmit="submitProStagingForm(event)">
 
-            <!-- Property Info -->
+          <!-- Property & Room -->
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
             <div>
-              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text);">Property Information</h3>
-              <div class="form-row">
-                <div class="form-group">
-                  <label>Property Address *</label>
-                  <input type="text" id="proAddress" placeholder="123 Main St, City, State" required>
+              <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px;">Property Address</label>
+              <input type="text" id="proAddress" placeholder="123 Main Street, Brooklyn, NY 11201" required style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 15px; background: white;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px;">Room Type</label>
+              <select id="proRoomType" required style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 15px; background: white;">
+                <option value="">Select room</option>
+                <option value="living">Living Room</option>
+                <option value="bedroom">Bedroom</option>
+                <option value="kitchen">Kitchen</option>
+                <option value="dining">Dining Room</option>
+                <option value="bathroom">Bathroom</option>
+                <option value="office">Home Office</option>
+                <option value="outdoor">Outdoor/Patio</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Design Style -->
+          <div style="margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
+            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 16px;">Design Style</label>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+              <label style="position: relative; cursor: pointer;">
+                <input type="radio" name="proStyle" value="modern" required style="position: absolute; opacity: 0;">
+                <div style="padding: 16px; border: 2px solid var(--border); border-radius: 12px; text-align: center; transition: all 0.2s; background: white;">
+                  <div style="font-size: 24px; margin-bottom: 8px;">🏢</div>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--text);">Modern</div>
                 </div>
-                <div class="form-group">
-                  <label>Room Type *</label>
-                  <select id="proRoomType" required>
-                    <option value="">Select a room</option>
-                    <option value="living">Living Room</option>
-                    <option value="bedroom">Bedroom</option>
-                    <option value="kitchen">Kitchen</option>
-                    <option value="dining">Dining Room</option>
-                    <option value="bathroom">Bathroom</option>
-                    <option value="office">Home Office</option>
-                    <option value="outdoor">Outdoor/Patio</option>
-                    <option value="other">Other</option>
-                  </select>
+              </label>
+              <label style="position: relative; cursor: pointer;">
+                <input type="radio" name="proStyle" value="scandinavian" style="position: absolute; opacity: 0;">
+                <div style="padding: 16px; border: 2px solid var(--border); border-radius: 12px; text-align: center; transition: all 0.2s; background: white;">
+                  <div style="font-size: 24px; margin-bottom: 8px;">🌿</div>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--text);">Scandi</div>
                 </div>
-              </div>
+              </label>
+              <label style="position: relative; cursor: pointer;">
+                <input type="radio" name="proStyle" value="luxury" style="position: absolute; opacity: 0;">
+                <div style="padding: 16px; border: 2px solid var(--border); border-radius: 12px; text-align: center; transition: all 0.2s; background: white;">
+                  <div style="font-size: 24px; margin-bottom: 8px;">✨</div>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--text);">Luxury</div>
+                </div>
+              </label>
+              <label style="position: relative; cursor: pointer;">
+                <input type="radio" name="proStyle" value="farmhouse" style="position: absolute; opacity: 0;">
+                <div style="padding: 16px; border: 2px solid var(--border); border-radius: 12px; text-align: center; transition: all 0.2s; background: white;">
+                  <div style="font-size: 24px; margin-bottom: 8px;">🌾</div>
+                  <div style="font-size: 13px; font-weight: 600; color: var(--text);">Farmhouse</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Photos Upload -->
+          <div style="margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
+            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 16px;">Upload Photos</label>
+
+            <div id="proPhotoUploadZone" style="border: 2px dashed var(--border); border-radius: 16px; padding: 48px 24px; text-align: center; cursor: pointer; background: linear-gradient(135deg, rgba(249,250,251,0.5), rgba(241,245,249,0.5)); transition: all 0.3s;" ondragover="event.preventDefault(); this.style.borderColor='#8B7355'; this.style.background='linear-gradient(135deg, rgba(249,250,251,1), rgba(241,245,249,1))';" ondragleave="this.style.borderColor='var(--border)'; this.style.background='linear-gradient(135deg, rgba(249,250,251,0.5), rgba(241,245,249,0.5))';" ondrop="handleProPhotoDrop(event)">
+              <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.8;">📸</div>
+              <p style="font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text);">Drag photos here or click to browse</p>
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Up to 20 high-resolution images. JPG, PNG supported.</p>
+              <input type="file" id="proPhotoInput" multiple accept="image/*" style="display: none;" onchange="handleProPhotoSelect(event)">
+              <button type="button" class="btn btn-secondary" onclick="document.getElementById('proPhotoInput').click()">Select Files</button>
             </div>
 
-            <!-- Style Preference -->
+            <div id="proPhotoList" style="margin-top: 20px;"></div>
+          </div>
+
+          <!-- Service Selection -->
+          <div style="margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
+            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 16px;">Select Service</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <label style="position: relative; cursor: pointer;">
+                <input type="radio" name="proService" value="staging" required style="position: absolute; opacity: 0;">
+                <div style="padding: 20px; border: 2px solid var(--border); border-radius: 12px; background: white; transition: all 0.2s;">
+                  <div style="font-weight: 600; color: var(--text); margin-bottom: 4px;">Pro Staging</div>
+                  <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Professional furniture staging</div>
+                  <div style="font-size: 14px; font-weight: 700; color: #8B7355;">2 tokens</div>
+                </div>
+              </label>
+              <label style="position: relative; cursor: pointer;">
+                <input type="radio" name="proService" value="editing" style="position: absolute; opacity: 0;">
+                <div style="padding: 20px; border: 2px solid var(--border); border-radius: 12px; background: white; transition: all 0.2s;">
+                  <div style="font-weight: 600; color: var(--text); margin-bottom: 4px;">Editing Services</div>
+                  <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Photo color & enhancement</div>
+                  <div style="font-size: 14px; font-weight: 700; color: #8B7355;">1 token</div>
+                </div>
+              </label>
+              <label style="position: relative; cursor: pointer;">
+                <input type="radio" name="proService" value="video" style="position: absolute; opacity: 0;">
+                <div style="padding: 20px; border: 2px solid var(--border); border-radius: 12px; background: white; transition: all 0.2s;">
+                  <div style="font-weight: 600; color: var(--text); margin-bottom: 4px;">Video Production</div>
+                  <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Cinematic walkthrough</div>
+                  <div style="font-size: 14px; font-weight: 700; color: #8B7355;">3 tokens</div>
+                </div>
+              </label>
+              <label style="position: relative; cursor: pointer;">
+                <input type="radio" name="proService" value="mixed" style="position: absolute; opacity: 0;">
+                <div style="padding: 20px; border: 2px solid var(--border); border-radius: 12px; background: white; transition: all 0.2s; border-color: #8B7355; box-shadow: 0 0 0 1px rgba(139, 115, 85, 0.1);">
+                  <div style="font-weight: 600; color: var(--text); margin-bottom: 4px;">Complete Package</div>
+                  <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">All services included</div>
+                  <div style="font-size: 14px; font-weight: 700; color: #8B7355;">5 tokens</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div style="margin-bottom: 32px;">
+            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px;">Special Instructions (Optional)</label>
+            <textarea id="proNotes" placeholder="Furniture preferences, color palettes, areas to highlight, specific requests..." rows="4" style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-family: inherit; font-size: 14px; resize: none;"></textarea>
+          </div>
+
+          <!-- Cost Summary -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; padding: 24px; background: linear-gradient(135deg, rgba(139,115,85,0.05), rgba(160,137,110,0.05)); border-radius: 12px; border: 1px solid rgba(139,115,85,0.1);">
             <div>
-              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text);">Style Preference *</h3>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
-                  <input type="radio" name="proStyle" value="modern" required> Modern
-                </label>
-                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
-                  <input type="radio" name="proStyle" value="scandinavian"> Scandinavian
-                </label>
-                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
-                  <input type="radio" name="proStyle" value="luxury"> Luxury
-                </label>
-                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
-                  <input type="radio" name="proStyle" value="farmhouse"> Farmhouse
-                </label>
-              </div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Token Cost</p>
+              <p style="font-size: 28px; font-weight: 700; color: #8B7355;"><span id="proTokenCost">2</span><span style="font-size: 16px; margin-left: 4px;">tokens</span></p>
             </div>
-
-            <!-- Photo Upload -->
-            <div>
-              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text);">Upload Photos *</h3>
-              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Upload up to 20 high-quality photos. Label each one for better organization.</p>
-
-              <div id="proPhotoUploadZone" style="border: 2px dashed var(--border); border-radius: 12px; padding: 32px; text-align: center; cursor: pointer; background: var(--bg); transition: all 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='var(--primary)'; this.style.background='var(--primary-light)';" ondragleave="this.style.borderColor='var(--border)'; this.style.background='var(--bg)';" ondrop="handleProPhotoDrop(event)">
-                <div style="font-size: 32px; margin-bottom: 12px;">📸</div>
-                <p style="font-weight: 600; margin-bottom: 4px;">Drag and drop images here</p>
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">or click to browse (up to 20 images)</p>
-                <input type="file" id="proPhotoInput" multiple accept="image/*" style="display: none;" onchange="handleProPhotoSelect(event)">
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('proPhotoInput').click()">Browse Files</button>
-              </div>
-
-              <div id="proPhotoList" style="margin-top: 20px; space-y: 12px;"></div>
+            <div style="text-align: right;">
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Available Balance</p>
+              <p style="font-size: 28px; font-weight: 700; color: var(--text);"><span id="proTokenBalance">42</span><span style="font-size: 16px; margin-left: 4px;">tokens</span></p>
             </div>
+          </div>
 
-            <!-- Special Notes -->
-            <div>
-              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text);">Special Notes</h3>
-              <textarea id="proNotes" placeholder="Any special requests, furniture preferences, color schemes, or areas to focus on?" rows="4" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit;"></textarea>
-            </div>
-
-            <!-- Service Type & Pricing -->
-            <div>
-              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text);">Select Service *</h3>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
-                  <input type="radio" name="proService" value="staging" required> Pro Staging (2 tokens)
-                </label>
-                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
-                  <input type="radio" name="proService" value="editing"> Editing Services (1 token)
-                </label>
-                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
-                  <input type="radio" name="proService" value="video"> Video Editing (3 tokens)
-                </label>
-                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
-                  <input type="radio" name="proService" value="mixed"> All Services (5 tokens)
-                </label>
-              </div>
-            </div>
-
-            <!-- Token Cost Display -->
-            <div style="background: var(--bg); padding: 16px; border-radius: 10px;">
-              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Token Cost</p>
-              <div style="display: flex; align-items: baseline; gap: 8px;">
-                <span id="proTokenCost" style="font-size: 24px; font-weight: 700; color: var(--primary);">2</span>
-                <span style="color: var(--text-muted);">tokens</span>
-                <span style="margin-left: auto; color: var(--text-muted); font-size: 13px;">Current balance: <strong id="proTokenBalance">42</strong> tokens</span>
-              </div>
-            </div>
-
-            <!-- Submit Button -->
-            <div style="display: flex; gap: 12px;">
-              <button type="reset" class="btn btn-secondary" style="flex: 1;">Clear Form</button>
-              <button type="submit" id="proSubmitBtn" class="btn btn-primary" style="flex: 1;">Submit for Pro Staging</button>
-            </div>
+          <!-- Submit -->
+          <div style="display: flex; gap: 12px;">
+            <button type="reset" class="btn btn-secondary" style="flex: 1; padding: 14px;">Clear</button>
+            <button type="submit" id="proSubmitBtn" class="btn btn-primary" style="flex: 1; padding: 14px;">Submit for Professional Review</button>
+          </div>
           </form>
         </div>
       </div>
