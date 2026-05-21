@@ -1399,27 +1399,18 @@
             <div id="proPhotoList" style="margin-top: 20px;"></div>
           </div>
 
-          <!-- Service Selection -->
+          <!-- Design Style -->
           <div style="margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
-            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 16px;">Service Type</label>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-              <label style="position: relative; cursor: pointer;">
-                <input type="radio" name="proService" value="staging" required style="position: absolute; opacity: 0;">
-                <div style="padding: 20px; border: 2px solid var(--border); border-radius: 12px; background: white; transition: all 0.2s;">
-                  <div style="font-weight: 600; color: var(--text); margin-bottom: 4px;">Pro Staging</div>
-                  <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Professional furniture staging</div>
-                  <div style="font-size: 14px; font-weight: 700; color: #8B7355;">2 tokens</div>
-                </div>
-              </label>
-              <label style="position: relative; cursor: pointer;">
-                <input type="radio" name="proService" value="editing" style="position: absolute; opacity: 0;">
-                <div style="padding: 20px; border: 2px solid var(--border); border-radius: 12px; background: white; transition: all 0.2s; border-color: #8B7355; box-shadow: 0 0 0 1px rgba(139, 115, 85, 0.1);">
-                  <div style="font-weight: 600; color: var(--text); margin-bottom: 4px;">Photo Editing</div>
-                  <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Color & enhancement only</div>
-                  <div style="font-size: 14px; font-weight: 700; color: #8B7355;">1 token</div>
-                </div>
-              </label>
-            </div>
+            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px;">Design Style</label>
+            <select id="proStyle" required style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 15px; background: white;">
+              <option value="">Select preferred design style</option>
+              <option value="modern">Modern</option>
+              <option value="scandinavian">Scandinavian</option>
+              <option value="luxury">Luxury</option>
+              <option value="farmhouse">Farmhouse</option>
+              <option value="industrial">Industrial</option>
+              <option value="transitional">Transitional</option>
+            </select>
           </div>
 
           <!-- Notes -->
@@ -1432,7 +1423,7 @@
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; padding: 24px; background: linear-gradient(135deg, rgba(139,115,85,0.05), rgba(160,137,110,0.05)); border-radius: 12px; border: 1px solid rgba(139,115,85,0.1);">
             <div>
               <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Cost Per Photo</p>
-              <p style="font-size: 28px; font-weight: 700; color: #8B7355;"><span id="proTokenCost">2</span><span style="font-size: 16px; margin-left: 4px;">tokens</span></p>
+              <p style="font-size: 28px; font-weight: 700; color: #8B7355;">2<span style="font-size: 16px; margin-left: 4px;">tokens</span></p>
             </div>
             <div style="text-align: right;">
               <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Your Balance</p>
@@ -3155,27 +3146,6 @@ function renderProPhotoList() {
   }
 }
 
-function updateProTokenCost() {
-  var service = document.querySelector('input[name="proService"]:checked');
-  var tokenCost = 2;
-
-  if (service) {
-    switch(service.value) {
-      case 'staging': tokenCost = 2; break;
-      case 'editing': tokenCost = 1; break;
-      case 'video': tokenCost = 3; break;
-      case 'mixed': tokenCost = 5; break;
-    }
-  }
-
-  document.getElementById('proTokenCost').textContent = tokenCost;
-}
-
-document.addEventListener('change', function(e) {
-  if (e.target.name === 'proService') {
-    updateProTokenCost();
-  }
-});
 
 function submitProStagingForm(e) {
   e.preventDefault();
@@ -3186,10 +3156,10 @@ function submitProStagingForm(e) {
   }
 
   var address = document.getElementById('proAddress').value.trim();
+  var style = document.getElementById('proStyle').value;
   var notes = document.getElementById('proNotes').value.trim();
-  var service = document.querySelector('input[name="proService"]:checked').value;
 
-  if (!address || !service) {
+  if (!address || !style) {
     toast('Please fill in all required fields', 'error');
     return;
   }
@@ -3221,11 +3191,11 @@ function submitProStagingForm(e) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Submitting...';
 
-  // For now, create form data with file references
+  // Create form data with file references
   var formData = new FormData();
   formData.append('address', address);
+  formData.append('style', style);
   formData.append('notes', notes);
-  formData.append('service', service);
   formData.append('photoCount', _proPhotoFiles.length);
 
   _proPhotoFiles.forEach(function(file, idx) {

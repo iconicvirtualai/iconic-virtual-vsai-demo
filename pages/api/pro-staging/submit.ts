@@ -11,12 +11,11 @@ export const config = {
 
 interface ProStagingSubmission {
   address: string;
-  roomType: string;
-  style: string;
-  service: "staging" | "editing" | "video" | "mixed";
+  style: "modern" | "scandinavian" | "luxury" | "farmhouse" | "industrial" | "transitional";
   notes?: string;
   photoCount: number;
   photoLabels?: string[];
+  photoRooms?: string[];
   createdAt: string;
   status: "pending" | "in-progress" | "completed" | "failed";
   tokenCost: number;
@@ -27,22 +26,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
-  const { address, roomType, style, service, notes, photoCount } = req.body;
+  const { address, style, notes, photoCount } = req.body;
 
-  if (!address || !roomType || !style || !service) {
+  if (!address || !style) {
     return res.status(400).json({ ok: false, error: "Missing required fields" });
   }
 
   try {
-    // Calculate token cost
-    const tokenCostMap: Record<string, number> = {
-      staging: 2,
-      editing: 1,
-      video: 3,
-      mixed: 5,
-    };
-
-    const tokenCost = tokenCostMap[service as string] || 2;
+    // Pro staging costs 2 tokens per photo
+    const tokenCost = 2;
 
     // Generate submission ID
     const submissionId = `PSS-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -72,9 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     const submission: ProStagingSubmission = {
       address,
-      roomType,
-      style,
-      service: service as any,
+      style: style as any,
       notes: notes || "",
       photoCount: parseInt(photoCount) || 0,
       createdAt: new Date().toISOString(),
@@ -103,9 +93,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data: {
         submissionId,
         address,
-        roomType,
         style,
-        service,
         photoCount: parseInt(req.body.photoCount) || 0,
         status: "pending",
         createdAt: new Date().toISOString(),
