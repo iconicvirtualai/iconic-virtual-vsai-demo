@@ -1215,6 +1215,7 @@
         <div class="sidebar-section-title">Workspace</div>
         <a class="sidebar-link active" id="link-home" onclick="showSub('home')"><span class="icon">🏠</span> Dashboard</a>
         <a class="sidebar-link" id="link-stage" onclick="showSub('stage')"><span class="icon">✨</span> Stage Now</a>
+        <a class="sidebar-link" id="link-pro-staging" onclick="showSub('pro-staging')"><span class="icon">👔</span> Pro Staging</a>
         <a class="sidebar-link" id="link-orders" onclick="showSub('orders')"><span class="icon">📋</span> Orders <span class="badge">3</span></a>
         <a class="sidebar-link" id="link-history" onclick="showSub('history')"><span class="icon">🕓</span> History</a>
         <a class="sidebar-link" id="link-projects" onclick="showSub('projects')"><span class="icon">📁</span> Projects</a>
@@ -1260,12 +1261,22 @@
         <div class="page-title">Welcome back, Jane 👋</div>
         <div class="page-subtitle">Here's what's happening with your stagings today.</div>
 
-        <div class="quick-action-card">
-          <div>
-            <h2>Ready to stage your next listing?</h2>
-            <p>Upload a photo and get back stunning results in 30 seconds.</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div class="quick-action-card">
+            <div>
+              <h2>Ready to stage your next listing?</h2>
+              <p>Upload a photo and get back stunning results in 30 seconds.</p>
+            </div>
+            <button class="btn-stage" onclick="showSub('stage')">+ Stage Now</button>
           </div>
-          <button class="btn-stage" onclick="showSub('stage')">+ Stage Now</button>
+
+          <div class="quick-action-card" style="background: linear-gradient(135deg, #2C2420, #4A3F37);">
+            <div style="color: white;">
+              <h2 style="color: white;">Need Professional Staging?</h2>
+              <p style="color: #d1c4b8;">Submit photos for expert manual staging & editing.</p>
+            </div>
+            <button class="btn-stage" onclick="showSub('pro-staging')" style="background: white; color: #2C2420; font-weight: 600;">→ Submit for Pro</button>
+          </div>
         </div>
 
         <div class="stats-row">
@@ -1337,6 +1348,118 @@
             title="AI Staging Workspace"
             scrolling="no"
           ></iframe>
+        </div>
+      </div>
+
+      <!-- ============ PRO STAGING INTAKE ============ -->
+      <div id="sub-pro-staging" class="subnav">
+        <div class="page-title">Submit for Pro Staging</div>
+        <div class="page-subtitle">Submit your photos for professional manual staging, editing, or video production. Get expert results with token-based pricing.</div>
+
+        <div class="panel" style="max-width: 800px; padding: 32px;">
+          <form id="proStagingForm" onsubmit="submitProStagingForm(event)" class="space-y-6">
+
+            <!-- Property Info -->
+            <div>
+              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text);">Property Information</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Property Address *</label>
+                  <input type="text" id="proAddress" placeholder="123 Main St, City, State" required>
+                </div>
+                <div class="form-group">
+                  <label>Room Type *</label>
+                  <select id="proRoomType" required>
+                    <option value="">Select a room</option>
+                    <option value="living">Living Room</option>
+                    <option value="bedroom">Bedroom</option>
+                    <option value="kitchen">Kitchen</option>
+                    <option value="dining">Dining Room</option>
+                    <option value="bathroom">Bathroom</option>
+                    <option value="office">Home Office</option>
+                    <option value="outdoor">Outdoor/Patio</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Style Preference -->
+            <div>
+              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text);">Style Preference *</h3>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
+                  <input type="radio" name="proStyle" value="modern" required> Modern
+                </label>
+                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
+                  <input type="radio" name="proStyle" value="scandinavian"> Scandinavian
+                </label>
+                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
+                  <input type="radio" name="proStyle" value="luxury"> Luxury
+                </label>
+                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
+                  <input type="radio" name="proStyle" value="farmhouse"> Farmhouse
+                </label>
+              </div>
+            </div>
+
+            <!-- Photo Upload -->
+            <div>
+              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text);">Upload Photos *</h3>
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">Upload up to 20 high-quality photos. Label each one for better organization.</p>
+
+              <div id="proPhotoUploadZone" style="border: 2px dashed var(--border); border-radius: 12px; padding: 32px; text-align: center; cursor: pointer; background: var(--bg); transition: all 0.2s;" ondragover="event.preventDefault(); this.style.borderColor='var(--primary)'; this.style.background='var(--primary-light)';" ondragleave="this.style.borderColor='var(--border)'; this.style.background='var(--bg)';" ondrop="handleProPhotoDrop(event)">
+                <div style="font-size: 32px; margin-bottom: 12px;">📸</div>
+                <p style="font-weight: 600; margin-bottom: 4px;">Drag and drop images here</p>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">or click to browse (up to 20 images)</p>
+                <input type="file" id="proPhotoInput" multiple accept="image/*" style="display: none;" onchange="handleProPhotoSelect(event)">
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('proPhotoInput').click()">Browse Files</button>
+              </div>
+
+              <div id="proPhotoList" style="margin-top: 20px; space-y: 12px;"></div>
+            </div>
+
+            <!-- Special Notes -->
+            <div>
+              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text);">Special Notes</h3>
+              <textarea id="proNotes" placeholder="Any special requests, furniture preferences, color schemes, or areas to focus on?" rows="4" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit;"></textarea>
+            </div>
+
+            <!-- Service Type & Pricing -->
+            <div>
+              <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text);">Select Service *</h3>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
+                  <input type="radio" name="proService" value="staging" required> Pro Staging (2 tokens)
+                </label>
+                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
+                  <input type="radio" name="proService" value="editing"> Editing Services (1 token)
+                </label>
+                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
+                  <input type="radio" name="proService" value="video"> Video Editing (3 tokens)
+                </label>
+                <label style="display: flex; align-items: center; padding: 12px; border: 2px solid var(--border); border-radius: 10px; cursor: pointer;">
+                  <input type="radio" name="proService" value="mixed"> All Services (5 tokens)
+                </label>
+              </div>
+            </div>
+
+            <!-- Token Cost Display -->
+            <div style="background: var(--bg); padding: 16px; border-radius: 10px;">
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">Token Cost</p>
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span id="proTokenCost" style="font-size: 24px; font-weight: 700; color: var(--primary);">2</span>
+                <span style="color: var(--text-muted);">tokens</span>
+                <span style="margin-left: auto; color: var(--text-muted); font-size: 13px;">Current balance: <strong id="proTokenBalance">42</strong> tokens</span>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div style="display: flex; gap: 12px;">
+              <button type="reset" class="btn btn-secondary" style="flex: 1;">Clear Form</button>
+              <button type="submit" id="proSubmitBtn" class="btn btn-primary" style="flex: 1;">Submit for Pro Staging</button>
+            </div>
+          </form>
         </div>
       </div>
 
@@ -2943,6 +3066,189 @@ function saveOrderToFirestore(orderData) {
   .catch(function(err) {
     toast('Error creating order: ' + err.message, 'error');
     if (btn) btn.disabled = false;
+  });
+}
+
+// ============ PRO STAGING INTAKE ============
+var _proPhotoFiles = [];
+
+function handleProPhotoDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  var files = Array.from(e.dataTransfer.files || []).slice(0, 20 - _proPhotoFiles.length);
+  if (files.length > 0) {
+    _proPhotoFiles = _proPhotoFiles.concat(files).slice(0, 20);
+    renderProPhotoList();
+  }
+}
+
+function handleProPhotoSelect(e) {
+  var files = Array.from(e.target.files || []).slice(0, 20 - _proPhotoFiles.length);
+  if (files.length > 0) {
+    _proPhotoFiles = _proPhotoFiles.concat(files).slice(0, 20);
+    renderProPhotoList();
+  }
+  e.target.value = '';
+}
+
+function renderProPhotoList() {
+  var container = document.getElementById('proPhotoList');
+  container.innerHTML = '';
+
+  _proPhotoFiles.forEach(function(file, idx) {
+    var itemDiv = document.createElement('div');
+    itemDiv.style.display = 'flex';
+    itemDiv.style.gap = '12px';
+    itemDiv.style.padding = '12px';
+    itemDiv.style.border = '1px solid var(--border)';
+    itemDiv.style.borderRadius = '10px';
+    itemDiv.style.marginBottom = '12px';
+    itemDiv.style.alignItems = 'center';
+
+    var preview = document.createElement('img');
+    preview.src = URL.createObjectURL(file);
+    preview.style.width = '60px';
+    preview.style.height = '60px';
+    preview.style.borderRadius = '8px';
+    preview.style.objectFit = 'cover';
+
+    var labelInput = document.createElement('input');
+    labelInput.type = 'text';
+    labelInput.placeholder = 'e.g., Master Bedroom - Before';
+    labelInput.style.flex = '1';
+    labelInput.style.padding = '8px 12px';
+    labelInput.style.border = '1px solid var(--border)';
+    labelInput.style.borderRadius = '8px';
+    labelInput.style.fontSize = '13px';
+    labelInput.id = 'proPhotoLabel-' + idx;
+
+    var removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.textContent = '✕';
+    removeBtn.style.padding = '8px 12px';
+    removeBtn.style.background = '#fee2e2';
+    removeBtn.style.border = '1px solid #fca5a5';
+    removeBtn.style.borderRadius = '8px';
+    removeBtn.style.cursor = 'pointer';
+    removeBtn.style.color = '#dc2626';
+    removeBtn.style.fontWeight = 'bold';
+    removeBtn.onclick = function() {
+      _proPhotoFiles.splice(idx, 1);
+      renderProPhotoList();
+    };
+
+    itemDiv.appendChild(preview);
+    itemDiv.appendChild(labelInput);
+    itemDiv.appendChild(removeBtn);
+    container.appendChild(itemDiv);
+  });
+
+  if (_proPhotoFiles.length > 0) {
+    var summaryDiv = document.createElement('div');
+    summaryDiv.style.padding = '12px';
+    summaryDiv.style.background = 'var(--primary-light)';
+    summaryDiv.style.borderRadius = '8px';
+    summaryDiv.style.fontSize = '13px';
+    summaryDiv.style.color = 'var(--primary)';
+    summaryDiv.textContent = _proPhotoFiles.length + ' photo(s) selected (max 20)';
+    container.appendChild(summaryDiv);
+  }
+}
+
+function updateProTokenCost() {
+  var service = document.querySelector('input[name="proService"]:checked');
+  var tokenCost = 2;
+
+  if (service) {
+    switch(service.value) {
+      case 'staging': tokenCost = 2; break;
+      case 'editing': tokenCost = 1; break;
+      case 'video': tokenCost = 3; break;
+      case 'mixed': tokenCost = 5; break;
+    }
+  }
+
+  document.getElementById('proTokenCost').textContent = tokenCost;
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target.name === 'proService') {
+    updateProTokenCost();
+  }
+});
+
+function submitProStagingForm(e) {
+  e.preventDefault();
+
+  if (_proPhotoFiles.length === 0) {
+    toast('Please upload at least one photo', 'error');
+    return;
+  }
+
+  var address = document.getElementById('proAddress').value.trim();
+  var roomType = document.getElementById('proRoomType').value;
+  var style = document.querySelector('input[name="proStyle"]:checked').value;
+  var notes = document.getElementById('proNotes').value.trim();
+  var service = document.querySelector('input[name="proService"]:checked').value;
+
+  if (!address || !roomType || !style || !service) {
+    toast('Please fill in all required fields', 'error');
+    return;
+  }
+
+  var submitBtn = document.getElementById('proSubmitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+
+  // Collect photo labels
+  var photoLabels = [];
+  _proPhotoFiles.forEach(function(_, idx) {
+    var label = document.getElementById('proPhotoLabel-' + idx).value.trim();
+    photoLabels.push(label || ('Photo ' + (idx + 1)));
+  });
+
+  // For now, create form data with file references
+  var formData = new FormData();
+  formData.append('address', address);
+  formData.append('roomType', roomType);
+  formData.append('style', style);
+  formData.append('notes', notes);
+  formData.append('service', service);
+  formData.append('photoCount', _proPhotoFiles.length);
+
+  _proPhotoFiles.forEach(function(file, idx) {
+    formData.append('photos', file);
+    formData.append('photoLabels[' + idx + ']', photoLabels[idx]);
+  });
+
+  fetch('/api/pro-staging/submit', {
+    method: 'POST',
+    body: formData
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok || data.submissionId) {
+      toast('Pro staging submission created! (ID: ' + (data.submissionId || 'pending') + ')');
+
+      // Reset form
+      document.getElementById('proStagingForm').reset();
+      _proPhotoFiles = [];
+      renderProPhotoList();
+      updateProTokenCost();
+
+      setTimeout(function() {
+        showSub('orders');
+      }, 1200);
+    } else {
+      toast('Error submitting: ' + (data.error || 'Unknown error'), 'error');
+    }
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit for Pro Staging';
+  })
+  .catch(function(err) {
+    toast('Error: ' + err.message, 'error');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit for Pro Staging';
   });
 }
 
