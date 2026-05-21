@@ -1274,29 +1274,21 @@
         <div class="page-title">Welcome back, Jane 👋</div>
         <div class="page-subtitle">Here's what's happening with your stagings today.</div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          <div class="quick-action-card">
-            <div>
-              <h2>Ready to stage your next listing?</h2>
-              <p>Upload a photo and get back stunning results in 30 seconds.</p>
-            </div>
-            <button class="btn-stage" onclick="showSub('stage')">+ Stage Now</button>
-          </div>
-
-          <div class="quick-action-card" style="background: linear-gradient(135deg, #2C2420, #4A3F37);">
-            <div style="color: white;">
-              <h2 style="color: white;">Need Professional Staging?</h2>
-              <p style="color: #d1c4b8;">Submit photos for expert manual staging & editing.</p>
-            </div>
-            <button class="btn-stage" onclick="showSub('pro-staging')" style="background: white; color: #2C2420; font-weight: 600;">→ Submit for Pro</button>
-          </div>
-        </div>
-
         <div class="stats-row">
           <div class="stat-card" onclick="showSub('credits')" style="cursor:pointer"><div class="stat-label">Credits Remaining</div><div class="stat-value">42</div><div class="stat-change up">↑ Refills May 31</div></div>
           <div class="stat-card" onclick="showSub('history')" style="cursor:pointer"><div class="stat-label">Stagings This Month</div><div class="stat-value">28</div><div class="stat-change up">↑ 12% vs last month</div></div>
           <div class="stat-card" onclick="showSub('projects')" style="cursor:pointer"><div class="stat-label">Active Projects</div><div class="stat-value">5</div><div class="stat-change">3 listings in progress</div></div>
           <div class="stat-card" onclick="showSub('history')" style="cursor:pointer"><div class="stat-label">Total Stagings</div><div class="stat-value">312</div><div class="stat-change">Since Mar 2024</div></div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+          <button onclick="showSub('stage')" style="padding: 14px 16px; background: white; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: left; font-size: 14px; font-weight: 600; color: var(--text); text-decoration: none;" onmouseover="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)';" onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+            ✨ Stage Now
+          </button>
+          <button onclick="showSub('pro-staging')" style="padding: 14px 16px; background: white; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: left; font-size: 14px; font-weight: 600; color: var(--text); text-decoration: none;" onmouseover="this.style.borderColor='#8B7355'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)';" onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+            👔 Submit for Pro
+          </button>
         </div>
 
         <div class="panel-grid">
