@@ -42,11 +42,11 @@ export default function CheckoutPage() {
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-800 to-amber-900 text-white text-xs font-bold">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 text-white text-xs font-bold">
               IV
             </div>
             <span className="text-sm font-bold tracking-widest hidden sm:block">
-              ICONIC VIRTUAL<span className="text-amber-800">.AI</span>
+              ICONIC VIRTUAL<span className="text-slate-800">.AI</span>
             </span>
           </div>
         </div>
@@ -56,7 +56,7 @@ export default function CheckoutPage() {
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm text-center">
           {!showError ? (
             <>
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-amber-800 mb-4" />
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-800 mb-4" />
               <h1 className="text-2xl font-bold mb-2">Checkout</h1>
               <p className="text-slate-600">{msg}</p>
             </>
@@ -68,7 +68,7 @@ export default function CheckoutPage() {
                 <button onClick={() => router.back()} className="rounded-lg border border-slate-300 px-6 py-3 font-semibold text-slate-900 hover:border-slate-400 transition">
                   Go Back
                 </button>
-                <Link href="/" className="rounded-lg bg-gradient-to-r from-amber-800 to-amber-900 px-6 py-3 font-semibold text-white hover:shadow-lg transition">
+                <Link href="/" className="rounded-lg bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-3 font-semibold text-white hover:shadow-lg transition">
                   Back to Staging
                 </Link>
               </div>

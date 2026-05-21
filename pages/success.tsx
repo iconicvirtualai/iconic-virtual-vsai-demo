@@ -100,11 +100,11 @@ export default function SuccessPage() {
       <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-amber-800 to-amber-900 text-white text-xs font-bold">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-slate-800 to-slate-900 text-white text-xs font-bold">
               IV
             </div>
             <span className="text-sm font-bold tracking-widest hidden sm:block">
-              ICONIC VIRTUAL<span className="text-amber-800">.AI</span>
+              ICONIC VIRTUAL<span className="text-slate-800">.AI</span>
             </span>
           </div>
         </div>
@@ -132,7 +132,7 @@ export default function SuccessPage() {
                 <button
                   type="button"
                   onClick={downloadFile}
-                  className="w-full rounded-lg bg-gradient-to-r from-amber-800 to-amber-900 px-6 py-3 font-semibold text-white hover:shadow-lg transition"
+                  className="w-full rounded-lg bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-3 font-semibold text-white hover:shadow-lg transition"
                 >
                   Download Your Image
                 </button>
@@ -154,7 +154,7 @@ export default function SuccessPage() {
           {!loading && !downloadUrl && (
             <a
               href="/"
-              className="block w-full text-center rounded-lg bg-gradient-to-r from-amber-800 to-amber-900 px-6 py-3 font-semibold text-white hover:shadow-lg transition"
+              className="block w-full text-center rounded-lg bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-3 font-semibold text-white hover:shadow-lg transition"
             >
               Back to Staging
             </a>
@@ -162,7 +162,7 @@ export default function SuccessPage() {
 
           <div className="mt-8 pt-8 border-t border-slate-200 text-center">
             <p className="text-sm text-slate-600 mb-4">What's next?</p>
-            <a href="/" className="text-amber-800 hover:text-amber-900 font-medium">
+            <a href="/" className="text-slate-800 hover:text-slate-900 font-medium">
               Stage another image →
             </a>
           </div>
