@@ -670,6 +670,21 @@
     color: #8B7355;
   }
 
+  /* Pricing Tab Styles */
+  .pricing-tab.active {
+    color: var(--text);
+    border-bottom-color: var(--primary);
+  }
+  .pricing-tab:hover {
+    color: var(--text);
+  }
+  .pricing-panel {
+    display: none;
+  }
+  .pricing-panel.active {
+    display: block;
+  }
+
   .tutorial-card {
     background: white; border: 1px solid var(--border); border-radius: 12px;
     overflow: hidden; cursor: pointer; transition: all 0.2s;
@@ -1688,73 +1703,104 @@
       <!-- ============ BUY CREDITS ============ -->
       <div id="sub-credits" class="subnav">
         <div class="page-title">Buy Credits</div>
-        <div class="page-subtitle">Top up your account or upgrade to a subscription for savings.</div>
+        <div class="page-subtitle">Pay per image or save up to 60% with a membership. No hidden fees, cancel anytime.</div>
 
         <div class="info-callout">
           <strong>You have 42 credits.</strong> Subscription credits refill on May 31, 2026.
         </div>
 
-        <h3 style="margin-bottom: 16px;">One-Time Credit Packs</h3>
-        <div class="credit-packs">
-          <div class="credit-pack" onclick="buyCredits(10)"><div class="pack-credits">10</div><div class="pack-label">credits</div><div class="pack-price">$60</div><div class="pack-per">$6.00 / image</div><button class="btn btn-secondary">Buy</button></div>
-          <div class="credit-pack best" onclick="buyCredits(40)"><div class="pack-credits">40</div><div class="pack-label">credits</div><div class="pack-price">$180</div><div class="pack-per">$4.50 / image</div><button class="btn btn-primary">Buy</button></div>
-          <div class="credit-pack" onclick="buyCredits(85)"><div class="pack-credits">85</div><div class="pack-label">credits</div><div class="pack-price">$255</div><div class="pack-per">$3.00 / image</div><button class="btn btn-secondary">Buy</button></div>
+        <!-- Pricing Tabs -->
+        <div class="pricing-tabs" style="display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap;">
+          <button class="pricing-tab active" onclick="switchCreditTab(this,'ai-otp')" style="padding: 10px 16px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.2s;">AI One-Time</button>
+          <button class="pricing-tab" onclick="switchCreditTab(this,'ai-member')" style="padding: 10px 16px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.2s;">AI Subscription</button>
+          <button class="pricing-tab" onclick="switchCreditTab(this,'trad-otp')" style="padding: 10px 16px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.2s;">Pro Staging</button>
+          <button class="pricing-tab" onclick="switchCreditTab(this,'trad-member')" style="padding: 10px 16px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.2s;">Pro Subscription</button>
         </div>
 
-        <h3 style="margin: 48px 0 16px;">AI Monthly Subscriptions</h3>
-        <div class="pricing-grid">
-          <div class="price-card">
-            <h3>AI Starter</h3><div class="price-desc">10 credits/mo</div>
-            <div class="price-amount"><span class="num">$39</span><span class="unit">/mo</span></div>
-            <button class="btn btn-secondary" onclick="openModal('confirmUpgrade')">Upgrade</button>
-          </div>
-          <div class="price-card featured">
-            <h3>AI Premium</h3><div class="price-desc">40 credits/mo</div>
-            <div class="price-amount"><span class="num">$79</span><span class="unit">/mo</span></div>
-            <button class="btn btn-primary" disabled style="opacity:0.7;cursor:default">Current Plan ✓</button>
-          </div>
-          <div class="price-card">
-            <h3>AI Pro</h3><div class="price-desc">160 credits/mo</div>
-            <div class="price-amount"><span class="num">$199</span><span class="unit">/mo</span></div>
-            <button class="btn btn-secondary" onclick="openModal('confirmUpgrade')">Upgrade</button>
-          </div>
-        </div>
-
-        <h3 style="margin: 48px 0 16px;">Professional Staging — One-Time</h3>
-        <div class="pricing-grid">
-          <div class="price-card">
-            <h3>Single Room</h3><div class="price-desc">1 professionally staged image</div>
-            <div class="price-amount"><span class="num">$15</span></div>
-            <button class="btn btn-secondary" onclick="toast('Redirecting to pro staging...')">Order Now</button>
-          </div>
-          <div class="price-card featured">
-            <h3>Small Property</h3><div class="price-desc">$12.50/image • 10 images</div>
-            <div class="price-amount"><span class="num">$125</span></div>
-            <button class="btn btn-primary" onclick="toast('Redirecting to pro staging...')">Order Now</button>
-          </div>
-          <div class="price-card">
-            <h3>Large Property</h3><div class="price-desc">$10.00/image • 20 images</div>
-            <div class="price-amount"><span class="num">$200</span></div>
-            <button class="btn btn-secondary" onclick="toast('Redirecting to pro staging...')">Order Now</button>
+        <!-- AI ONE-TIME -->
+        <div id="panel-ai-otp" class="pricing-panel active">
+          <div class="pricing-grid">
+            <div class="price-card">
+              <h3>Small AI Pack</h3><div class="price-desc">Perfect for a quick listing</div>
+              <div class="price-amount"><span class="currency">$</span><span class="num">60</span></div>
+              <div class="per-image">$6.00 per image • 10 credits</div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(10)">Get Started</button>
+            </div>
+            <div class="price-card featured">
+              <h3>Medium AI Pack</h3><div class="price-desc">Great for apartments & studios</div>
+              <div class="price-amount"><span class="currency">$</span><span class="num">180</span></div>
+              <div class="per-image">$4.50 per image • 40 credits</div>
+              <button class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(40)">Best Value →</button>
+            </div>
+            <div class="price-card">
+              <h3>Big AI Pack</h3><div class="price-desc">Best for houses & rentals</div>
+              <div class="price-amount"><span class="currency">$</span><span class="num">255</span></div>
+              <div class="per-image">$3.00 per image • 85 credits</div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(85)">Get Started</button>
+            </div>
           </div>
         </div>
 
-        <h3 style="margin: 48px 0 16px;">Professional Staging — Monthly Subscriptions</h3>
-        <div class="pricing-grid">
-          <div class="price-card">
-            <h3>T Starter</h3><div class="price-desc">10 images/mo</div>
-            <div class="price-amount"><span class="num">$99</span><span class="unit">/mo</span></div>
-            <button class="btn btn-secondary" onclick="openModal('confirmUpgrade')">Upgrade</button>
+        <!-- AI MEMBERSHIP -->
+        <div id="panel-ai-member" class="pricing-panel" style="display: none;">
+          <div class="pricing-grid">
+            <div class="price-card">
+              <h3>AI Starter</h3><div class="price-desc">10 credits/mo</div>
+              <div class="price-amount"><span class="num">$39</span><span class="unit">/mo</span></div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Start Plan</button>
+            </div>
+            <div class="price-card featured">
+              <h3>AI Premium</h3><div class="price-desc">40 credits/mo</div>
+              <div class="price-amount"><span class="num">$79</span><span class="unit">/mo</span></div>
+              <button class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" disabled style="opacity:0.7;cursor:default">Current Plan ✓</button>
+            </div>
+            <div class="price-card">
+              <h3>AI Pro</h3><div class="price-desc">160 credits/mo</div>
+              <div class="price-amount"><span class="num">$199</span><span class="unit">/mo</span></div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Start Plan</button>
+            </div>
           </div>
-          <div class="price-card featured">
-            <h3>T Premium</h3><div class="price-desc">20 images/mo</div>
-            <div class="price-amount"><span class="num">$149</span><span class="unit">/mo</span></div>
-            <button class="btn btn-primary" onclick="openModal('confirmUpgrade')">Upgrade</button>
+        </div>
+
+        <!-- TRADITIONAL ONE-TIME -->
+        <div id="panel-trad-otp" class="pricing-panel" style="display: none;">
+          <div class="pricing-grid">
+            <div class="price-card">
+              <h3>Single Room</h3><div class="price-desc">1 professionally staged image</div>
+              <div class="price-amount"><span class="num">$15</span></div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="showSub('pro-staging')">Order Now</button>
+            </div>
+            <div class="price-card featured">
+              <h3>Small Property</h3><div class="price-desc">$12.50/image • 10 images</div>
+              <div class="price-amount"><span class="num">$125</span></div>
+              <button class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" onclick="showSub('pro-staging')">Best Value →</button>
+            </div>
+            <div class="price-card">
+              <h3>Large Property</h3><div class="price-desc">$10.00/image • 20 images</div>
+              <div class="price-amount"><span class="num">$200</span></div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="showSub('pro-staging')">Order Now</button>
+            </div>
           </div>
-          <div class="price-card">
-            <h3>T Pro</h3><div class="price-desc">50 images/mo</div>
-            <div class="price-amount"><span class="num">$299</span><span class="unit">/mo</span></div>
-            <button class="btn btn-secondary" onclick="openModal('confirmUpgrade')">Upgrade</button>
+        </div>
+
+        <!-- TRADITIONAL MEMBERSHIP -->
+        <div id="panel-trad-member" class="pricing-panel" style="display: none;">
+          <div class="pricing-grid">
+            <div class="price-card">
+              <h3>T Starter</h3><div class="price-desc">10 images/mo</div>
+              <div class="price-amount"><span class="num">$99</span><span class="unit">/mo</span></div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Start Plan</button>
+            </div>
+            <div class="price-card featured">
+              <h3>T Premium</h3><div class="price-desc">20 images/mo</div>
+              <div class="price-amount"><span class="num">$149</span><span class="unit">/mo</span></div>
+              <button class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Best Value →</button>
+            </div>
+            <div class="price-card">
+              <h3>T Pro</h3><div class="price-desc">50 images/mo</div>
+              <div class="price-amount"><span class="num">$299</span><span class="unit">/mo</span></div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Start Plan</button>
+            </div>
           </div>
         </div>
       </div>
@@ -3073,6 +3119,22 @@ function saveOrderToFirestore(orderData) {
     toast('Error creating order: ' + err.message, 'error');
     if (btn) btn.disabled = false;
   });
+}
+
+// ============ CREDIT TABS ============
+function switchCreditTab(btn, panelName) {
+  // Hide all panels
+  document.querySelectorAll('.pricing-panel').forEach(p => p.classList.remove('active'));
+
+  // Remove active from all tabs
+  document.querySelectorAll('.pricing-tab').forEach(t => t.classList.remove('active'));
+
+  // Show selected panel and activate tab
+  var panel = document.getElementById('panel-' + panelName);
+  if (panel) {
+    panel.classList.add('active');
+  }
+  btn.classList.add('active');
 }
 
 // ============ PRO STAGING INTAKE ============
