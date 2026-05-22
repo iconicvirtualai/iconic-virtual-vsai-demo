@@ -1945,9 +1945,6 @@
           <button class="tab-btn" onclick="switchSettingsTab(this, 'preferences')">Preferences</button>
           <button class="tab-btn" onclick="switchSettingsTab(this, 'notifications')">Notifications</button>
           <button class="tab-btn" onclick="switchSettingsTab(this, 'security')">Security</button>
-          <button class="tab-btn" onclick="switchSettingsTab(this, 'integrations')">Integrations</button>
-          <button class="tab-btn" onclick="switchSettingsTab(this, 'api')">API Keys</button>
-          <button class="tab-btn" onclick="switchSettingsTab(this, 'danger')">Danger Zone</button>
         </div>
 
         <div id="settings-profile" class="settings-tab">
@@ -2047,99 +2044,6 @@
               <button class="btn btn-ghost" style="color:var(--danger)" onclick="toast('Session revoked')">Revoke</button>
             </div>
             <button class="btn btn-secondary" style="margin-top:16px;" onclick="toast('All other sessions signed out')">Sign Out All Other Sessions</button>
-          </div>
-        </div>
-
-        <div id="settings-integrations" class="settings-tab" style="display:none;">
-          <div class="panel">
-            <h3 style="margin-bottom:24px;">Connected Apps</h3>
-            <div style="display:grid; gap:12px;">
-              <div class="integration-card">
-                <div class="integration-icon">🏠</div>
-                <div class="integration-info"><h4>MLS Connect <span class="pill pill-success" style="margin-left:6px">Connected</span></h4><p>Upload staged images directly to your MLS listings</p></div>
-                <button class="btn btn-ghost" style="color:var(--danger)" onclick="toast('Disconnected MLS')">Disconnect</button>
-              </div>
-              <div class="integration-card">
-                <div class="integration-icon">📷</div>
-                <div class="integration-info"><h4>Google Photos</h4><p>Import room photos from Google Photos</p></div>
-                <button class="btn btn-primary" onclick="toast('Connecting to Google Photos...')">Connect</button>
-              </div>
-              <div class="integration-card">
-                <div class="integration-icon">☁️</div>
-                <div class="integration-info"><h4>Dropbox <span class="pill pill-success" style="margin-left:6px">Connected</span></h4><p>Auto-save staged images to a Dropbox folder</p></div>
-                <button class="btn btn-ghost" style="color:var(--danger)" onclick="toast('Disconnected Dropbox')">Disconnect</button>
-              </div>
-              <div class="integration-card">
-                <div class="integration-icon">📊</div>
-                <div class="integration-info"><h4>Zapier</h4><p>Automate workflows with 5,000+ apps</p></div>
-                <button class="btn btn-primary" onclick="toast('Connecting to Zapier...')">Connect</button>
-              </div>
-              <div class="integration-card">
-                <div class="integration-icon">📧</div>
-                <div class="integration-info"><h4>Mailchimp</h4><p>Send staged photos in your marketing emails</p></div>
-                <button class="btn btn-primary" onclick="toast('Connecting to Mailchimp...')">Connect</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="settings-api" class="settings-tab" style="display:none;">
-          <div class="panel">
-            <div class="panel-header">
-              <div class="panel-title">API Keys</div>
-              <button class="btn btn-primary" onclick="openModal('createApiKey')">+ Create New Key</button>
-            </div>
-            <div class="info-callout"><strong>API access requires the Brokerage plan.</strong> <a class="link-text" onclick="showSub('credits')">Upgrade →</a></div>
-            <div class="api-key-row">
-              <strong style="font-size:13px;">Production</strong>
-              <code>sk_live_••••••••••••••••4f8a</code>
-              <button class="btn btn-secondary" onclick="toast('Key copied to clipboard')">Copy</button>
-              <button class="btn btn-ghost" style="color:var(--danger)" onclick="openModal('confirmRevokeKey')">Revoke</button>
-            </div>
-            <div class="api-key-row">
-              <strong style="font-size:13px;">Development</strong>
-              <code>sk_test_••••••••••••••••a12b</code>
-              <button class="btn btn-secondary" onclick="toast('Key copied to clipboard')">Copy</button>
-              <button class="btn btn-ghost" style="color:var(--danger)" onclick="openModal('confirmRevokeKey')">Revoke</button>
-            </div>
-            <div style="margin-top:16px;">
-              <a class="link-text" onclick="toast('Opening API docs')">📖 Read API Documentation →</a>
-            </div>
-          </div>
-          <div class="panel">
-            <h3 style="margin-bottom:16px;">Webhooks</h3>
-            <div class="api-key-row">
-              <code>https://yourapp.com/webhook/staging</code>
-              <span class="pill pill-success">Active</span>
-              <button class="btn btn-secondary" onclick="toast('Test webhook sent')">Test</button>
-              <button class="btn btn-ghost" style="color:var(--danger)" onclick="toast('Webhook removed')">Remove</button>
-            </div>
-            <button class="btn btn-secondary" style="margin-top:12px;" onclick="openModal('addWebhook')">+ Add Webhook</button>
-          </div>
-        </div>
-
-        <div id="settings-danger" class="settings-tab" style="display:none;">
-          <div class="panel">
-            <h3 style="margin-bottom:24px; color:var(--danger);">Danger Zone</h3>
-            <div class="danger-callout">
-              <strong>These actions cannot be undone.</strong> Please proceed with caution.
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><h4>Export all data</h4><p>Download all your stagings, orders, and account data as a ZIP</p></div>
-              <button class="btn btn-secondary" onclick="toast('Data export started — you will receive an email')">Export</button>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><h4>Clear all history</h4><p>Permanently delete all staging history (keeps account active)</p></div>
-              <button class="btn btn-ghost" style="color:var(--danger)" onclick="openModal('confirmClearHistory')">Clear History</button>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><h4>Cancel subscription</h4><p>End your Professional plan at the end of the billing period</p></div>
-              <button class="btn btn-ghost" style="color:var(--danger)" onclick="openModal('confirmCancelPlan')">Cancel</button>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><h4>Delete account</h4><p>Permanently delete your account, all data, and remaining credits</p></div>
-              <button class="btn btn-danger" onclick="openModal('confirmDeleteAccount')">Delete Account</button>
-            </div>
           </div>
         </div>
       </div>
