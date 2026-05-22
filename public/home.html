@@ -952,7 +952,7 @@ if (document.readyState === 'loading') {
 <div id="clippy" class="clippy-widget">
   <div class="clippy-bubble">It looks like you're trying to stage a home. Would you like help?</div>
   <div class="clippy-container">
-    <svg viewBox="0 0 120 150" class="clippy-char">
+    <svg viewBox="0 0 140 160" class="clippy-char">
       <defs>
         <!-- 3D gradient for metallic effect -->
         <linearGradient id="metalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -968,35 +968,36 @@ if (document.readyState === 'loading') {
       </defs>
 
       <!-- Shadow layer -->
-      <path d="M 30 20 Q 30 10 50 10 Q 70 10 70 20 L 70 100 Q 70 115 50 115 Q 30 115 30 100 L 30 40" stroke="#00000040" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.3" transform="translate(1,2)"/>
+      <path d="M 35 25 Q 35 12 55 12 Q 75 12 75 25 L 75 105 Q 75 120 55 120 Q 35 120 35 105 L 35 45" stroke="#00000040" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.3" transform="translate(1,2)"/>
 
-      <!-- Paperclip outer loop - 3D -->
-      <path d="M 30 20 Q 30 10 50 10 Q 70 10 70 20 L 70 100 Q 70 115 50 115 Q 30 115 30 100 L 30 40" stroke="url(#metalGradient)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)"/>
+      <!-- Paperclip outer loop - larger, rounder -->
+      <path d="M 35 25 Q 35 12 55 12 Q 75 12 75 25 L 75 105 Q 75 120 55 120 Q 35 120 35 105 L 35 45" stroke="url(#metalGradient)" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)"/>
 
       <!-- Highlight on outer loop -->
-      <path d="M 32 22 Q 32 12 50 12 Q 65 12 68 22" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <path d="M 37 27 Q 37 14 55 14 Q 70 14 73 27" stroke="#ffffff" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.8"/>
 
-      <!-- Paperclip inner loop - 3D -->
-      <path d="M 42 32 L 42 90 Q 42 105 56 105 Q 70 105 70 90" stroke="url(#metalGradient)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)"/>
+      <!-- Paperclip inner loop - larger, rounder -->
+      <path d="M 48 37 L 48 95 Q 48 112 60 112 Q 75 112 75 95" stroke="url(#metalGradient)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)"/>
 
       <!-- Highlight on inner loop -->
-      <path d="M 43 34 L 43 88 Q 43 102 56 102" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+      <path d="M 49 39 L 49 93 Q 49 110 60 110" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7"/>
 
-      <!-- Left eye -->
-      <circle cx="45" cy="55" r="6" fill="#000"/>
-      <circle cx="47" cy="52" r="2.5" fill="white"/>
+      <!-- Left eye white -->
+      <circle cx="42" cy="50" r="10" fill="white" stroke="#a0a0a0" stroke-width="1"/>
+      <!-- Left eye pupil -->
+      <circle cx="42" cy="52" r="7" fill="#000"/>
+      <!-- Left eye shine -->
+      <circle cx="45" cy="48" r="3" fill="white" opacity="0.9"/>
 
-      <!-- Right eye -->
-      <circle cx="65" cy="55" r="6" fill="#000"/>
-      <circle cx="67" cy="52" r="2.5" fill="white"/>
+      <!-- Right eye white -->
+      <circle cx="68" cy="50" r="10" fill="white" stroke="#a0a0a0" stroke-width="1"/>
+      <!-- Right eye pupil -->
+      <circle cx="68" cy="52" r="7" fill="#000"/>
+      <!-- Right eye shine -->
+      <circle cx="71" cy="48" r="3" fill="white" opacity="0.9"/>
 
-      <!-- Big smile with white outline -->
-      <path d="M 40 75 Q 55 90 70 75" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
-
-      <!-- Teeth -->
-      <line x1="46" y1="75" x2="46" y2="83" stroke="white" stroke-width="2"/>
-      <line x1="55" y1="82" x2="55" y2="90" stroke="white" stroke-width="2"/>
-      <line x1="64" y1="75" x2="64" y2="83" stroke="white" stroke-width="2"/>
+      <!-- Smile -->
+      <path d="M 42 75 Q 55 88 68 75" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
     </svg>
   </div>
   <div class="clippy-controls">
