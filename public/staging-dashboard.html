@@ -2542,7 +2542,8 @@ const MODALS = {
     <p class="modal-subtitle" id="newOrderStep">Step 1 of 2: Order Information</p>
 
     <div id="newOrderStep1" style="display: block;">
-      <div class="form-group"><label>Property Address</label><input type="text" id="newOrderAddress" placeholder="e.g., 1247 Oak Street, Brooklyn, NY"></div>
+      <div class="form-group"><label>Property Address</label><input type="text" id="newOrderAddress" placeholder="e.g., 1247 Oak Street, Brooklyn, NY" onchange="updateProjectName()"></div>
+      <div class="form-group"><label>Project Name <span style="color: var(--text-muted); font-weight: 400;">(defaults to address, or enter a custom name)</span></label><input type="text" id="newOrderProjectName" placeholder="e.g., Kitchen Examples, 123 Oak Renovations"></div>
       <div class="form-row">
         <div class="form-group"><label>First Name</label><input type="text" id="newOrderFirstName" placeholder="John"></div>
         <div class="form-group"><label>Last Name</label><input type="text" id="newOrderLastName" placeholder="Doe"></div>
@@ -3059,15 +3060,24 @@ function realRegenerate() {
 var _newOrderData = {};
 var _selectedOrderType = null;
 
+function updateProjectName() {
+  var address = document.getElementById('newOrderAddress').value.trim();
+  var projectNameInput = document.getElementById('newOrderProjectName');
+  if (!projectNameInput.value && address) {
+    projectNameInput.value = address;
+  }
+}
+
 function proceedToOrderType() {
   var address = document.getElementById('newOrderAddress').value.trim();
+  var projectName = document.getElementById('newOrderProjectName').value.trim();
   var firstName = document.getElementById('newOrderFirstName').value.trim();
   var lastName = document.getElementById('newOrderLastName').value.trim();
   var email = document.getElementById('newOrderEmail').value.trim();
   var phone = document.getElementById('newOrderPhone').value.trim();
   var notes = document.getElementById('newOrderNotes').value.trim();
 
-  if (!address || !firstName || !lastName || !email) {
+  if (!address || !projectName || !firstName || !lastName || !email) {
     toast('Please fill in all required fields', 'error');
     return;
   }
@@ -3080,6 +3090,7 @@ function proceedToOrderType() {
 
   _newOrderData = {
     address: address,
+    projectName: projectName,
     firstName: firstName,
     lastName: lastName,
     email: email,
@@ -3165,6 +3176,7 @@ function saveOrderToFirestore(orderData) {
         document.getElementById('newOrderStep2').style.display = 'none';
         document.getElementById('newOrderStep').textContent = 'Step 1 of 2: Order Information';
         document.getElementById('newOrderAddress').value = '';
+        document.getElementById('newOrderProjectName').value = '';
         document.getElementById('newOrderFirstName').value = '';
         document.getElementById('newOrderLastName').value = '';
         document.getElementById('newOrderEmail').value = '';
