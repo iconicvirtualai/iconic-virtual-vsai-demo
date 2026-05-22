@@ -1709,10 +1709,14 @@
           <strong>You have 42 credits.</strong> Subscription credits refill on May 31, 2026.
         </div>
 
-        <!-- ONE-TIME PURCHASE SECTION -->
-        <div style="margin-bottom: 64px;">
-          <h2 style="font-size: 28px; font-weight: 700; margin-bottom: 32px; color: var(--text);">One-Time Purchase</h2>
+        <!-- Pricing Toggle -->
+        <div style="display: flex; gap: 16px; margin-bottom: 40px;">
+          <button class="btn btn-primary" style="flex: 1; padding: 16px 24px; text-align: center;" onclick="switchPricingSection(this, 'onetime')">💳 One-Time Purchase</button>
+          <button class="btn btn-secondary" style="flex: 1; padding: 16px 24px; text-align: center;" onclick="switchPricingSection(this, 'membership')">🔄 Membership Pricing</button>
+        </div>
 
+        <!-- ONE-TIME PURCHASE SECTION -->
+        <div id="section-onetime">
           <!-- AI ONE-TIME -->
           <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px; color: var(--text);">AI One-Time Pricing</h3>
           <div class="pricing-grid" style="margin-bottom: 48px;">
@@ -1758,9 +1762,7 @@
         </div>
 
         <!-- MEMBERSHIP PRICING SECTION -->
-        <div>
-          <h2 style="font-size: 28px; font-weight: 700; margin-bottom: 32px; color: var(--text);">Membership Pricing</h2>
-
+        <div id="section-membership" style="display: none;">
           <!-- AI MEMBERSHIP -->
           <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px; color: var(--text);">AI Subscription</h3>
           <div class="pricing-grid" style="margin-bottom: 48px;">
@@ -3157,6 +3159,24 @@ function switchCreditTab(btn, panelName) {
     panel.classList.add('active');
   }
   btn.classList.add('active');
+}
+
+// ============ PRICING SECTION TOGGLE ============
+function switchPricingSection(btn, sectionName) {
+  // Hide all sections
+  document.getElementById('section-onetime').style.display = 'none';
+  document.getElementById('section-membership').style.display = 'none';
+
+  // Remove active state from all buttons
+  document.querySelectorAll('[onclick*="switchPricingSection"]').forEach(b => {
+    b.classList.remove('btn-primary');
+    b.classList.add('btn-secondary');
+  });
+
+  // Show selected section and activate button
+  document.getElementById('section-' + sectionName).style.display = 'block';
+  btn.classList.remove('btn-secondary');
+  btn.classList.add('btn-primary');
 }
 
 // ============ PRO STAGING INTAKE ============
