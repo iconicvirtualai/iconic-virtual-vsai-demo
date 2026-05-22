@@ -952,12 +952,18 @@ document.addEventListener('DOMContentLoaded', initClippy);
   <div class="clippy-bubble">It looks like you're trying to stage a home. Would you like help?</div>
   <div class="clippy-container">
     <svg viewBox="0 0 100 120" class="clippy-char">
-      <!-- Paperclip body -->
-      <path d="M 30 20 Q 30 10 40 10 Q 50 10 50 20 L 50 80 Q 50 90 40 90 Q 30 90 30 80 L 30 40 Q 30 35 35 35 L 65 35 Q 70 35 70 40 L 70 80" stroke="#666" stroke-width="3" fill="none" stroke-linecap="round"/>
-      <!-- Eye -->
-      <circle cx="45" cy="50" r="2" fill="#666"/>
-      <!-- Smile -->
-      <path d="M 40 60 Q 45 65 50 60" stroke="#666" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <!-- Paperclip outer loop -->
+      <path d="M 25 15 Q 25 5 40 5 Q 55 5 55 15 L 55 85 Q 55 95 40 95 Q 25 95 25 85 L 25 35" stroke="#8B7355" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Paperclip inner loop -->
+      <path d="M 35 25 L 35 75 Q 35 85 45 85 Q 55 85 55 75" stroke="#8B7355" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Left eye -->
+      <circle cx="38" cy="45" r="4" fill="#8B7355"/>
+      <circle cx="39" cy="44" r="1.5" fill="white"/>
+      <!-- Right eye -->
+      <circle cx="52" cy="45" r="4" fill="#8B7355"/>
+      <circle cx="53" cy="44" r="1.5" fill="white"/>
+      <!-- Big smile -->
+      <path d="M 35 58 Q 45 68 55 58" stroke="#8B7355" stroke-width="3" fill="none" stroke-linecap="round"/>
     </svg>
   </div>
   <div class="clippy-controls">
