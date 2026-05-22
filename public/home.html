@@ -905,7 +905,7 @@ function updateCD(){
 setInterval(updateCD,1000);updateCD();
 
 // CLIPPY ASSISTANT
-let clippyVisible = localStorage.getItem('clippyDismissed') !== 'true';
+let clippyVisible = true;
 const clippyMessages = [
   "It looks like you're trying to stage a home. Would you like help?",
   "Did you know? Staged homes sell 73% faster!",
@@ -916,14 +916,11 @@ const clippyMessages = [
 ];
 
 function initClippy() {
-  if (!clippyVisible) return;
-
   const clippyEl = document.getElementById('clippy');
   if (!clippyEl) return;
 
-  setTimeout(() => {
-    clippyEl.classList.add('show');
-  }, 2000);
+  // Show immediately
+  clippyEl.classList.add('show');
 
   // Random message every 8 seconds
   setInterval(() => {
@@ -940,11 +937,15 @@ function dismissClippy() {
   if (clippyEl) {
     clippyEl.classList.remove('show');
     clippyVisible = false;
-    localStorage.setItem('clippyDismissed', 'true');
   }
 }
 
-document.addEventListener('DOMContentLoaded', initClippy);
+// Show Clippy when page loads
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initClippy);
+} else {
+  initClippy();
+}
 </script>
 
 <!-- CLIPPY PAPERCLIP ASSISTANT -->
