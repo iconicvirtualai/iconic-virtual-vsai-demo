@@ -1709,17 +1709,13 @@
           <strong>You have 42 credits.</strong> Subscription credits refill on May 31, 2026.
         </div>
 
-        <!-- Pricing Tabs -->
-        <div class="pricing-tabs" style="display: flex; gap: 8px; margin-bottom: 32px; flex-wrap: wrap;">
-          <button class="pricing-tab active" onclick="switchCreditTab(this,'ai-otp')" style="padding: 10px 16px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.2s;">AI One-Time</button>
-          <button class="pricing-tab" onclick="switchCreditTab(this,'ai-member')" style="padding: 10px 16px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.2s;">AI Subscription</button>
-          <button class="pricing-tab" onclick="switchCreditTab(this,'trad-otp')" style="padding: 10px 16px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.2s;">Pro Staging</button>
-          <button class="pricing-tab" onclick="switchCreditTab(this,'trad-member')" style="padding: 10px 16px; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; transition: all 0.2s;">Pro Subscription</button>
-        </div>
+        <!-- ONE-TIME PURCHASE SECTION -->
+        <div style="margin-bottom: 64px;">
+          <h2 style="font-size: 28px; font-weight: 700; margin-bottom: 32px; color: var(--text);">One-Time Purchase</h2>
 
-        <!-- AI ONE-TIME -->
-        <div id="panel-ai-otp" class="pricing-panel active">
-          <div class="pricing-grid">
+          <!-- AI ONE-TIME -->
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px; color: var(--text);">AI One-Time Pricing</h3>
+          <div class="pricing-grid" style="margin-bottom: 48px;">
             <div class="price-card">
               <h3>Small AI Pack</h3><div class="price-desc">Perfect for a quick listing</div>
               <div class="price-amount"><span class="currency">$</span><span class="num">60</span></div>
@@ -1739,31 +1735,9 @@
               <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(85)">Get Started</button>
             </div>
           </div>
-        </div>
 
-        <!-- AI MEMBERSHIP -->
-        <div id="panel-ai-member" class="pricing-panel">
-          <div class="pricing-grid">
-            <div class="price-card">
-              <h3>AI Starter</h3><div class="price-desc">10 credits/mo</div>
-              <div class="price-amount"><span class="num">$39</span><span class="unit">/mo</span></div>
-              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Start Plan</button>
-            </div>
-            <div class="price-card featured">
-              <h3>AI Premium</h3><div class="price-desc">40 credits/mo</div>
-              <div class="price-amount"><span class="num">$79</span><span class="unit">/mo</span></div>
-              <button class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" disabled style="opacity:0.7;cursor:default">Current Plan ✓</button>
-            </div>
-            <div class="price-card">
-              <h3>AI Pro</h3><div class="price-desc">160 credits/mo</div>
-              <div class="price-amount"><span class="num">$199</span><span class="unit">/mo</span></div>
-              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Start Plan</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- TRADITIONAL ONE-TIME -->
-        <div id="panel-trad-otp" class="pricing-panel">
+          <!-- TRADITIONAL ONE-TIME -->
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px; color: var(--text);">Pro Staging Pricing</h3>
           <div class="pricing-grid">
             <div class="price-card">
               <h3>Single Room</h3><div class="price-desc">1 professionally staged image</div>
@@ -1783,8 +1757,32 @@
           </div>
         </div>
 
-        <!-- TRADITIONAL MEMBERSHIP -->
-        <div id="panel-trad-member" class="pricing-panel">
+        <!-- MEMBERSHIP PRICING SECTION -->
+        <div>
+          <h2 style="font-size: 28px; font-weight: 700; margin-bottom: 32px; color: var(--text);">Membership Pricing</h2>
+
+          <!-- AI MEMBERSHIP -->
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px; color: var(--text);">AI Subscription</h3>
+          <div class="pricing-grid" style="margin-bottom: 48px;">
+            <div class="price-card">
+              <h3>AI Starter</h3><div class="price-desc">10 credits/mo</div>
+              <div class="price-amount"><span class="num">$39</span><span class="unit">/mo</span></div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Start Plan</button>
+            </div>
+            <div class="price-card featured">
+              <h3>AI Premium</h3><div class="price-desc">40 credits/mo</div>
+              <div class="price-amount"><span class="num">$79</span><span class="unit">/mo</span></div>
+              <button class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" disabled style="opacity:0.7;cursor:default">Current Plan ✓</button>
+            </div>
+            <div class="price-card">
+              <h3>AI Pro</h3><div class="price-desc">160 credits/mo</div>
+              <div class="price-amount"><span class="num">$199</span><span class="unit">/mo</span></div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Start Plan</button>
+            </div>
+          </div>
+
+          <!-- TRADITIONAL MEMBERSHIP -->
+          <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px; color: var(--text);">Pro Subscription</h3>
           <div class="pricing-grid">
             <div class="price-card">
               <h3>T Starter</h3><div class="price-desc">For individual agents</div>
