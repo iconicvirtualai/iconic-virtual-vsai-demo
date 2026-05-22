@@ -953,18 +953,46 @@ if (document.readyState === 'loading') {
   <div class="clippy-bubble">It looks like you're trying to stage a home. Would you like help?</div>
   <div class="clippy-container">
     <svg viewBox="0 0 120 150" class="clippy-char">
-      <!-- Paperclip outer loop - rounder -->
-      <path d="M 30 20 Q 30 10 50 10 Q 70 10 70 20 L 70 100 Q 70 115 50 115 Q 30 115 30 100 L 30 40" stroke="#c0c0c0" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <!-- Paperclip inner loop - rounder -->
-      <path d="M 42 32 L 42 90 Q 42 105 56 105 Q 70 105 70 90" stroke="#c0c0c0" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <defs>
+        <!-- 3D gradient for metallic effect -->
+        <linearGradient id="metalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#e8e8e8;stop-opacity:1" />
+          <stop offset="40%" style="stop-color:#c0c0c0;stop-opacity:1" />
+          <stop offset="60%" style="stop-color:#808080;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#606060;stop-opacity:1" />
+        </linearGradient>
+        <!-- Shadow gradient -->
+        <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feDropShadow dx="2" dy="3" stdDeviation="3" flood-opacity="0.4"/>
+        </filter>
+      </defs>
+
+      <!-- Shadow layer -->
+      <path d="M 30 20 Q 30 10 50 10 Q 70 10 70 20 L 70 100 Q 70 115 50 115 Q 30 115 30 100 L 30 40" stroke="#00000040" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.3" transform="translate(1,2)"/>
+
+      <!-- Paperclip outer loop - 3D -->
+      <path d="M 30 20 Q 30 10 50 10 Q 70 10 70 20 L 70 100 Q 70 115 50 115 Q 30 115 30 100 L 30 40" stroke="url(#metalGradient)" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)"/>
+
+      <!-- Highlight on outer loop -->
+      <path d="M 32 22 Q 32 12 50 12 Q 65 12 68 22" stroke="#ffffff" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.7"/>
+
+      <!-- Paperclip inner loop - 3D -->
+      <path d="M 42 32 L 42 90 Q 42 105 56 105 Q 70 105 70 90" stroke="url(#metalGradient)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" filter="url(#shadow)"/>
+
+      <!-- Highlight on inner loop -->
+      <path d="M 43 34 L 43 88 Q 43 102 56 102" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/>
+
       <!-- Left eye -->
       <circle cx="45" cy="55" r="6" fill="#000"/>
       <circle cx="47" cy="52" r="2.5" fill="white"/>
+
       <!-- Right eye -->
       <circle cx="65" cy="55" r="6" fill="#000"/>
       <circle cx="67" cy="52" r="2.5" fill="white"/>
+
       <!-- Big smile with white outline -->
       <path d="M 40 75 Q 55 90 70 75" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
+
       <!-- Teeth -->
       <line x1="46" y1="75" x2="46" y2="83" stroke="white" stroke-width="2"/>
       <line x1="55" y1="82" x2="55" y2="90" stroke="white" stroke-width="2"/>
@@ -1043,10 +1071,10 @@ if (document.readyState === 'loading') {
 }
 
 @keyframes clippyWave {
-  0%, 100% { transform: rotate(0deg) translateX(0); }
-  25% { transform: rotate(-5deg) translateX(-2px); }
-  50% { transform: rotate(5deg) translateX(2px); }
-  75% { transform: rotate(-3deg) translateX(-1px); }
+  0%, 100% { transform: rotate(0deg) translateX(0) rotateY(0deg); }
+  25% { transform: rotate(-8deg) translateX(-3px) rotateY(-10deg); }
+  50% { transform: rotate(8deg) translateX(3px) rotateY(10deg); }
+  75% { transform: rotate(-4deg) translateX(-1px) rotateY(-5deg); }
 }
 
 .clippy-controls {
