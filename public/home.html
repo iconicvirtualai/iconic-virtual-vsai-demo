@@ -952,23 +952,23 @@ if (document.readyState === 'loading') {
 <div id="clippy" class="clippy-widget">
   <div class="clippy-bubble">It looks like you're trying to stage a home. Would you like help?</div>
   <div class="clippy-container">
-    <svg viewBox="0 0 100 120" class="clippy-char">
-      <!-- Paperclip outer loop -->
-      <path d="M 25 15 Q 25 5 40 5 Q 55 5 55 15 L 55 85 Q 55 95 40 95 Q 25 95 25 85 L 25 35" stroke="#c0c0c0" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-      <!-- Paperclip inner loop -->
-      <path d="M 35 25 L 35 75 Q 35 85 45 85 Q 55 85 55 75" stroke="#c0c0c0" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <svg viewBox="0 0 120 150" class="clippy-char">
+      <!-- Paperclip outer loop - rounder -->
+      <path d="M 30 20 Q 30 10 50 10 Q 70 10 70 20 L 70 100 Q 70 115 50 115 Q 30 115 30 100 L 30 40" stroke="#c0c0c0" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Paperclip inner loop - rounder -->
+      <path d="M 42 32 L 42 90 Q 42 105 56 105 Q 70 105 70 90" stroke="#c0c0c0" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
       <!-- Left eye -->
-      <circle cx="38" cy="42" r="5" fill="#000"/>
-      <circle cx="39" cy="40" r="2" fill="white"/>
+      <circle cx="45" cy="55" r="6" fill="#000"/>
+      <circle cx="47" cy="52" r="2.5" fill="white"/>
       <!-- Right eye -->
-      <circle cx="52" cy="42" r="5" fill="#000"/>
-      <circle cx="53" cy="40" r="2" fill="white"/>
-      <!-- Big smile -->
-      <path d="M 35 62 Q 45 72 55 62" stroke="#000" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <circle cx="65" cy="55" r="6" fill="#000"/>
+      <circle cx="67" cy="52" r="2.5" fill="white"/>
+      <!-- Big smile with white outline -->
+      <path d="M 40 75 Q 55 90 70 75" stroke="white" stroke-width="4" fill="none" stroke-linecap="round"/>
       <!-- Teeth -->
-      <line x1="40" y1="62" x2="40" y2="68" stroke="#000" stroke-width="1.5"/>
-      <line x1="45" y1="65" x2="45" y2="71" stroke="#000" stroke-width="1.5"/>
-      <line x1="50" y1="62" x2="50" y2="68" stroke="#000" stroke-width="1.5"/>
+      <line x1="46" y1="75" x2="46" y2="83" stroke="white" stroke-width="2"/>
+      <line x1="55" y1="82" x2="55" y2="90" stroke="white" stroke-width="2"/>
+      <line x1="64" y1="75" x2="64" y2="83" stroke="white" stroke-width="2"/>
     </svg>
   </div>
   <div class="clippy-controls">
@@ -999,18 +999,22 @@ if (document.readyState === 'loading') {
 }
 
 .clippy-bubble {
-  background: white;
-  border: 2px solid #999;
+  background: linear-gradient(to right, transparent 0%, transparent 20px, #fef08a 20px);
+  background-color: #fef08a;
+  border: 2px solid #d4af37;
   border-radius: 12px;
   padding: 14px 16px;
   margin-bottom: 12px;
   font-size: 13px;
   color: #333;
-  line-height: 1.4;
+  line-height: 1.6;
   max-width: 220px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2), inset -20px 0 0 rgba(255,255,255,0.3);
   position: relative;
   text-align: right;
+  background-image:
+    linear-gradient(to right, transparent 0%, transparent 20px, #fef08a 20px),
+    repeating-linear-gradient(0deg, transparent, transparent 19px, #ddc94e 19px, #ddc94e 20px);
 }
 
 .clippy-bubble::after {
@@ -1022,7 +1026,7 @@ if (document.readyState === 'loading') {
   height: 0;
   border-left: 8px solid transparent;
   border-right: 0 solid transparent;
-  border-top: 8px solid #999;
+  border-top: 8px solid #d4af37;
 }
 
 .clippy-container {
