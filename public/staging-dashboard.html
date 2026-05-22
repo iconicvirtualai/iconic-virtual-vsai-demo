@@ -1746,17 +1746,17 @@
             <div class="price-card">
               <h3>Single Room</h3><div class="price-desc">1 professionally staged image</div>
               <div class="price-amount"><span class="num">$15</span></div>
-              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="showSub('pro-staging')">Order Now</button>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(1, 'pro')">Order Now</button>
             </div>
             <div class="price-card featured">
               <h3>Small Property</h3><div class="price-desc">$12.50/image • 10 images</div>
               <div class="price-amount"><span class="num">$125</span></div>
-              <button class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" onclick="showSub('pro-staging')">Best Value →</button>
+              <button class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(10, 'pro')">Best Value →</button>
             </div>
             <div class="price-card">
               <h3>Large Property</h3><div class="price-desc">$10.00/image • 20 images</div>
               <div class="price-amount"><span class="num">$200</span></div>
-              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="showSub('pro-staging')">Order Now</button>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(20, 'pro')">Order Now</button>
             </div>
           </div>
         </div>
@@ -2730,24 +2730,63 @@ function switchSettingsTab(btn, target) {
 }
 
 // ============ CREDITS ============
-function buyCredits(amount) {
-  const prices = {5: 10, 25: 40, 100: 120, 500: 450};
+function buyCredits(amount, productType = 'ai') {
+  const aiPrices = {5: 10, 25: 40, 100: 120, 500: 450};
+  const proPrices = {1: 15, 10: 125, 20: 200};
+
+  const prices = productType === 'pro' ? proPrices : aiPrices;
   const price = prices[amount];
+
+  const productLabel = productType === 'pro'
+    ? `Professional Staging (${amount} image${amount > 1 ? 's' : ''})`
+    : `${amount} Credits`;
+
   document.getElementById('modalContent').innerHTML = `
-    <h3>Buy ${amount} Credits?</h3>
-    <p class="modal-subtitle">Charged to Visa •••• 4242. Credits never expire.</p>
+    <h3>Purchase ${productLabel}?</h3>
+    <p class="modal-subtitle">Charged to Visa •••• 4242. Professional staging results delivered within 24 hours.</p>
     <div style="background:var(--bg);padding:16px;border-radius:10px;margin-bottom:16px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span>${amount} credits</span><strong>$${price}.00</strong></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span>${productLabel}</span><strong>$${price}.00</strong></div>
       <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span>Tax</span><strong>$0.00</strong></div>
       <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border);"><strong>Total</strong><strong>$${price}.00</strong></div>
     </div>
-    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal(); toast('${amount} credits added'); updateCredits(${amount})">Confirm Purchase</button></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="confirmPurchase(${amount}, '${productType}')">Confirm Purchase</button></div>
   `;
   document.getElementById('modal').classList.add('show');
 }
-function updateCredits(amount) {
-  const el = document.getElementById('creditCount');
-  el.textContent = parseInt(el.textContent) + amount;
+
+function confirmPurchase(amount, productType) {
+  closeModal();
+
+  // Record purchase in Firebase
+  const purchaseData = {
+    amount: amount,
+    productType: productType,
+    timestamp: new Date().toISOString(),
+    price: productType === 'pro'
+      ? {1: 15, 10: 125, 20: 200}[amount]
+      : {5: 10, 25: 40, 100: 120, 500: 450}[amount]
+  };
+
+  // Send to Firebase endpoint
+  fetch('/api/orders/purchase', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(purchaseData)
+  }).then(res => res.json()).catch(err => console.error('Purchase error:', err));
+
+  const message = productType === 'pro'
+    ? `Professional staging order created for ${amount} image${amount > 1 ? 's' : ''}`
+    : `${amount} credits added to your account`;
+
+  toast(message);
+  updateCredits(amount, productType);
+}
+
+function updateCredits(amount, productType = 'ai') {
+  if (productType === 'ai') {
+    const el = document.getElementById('creditCount');
+    if (el) el.textContent = parseInt(el.textContent) + amount;
+  }
 }
 
 // ============ EXAMPLES FILTER ============
