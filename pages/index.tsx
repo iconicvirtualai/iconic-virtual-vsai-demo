@@ -724,7 +724,7 @@ const handlePurchaseClick = async () => {
 
                     <div className="mt-4 text-center">
                       <a
-                        href="https://www.iconicvirtual.ai"
+                        href="/"
                         className="text-xs font-medium uppercase tracking-[0.3em] text-slate-500 underline"
                       >
                         return to home
