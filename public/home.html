@@ -289,8 +289,8 @@ img{max-width:100%;display:block}
   <div class="nav-links">
     <a href="#services">Services</a>
     <a href="#gallery">Gallery</a>
-    <a href="#pricing">Pricing</a>
     <a href="#how">How It Works</a>
+    <a href="#pricing">Pricing</a>
     <a href="#faq">FAQ</a>
     <a href="#contact">Contact</a>
     <button class="btn btn-outline btn-sm" onclick="openAuth('login')">Log In</button>
@@ -307,7 +307,7 @@ img{max-width:100%;display:block}
     <h1>Virtual Staging that <span class="accent">sells a story</span>, not just square footage.</h1>
     <p class="hero-sub">Stop losing buyers at the first scroll. Our AI transforms empty rooms into magazine-worthy listings in under 60 seconds. DIY staging from $1/photo, or let our pro design team handle it.</p>
     <div class="hero-ctas">
-      <button class="btn btn-primary btn-lg" onclick="window.location.href='/staging-dashboard.html'">Try AI Staging Free</button>
+      <button class="btn btn-primary btn-lg" onclick="window.location.href='/'">Try AI Staging Free</button>
       <button class="btn btn-outline btn-lg" onclick="scrollTo('#pricing')">See Pricing</button>
     </div>
     <div class="hero-trust">
@@ -362,7 +362,7 @@ img{max-width:100%;display:block}
         <li><span class="check">&#10003;</span> Commercial license included</li>
         <li><span class="check">&#10003;</span> No sign-up required to try</li>
       </ul>
-      <button class="btn btn-primary btn-lg" onclick="window.location.href='/staging-dashboard.html'">Try AI Staging Free &rarr;</button>
+      <button class="btn btn-primary btn-lg" onclick="window.location.href='/'">Try AI Staging Free &rarr;</button>
     </div>
     <div class="way-card trad">
       <span class="tag">&#127912; CUSTOM DESIGN</span>
@@ -399,7 +399,7 @@ img{max-width:100%;display:block}
     <div class="ba-card"><div class="ba-images"><div class="ba-img before"><span class="tag">BEFORE</span>Empty</div><div class="ba-img after" style="background:linear-gradient(135deg,#fef9c3,#ca8a04)"><span class="tag">AFTER</span>Farm</div><div class="ba-arrow">&rarr;</div></div><div class="ba-info"><div class="style">Farmhouse</div><div class="room">Family Room &bull; Dallas, TX</div></div></div>
   </div>
   <div style="text-align:center;margin-top:48px">
-    <button class="btn btn-primary btn-lg" onclick="window.location.href='/staging-dashboard.html'">Stage Your First Room Free &rarr;</button>
+    <button class="btn btn-primary btn-lg" onclick="window.location.href='/'">Stage Your First Room Free &rarr;</button>
   </div>
 </div>
 </section>
@@ -418,7 +418,7 @@ img{max-width:100%;display:block}
     <div class="step"><div class="step-num">3</div><h3>Download &amp; List</h3><p>Get your staged photo in under 60 seconds. High-res, watermark-free, MLS-ready.</p></div>
   </div>
   <div style="text-align:center;margin-top:48px">
-    <button class="btn btn-primary btn-lg" onclick="window.location.href='/staging-dashboard.html'">Try It Now &mdash; No Sign Up Required &rarr;</button>
+    <button class="btn btn-primary btn-lg" onclick="window.location.href='/'">Try It Now &mdash; No Sign Up Required &rarr;</button>
     <p style="color:var(--text-muted);font-size:13px;margin-top:12px">No credit card. No commitments. See your room staged instantly.</p>
   </div>
 </div>
@@ -702,7 +702,7 @@ img{max-width:100%;display:block}
 <section class="final-cta">
   <h2>Stop losing buyers at the first scroll.</h2>
   <p>Stage your first room free. No sign up, no credit card, no commitments. Just upload and see the magic.</p>
-  <button class="btn btn-lg" onclick="window.location.href='/staging-dashboard.html'">Try AI Staging Free &rarr;</button>
+  <button class="btn btn-lg" onclick="window.location.href='/'">Try AI Staging Free &rarr;</button>
   <div class="guarantee">&#128274; Your photos are never shared. Commercial license included with every purchase.</div>
 </section>
 
@@ -720,8 +720,8 @@ img{max-width:100%;display:block}
         <li><a href="#services">AI Staging</a></li>
         <li><a href="#services">Traditional Staging</a></li>
         <li><a href="#gallery">Gallery</a></li>
-        <li><a href="#pricing">Pricing</a></li>
         <li><a href="#how">How It Works</a></li>
+        <li><a href="#pricing">Pricing</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -776,22 +776,20 @@ function switchPricing(btn,panel){
 const AUTH={
 login:`<div style="text-align:center;margin-bottom:24px"><span class="icon" style="display:inline-flex;width:48px;height:48px;font-size:20px;background:var(--gradient);border-radius:14px;color:#fff;align-items:center;justify-content:center;font-weight:900;letter-spacing:1px">IV</span></div>
 <h2>Welcome back</h2><p class="subtitle">Sign in to your IconicVirtual.AI account</p>
-<div class="social-btns"><button class="social-btn" onclick="goToDashboard()">Google</button><button class="social-btn" onclick="goToDashboard()">Apple</button></div>
-<div class="auth-divider">or</div>
-<div class="form-group"><label>Email</label><input type="email" placeholder="you@brokerage.com"></div>
-<div class="form-group"><label>Password</label><input type="password" placeholder="Your password"></div>
-<button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="goToDashboard()">Sign In</button>
+<div class="auth-divider"></div>
+<div class="form-group"><label>Email</label><input type="email" id="authEmail" placeholder="you@brokerage.com"></div>
+<div class="form-group"><label>Password</label><input type="password" id="authPassword" placeholder="Your password"></div>
+<div id="authError" style="display:none;background:#fee;border:1px solid #fcc;padding:10px;border-radius:6px;margin-bottom:16px;color:#c33;font-size:13px;"></div>
+<button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="handleAuthSignIn()">Sign In</button>
 <div class="auth-footer">Don't have an account? <a onclick="openAuth('signup')">Sign up free</a></div>`,
 
 signup:`<div style="text-align:center;margin-bottom:24px"><span class="icon" style="display:inline-flex;width:48px;height:48px;font-size:20px;background:var(--gradient);border-radius:14px;color:#fff;align-items:center;justify-content:center;font-weight:900;letter-spacing:1px">IV</span></div>
 <h2>Create your account</h2><p class="subtitle">Get started free &mdash; no credit card required</p>
-<div class="social-btns"><button class="social-btn" onclick="goToDashboard()">Google</button><button class="social-btn" onclick="goToDashboard()">Apple</button></div>
-<div class="auth-divider">or</div>
-<div class="form-row"><div class="form-group"><label>First name</label><input type="text" placeholder="Jane"></div><div class="form-group"><label>Last name</label><input type="text" placeholder="Doe"></div></div>
-<div class="form-group"><label>Email</label><input type="email" placeholder="you@brokerage.com"></div>
-<div class="form-group"><label>Password</label><input type="password" placeholder="At least 8 characters"></div>
-<div class="form-group"><label>I'm a...</label><select><option>Real Estate Agent</option><option>Listing Photographer</option><option>Investor / Flipper</option><option>Property Manager</option><option>Interior Designer</option><option>Other</option></select></div>
-<button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="goToDashboard()">Create Account &rarr;</button>
+<div class="auth-divider"></div>
+<div class="form-group"><label>Email</label><input type="email" id="authEmail" placeholder="you@brokerage.com"></div>
+<div class="form-group"><label>Password</label><input type="password" id="authPassword" placeholder="At least 8 characters"></div>
+<div id="authError" style="display:none;background:#fee;border:1px solid #fcc;padding:10px;border-radius:6px;margin-bottom:16px;color:#c33;font-size:13px;"></div>
+<button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="handleAuthSignUp()">Create Account &rarr;</button>
 <div class="auth-footer">Already have an account? <a onclick="openAuth('login')">Sign in</a></div>`
 };
 
@@ -800,7 +798,88 @@ function openAuth(type){
   document.getElementById('authModal').classList.add('show');
 }
 function closeAuth(){document.getElementById('authModal').classList.remove('show')}
-function goToDashboard(){closeAuth();window.location.href='/staging-dashboard.html'}
+
+async function handleAuthSignIn(){
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+  const errorEl = document.getElementById('authError');
+
+  if(!email||!password){
+    errorEl.textContent='Please fill in all fields';
+    errorEl.style.display='block';
+    return;
+  }
+
+  try{
+    const resp = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, password})
+    });
+
+    const json = await resp.json();
+    if(!resp.ok || !json.ok){
+      errorEl.textContent = json?.error || 'Authentication failed';
+      errorEl.style.display='block';
+      return;
+    }
+
+    if(json.data?.userId){
+      localStorage.setItem('userId', json.data.userId);
+      localStorage.setItem('userEmail', email);
+      if(json.data?.token){
+        localStorage.setItem('authToken', json.data.token);
+      }
+    }
+
+    closeAuth();
+    window.location.href='/staging-dashboard.html';
+  }catch(err){
+    errorEl.textContent = err?.message || 'Authentication failed';
+    errorEl.style.display='block';
+  }
+}
+
+async function handleAuthSignUp(){
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value.trim();
+  const errorEl = document.getElementById('authError');
+
+  if(!email||!password){
+    errorEl.textContent='Please fill in all fields';
+    errorEl.style.display='block';
+    return;
+  }
+
+  try{
+    const resp = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email, password})
+    });
+
+    const json = await resp.json();
+    if(!resp.ok || !json.ok){
+      errorEl.textContent = json?.error || 'Account creation failed';
+      errorEl.style.display='block';
+      return;
+    }
+
+    if(json.data?.userId){
+      localStorage.setItem('userId', json.data.userId);
+      localStorage.setItem('userEmail', email);
+      if(json.data?.token){
+        localStorage.setItem('authToken', json.data.token);
+      }
+    }
+
+    closeAuth();
+    window.location.href='/staging-dashboard.html';
+  }catch(err){
+    errorEl.textContent = err?.message || 'Account creation failed';
+    errorEl.style.display='block';
+  }
+}
 // Homepage URL for logout
 window._homepageUrl = '/home.html';
 
@@ -824,6 +903,9 @@ function updateCD(){
   if(cdEl)cdEl.innerHTML='<span>'+String(h).padStart(2,'0')+'h</span><span>'+String(m).padStart(2,'0')+'m</span><span>'+String(s).padStart(2,'0')+'s</span>';
 }
 setInterval(updateCD,1000);updateCD();
+
 </script>
+
+
 </body>
 </html>
