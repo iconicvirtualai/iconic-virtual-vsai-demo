@@ -1,4 +1,4 @@
-// pages/index.tsx
+// pages/studio.tsx
 import type { ChangeEvent, DragEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, ImageIcon, RefreshCw, Sparkles } from "lucide-react";
