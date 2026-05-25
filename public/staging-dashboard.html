@@ -7,28 +7,29 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
-    --primary: #8B7355;
-    --primary-dark: #6B5842;
-    --primary-light: #F5F0EB;
-    --accent: #A0896E;
+    --primary: #83756b;
+    --primary-dark: #6b5f57;
+    --primary-light: #f5f3f0;
+    --accent: #83756b;
     --success: #10b981;
     --danger: #ef4444;
     --warning: #f59e0b;
-    --bg: #FAF8F5;
+    --bg: #ffffff;
     --surface: #ffffff;
-    --border: #e2e8f0;
-    --text: #0f172a;
-    --text-muted: #8B7A6B;
-    --text-light: #94a3b8;
-    --sidebar-bg: #2C2420;
-    --sidebar-active: #4A3F37;
+    --border: #e5e5e5;
+    --text: #1a1a1a;
+    --text-muted: #666666;
+    --text-light: #999999;
+    --sidebar-bg: #f9f9f9;
+    --sidebar-active: #efefef;
   }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    background: #f5f5f5;
     color: var(--text);
     line-height: 1.5;
     font-size: 14px;
+    letter-spacing: -0.3px;
   }
   .screen { display: none; min-height: 100vh; }
   .screen.active { display: block; }
@@ -37,25 +38,25 @@
 
   /* ============ MARKETING NAV ============ */
   .top-nav {
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 48px;
+    background: #ffffff;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 20px 48px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: sticky; top: 0; z-index: 100;
   }
   .logo {
-    font-size: 22px; font-weight: 800; color: var(--primary);
+    font-size: 18px; font-weight: 700; color: #1a1a1a;
     cursor: pointer; display: flex; align-items: center; gap: 8px;
+    letter-spacing: 0.5px;
   }
   .logo-icon {
     width: 32px; height: 32px;
-    background: linear-gradient(135deg, #8B7355, #A0896E);
-    border-radius: 8px;
+    background: #1a1a1a;
+    border-radius: 6px;
     display: flex; align-items: center; justify-content: center;
-    color: white; font-size: 18px;
+    color: white; font-size: 16px; font-weight: 700;
   }
   .nav-links { display: flex; gap: 32px; align-items: center; }
   .nav-links a {
@@ -64,18 +65,18 @@
   }
   .nav-links a:hover { color: var(--primary); }
   .btn {
-    padding: 10px 20px; border-radius: 8px; border: none;
-    font-weight: 600; cursor: pointer; text-decoration: none;
+    padding: 11px 22px; border-radius: 6px; border: none;
+    font-weight: 500; cursor: pointer; text-decoration: none;
     display: inline-flex; align-items: center; gap: 8px;
-    transition: all 0.2s; font-size: 14px;
+    transition: all 0.2s; font-size: 14px; letter-spacing: 0.2px;
   }
-  .btn-primary { background: var(--primary); color: white; }
-  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
-  .btn-secondary { background: white; color: var(--text); border: 1px solid var(--border); }
-  .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
-  .btn-large { padding: 14px 28px; font-size: 16px; }
+  .btn-primary { background: #1a1a1a; color: white; }
+  .btn-primary:hover { background: #333333; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+  .btn-secondary { background: white; color: var(--text); border: 1px solid #d0d0d0; }
+  .btn-secondary:hover { background: #f9f9f9; border-color: #83756b; }
+  .btn-large { padding: 14px 28px; font-size: 15px; }
   .btn-ghost { background: transparent; color: var(--text); }
-  .btn-danger { background: var(--danger); color: white; }
+  .btn-danger { background: #e74c3c; color: white; }
   .btn-success { background: var(--success); color: white; }
 
   /* ============ HERO ============ */
@@ -255,68 +256,69 @@
     min-height: 100vh;
   }
   .sidebar {
-    background: var(--sidebar-bg); color: #cbd5e1;
+    background: #ffffff; color: #666666;
     padding: 24px 16px; position: sticky; top: 0;
-    height: 100vh; overflow-y: auto;
+    height: 100vh; overflow-y: auto; border-right: 1px solid #f0f0f0;
   }
   .sidebar-logo {
-    color: white; font-size: 20px; font-weight: 800;
+    color: #1a1a1a; font-size: 16px; font-weight: 700;
     padding: 0 12px 24px; display: flex; align-items: center;
-    gap: 10px; border-bottom: 1px solid #4A3F37; margin-bottom: 16px;
-    cursor: pointer;
+    gap: 10px; border-bottom: 1px solid #f0f0f0; margin-bottom: 16px;
+    cursor: pointer; letter-spacing: 0.5px;
   }
   .sidebar-section { margin-bottom: 24px; }
   .sidebar-section-title {
-    font-size: 11px; text-transform: uppercase;
-    letter-spacing: 1px; color: #8B7A6B; padding: 0 12px 8px;
+    font-size: 10px; text-transform: uppercase;
+    letter-spacing: 1px; color: #999999; padding: 0 12px 8px; font-weight: 600;
   }
   .sidebar-link {
     display: flex; align-items: center; gap: 12px;
-    padding: 10px 12px; border-radius: 8px; color: #cbd5e1;
+    padding: 11px 12px; border-radius: 6px; color: #666666;
     text-decoration: none; cursor: pointer; font-size: 14px;
     margin-bottom: 2px; transition: all 0.15s;
   }
-  .sidebar-link:hover { background: var(--sidebar-active); color: white; }
-  .sidebar-link.active { background: var(--primary); color: white; }
+  .sidebar-link:hover { background: #f5f5f5; color: #1a1a1a; }
+  .sidebar-link.active { background: #f5f5f5; color: #83756b; border-left: 2px solid #83756b; padding-left: 10px; }
   .sidebar-link .icon { width: 18px; text-align: center; }
   .sidebar-link .badge {
-    margin-left: auto; background: var(--accent); color: white;
-    font-size: 11px; padding: 2px 8px; border-radius: 100px; font-weight: 700;
+    margin-left: auto; background: #83756b; color: white;
+    font-size: 10px; padding: 3px 8px; border-radius: 3px; font-weight: 600;
   }
   .credit-widget {
-    background: linear-gradient(135deg, #8B7355, #A0896E);
-    padding: 16px; border-radius: 12px; margin-top: 24px;
+    background: #1a1a1a;
+    padding: 18px; border-radius: 8px; margin-top: 24px;
   }
-  .credit-widget .label { font-size: 12px; color: rgba(255,255,255,0.8); }
-  .credit-widget .amount { font-size: 28px; font-weight: 800; color: white; margin: 4px 0; }
+  .credit-widget .label { font-size: 12px; color: #999999; }
+  .credit-widget .amount { font-size: 28px; font-weight: 700; color: white; margin: 6px 0; }
   .credit-widget .btn-buy {
-    width: 100%; background: rgba(255,255,255,0.2); color: white;
-    border: none; padding: 8px; border-radius: 8px; cursor: pointer;
-    font-weight: 600; margin-top: 8px; backdrop-filter: blur(10px);
+    width: 100%; background: #333333; color: white;
+    border: none; padding: 10px; border-radius: 6px; cursor: pointer;
+    font-weight: 500; margin-top: 12px; transition: all 0.2s;
   }
-  .credit-widget .btn-buy:hover { background: rgba(255,255,255,0.3); }
+  .credit-widget .btn-buy:hover { background: #555555; }
 
-  .main-content { padding: 24px 40px; background: var(--bg); }
+  .main-content { padding: 32px 40px; background: #f5f5f5; }
   .top-bar {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 16px 0 24px; margin-bottom: 8px;
+    padding: 12px 0 24px; margin-bottom: 8px;
   }
-  .breadcrumb { color: var(--text-muted); font-size: 13px; }
-  .breadcrumb a { color: var(--text-muted); cursor: pointer; text-decoration: none; }
-  .breadcrumb a:hover { color: var(--primary); }
-  .breadcrumb .current { color: var(--text); font-weight: 600; }
+  .breadcrumb { color: #999999; font-size: 13px; }
+  .breadcrumb a { color: #999999; cursor: pointer; text-decoration: none; }
+  .breadcrumb a:hover { color: #83756b; }
+  .breadcrumb .current { color: #1a1a1a; font-weight: 600; }
   .top-bar-right { display: flex; align-items: center; gap: 16px; }
   .search-box {
-    background: white; border: 1px solid var(--border); border-radius: 10px;
-    padding: 8px 14px; display: flex; align-items: center; gap: 8px; width: 280px;
+    background: white; border: 1px solid #e5e5e5; border-radius: 6px;
+    padding: 10px 14px; display: flex; align-items: center; gap: 8px; width: 280px;
   }
   .search-box input { border: none; outline: none; flex: 1; font-size: 14px; }
   .icon-btn {
-    background: white; border: 1px solid var(--border);
-    width: 40px; height: 40px; border-radius: 10px;
+    background: white; border: 1px solid #e5e5e5;
+    width: 40px; height: 40px; border-radius: 6px;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; position: relative;
+    cursor: pointer; position: relative; transition: all 0.2s;
   }
+  .icon-btn:hover { border-color: #d0d0d0; background: #f9f9f9; }
   .icon-btn:hover { background: var(--bg); }
   .icon-btn .notif-dot {
     position: absolute; top: 8px; right: 8px;
@@ -382,12 +384,12 @@
     gap: 16px; margin-bottom: 32px;
   }
   .stat-card {
-    background: white; padding: 24px; border-radius: 16px;
-    border: 1px solid var(--border);
+    background: white; padding: 26px; border-radius: 8px;
+    border: 1px solid #f0f0f0; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
   }
-  .stat-card .stat-label { color: var(--text-muted); font-size: 13px; margin-bottom: 8px; }
-  .stat-card .stat-value { font-size: 32px; font-weight: 800; letter-spacing: -1px; }
-  .stat-card .stat-change { font-size: 13px; margin-top: 8px; }
+  .stat-card .stat-label { color: #999999; font-size: 12px; margin-bottom: 8px; font-weight: 500; }
+  .stat-card .stat-value { font-size: 32px; font-weight: 700; letter-spacing: -0.5px; color: #1a1a1a; }
+  .stat-card .stat-change { font-size: 13px; margin-top: 10px; }
   .stat-change.up { color: var(--success); }
   .stat-change.down { color: var(--danger); }
 
@@ -396,41 +398,39 @@
     gap: 24px; margin-bottom: 24px;
   }
   .panel {
-    background: white; border-radius: 16px;
-    border: 1px solid var(--border); padding: 24px; margin-bottom: 24px;
+    background: white; border-radius: 8px;
+    border: 1px solid #f0f0f0; padding: 26px; margin-bottom: 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
   }
   .panel-header {
     display: flex; justify-content: space-between; align-items: center;
     margin-bottom: 20px;
   }
-  .panel-title { font-size: 17px; font-weight: 700; }
-  .link-text { color: var(--primary); font-weight: 600; cursor: pointer; font-size: 13px; }
-  .link-text:hover { text-decoration: underline; }
+  .panel-title { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+  .link-text { color: #83756b; font-weight: 500; cursor: pointer; font-size: 13px; }
+  .link-text:hover { color: #6b5f57; }
 
   .quick-action-card {
-    background: linear-gradient(135deg, #8B7355, #A0896E);
-    color: white; padding: 32px; border-radius: 16px;
-    margin-bottom: 24px;
-    display: flex; justify-content: space-between; align-items: center;
+    background: white; color: #1a1a1a; padding: 0;
+    margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; border: none;
   }
-  .quick-action-card h2 { font-size: 24px; margin-bottom: 8px; }
-  .quick-action-card p { opacity: 0.9; margin-bottom: 0; }
+  .quick-action-card h2 { font-size: 16px; margin-bottom: 8px; font-weight: 600; }
+  .quick-action-card p { color: #666666; margin-bottom: 0; font-size: 14px; }
   .quick-action-card .btn-stage {
-    background: white; color: var(--primary); padding: 14px 28px;
-    border-radius: 10px; font-weight: 700; border: none;
-    cursor: pointer; font-size: 15px;
+    background: white; color: #1a1a1a; padding: 0;
+    border-radius: 0; font-weight: 500; border: none;
+    cursor: pointer; font-size: 14px;
   }
-  .quick-action-card .btn-stage:hover { transform: scale(1.05); }
+  .quick-action-card .btn-stage:hover { color: #83756b; }
 
   .data-table { width: 100%; border-collapse: collapse; }
   .data-table th {
-    text-align: left; padding: 12px; font-size: 12px;
+    text-align: left; padding: 14px 12px; font-size: 11px;
     text-transform: uppercase; letter-spacing: 0.5px;
-    color: var(--text-muted); border-bottom: 1px solid var(--border);
+    color: #999999; border-bottom: 1px solid #f0f0f0; font-weight: 600;
   }
-  .data-table td { padding: 14px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+  .data-table td { padding: 16px 12px; border-bottom: 1px solid #f0f0f0; font-size: 14px; }
   .data-table tr:last-child td { border-bottom: none; }
-  .data-table tr.clickable:hover { background: var(--bg); cursor: pointer; }
+  .data-table tr.clickable:hover { background: #f9f9f9; cursor: pointer; }
   .pill {
     display: inline-block; padding: 4px 10px; border-radius: 100px;
     font-size: 11px; font-weight: 700;
@@ -657,6 +657,34 @@
     flex: 1; font-family: 'SF Mono', Monaco, monospace; font-size: 13px;
     min-width: 200px;
   }
+  /* Pro Staging Radio Styles */
+  input[type="radio"][name="proStyle"]:checked + div,
+  input[type="radio"][name="proService"]:checked + div {
+    border-color: #8B7355;
+    background: linear-gradient(135deg, rgba(139,115,85,0.05), rgba(160,137,110,0.05));
+    box-shadow: 0 0 0 3px rgba(139,115,85,0.1);
+  }
+
+  input[type="radio"][name="proStyle"]:checked + div div:first-child,
+  input[type="radio"][name="proService"]:checked + div div:first-child {
+    color: #8B7355;
+  }
+
+  /* Pricing Tab Styles */
+  .pricing-tab.active {
+    color: var(--text);
+    border-bottom-color: var(--primary);
+  }
+  .pricing-tab:hover {
+    color: var(--text);
+  }
+  .pricing-panel {
+    display: none;
+  }
+  .pricing-panel.active {
+    display: block;
+  }
+
   .tutorial-card {
     background: white; border: 1px solid var(--border); border-radius: 12px;
     overflow: hidden; cursor: pointer; transition: all 0.2s;
@@ -891,7 +919,6 @@
         <ul>
           <li><a onclick="goto('login')">Help Center</a></li>
           <li><a onclick="goto('faq')">FAQ</a></li>
-          <li><a onclick="goto('login')">Tutorials</a></li>
           <li><a onclick="toast('Status: All systems operational')">Status</a></li>
           <li><a onclick="toast('Email: info@iconicvirtual.ai')">Email Support</a></li>
         </ul>
@@ -1215,6 +1242,7 @@
         <div class="sidebar-section-title">Workspace</div>
         <a class="sidebar-link active" id="link-home" onclick="showSub('home')"><span class="icon">🏠</span> Dashboard</a>
         <a class="sidebar-link" id="link-stage" onclick="showSub('stage')"><span class="icon">✨</span> Stage Now</a>
+        <a class="sidebar-link" id="link-pro-staging" onclick="showSub('pro-staging')"><span class="icon">👔</span> Pro Staging</a>
         <a class="sidebar-link" id="link-orders" onclick="showSub('orders')"><span class="icon">📋</span> Orders <span class="badge">3</span></a>
         <a class="sidebar-link" id="link-history" onclick="showSub('history')"><span class="icon">🕓</span> History</a>
         <a class="sidebar-link" id="link-projects" onclick="showSub('projects')"><span class="icon">📁</span> Projects</a>
@@ -1228,7 +1256,6 @@
       </div>
       <div class="sidebar-section">
         <div class="sidebar-section-title">Resources</div>
-        <a class="sidebar-link" id="link-tutorials" onclick="showSub('tutorials')"><span class="icon">📚</span> Tutorials</a>
         <a class="sidebar-link" id="link-support" onclick="showSub('support')"><span class="icon">💬</span> Support</a>
         <a class="sidebar-link" id="link-refer" onclick="showSub('refer')"><span class="icon">🎁</span> Refer & Earn</a>
         <a class="sidebar-link" onclick="window.location.href='/home.html';"><span class="icon">↩️</span> Log Out</a>
@@ -1260,19 +1287,21 @@
         <div class="page-title">Welcome back, Jane 👋</div>
         <div class="page-subtitle">Here's what's happening with your stagings today.</div>
 
-        <div class="quick-action-card">
-          <div>
-            <h2>Ready to stage your next listing?</h2>
-            <p>Upload a photo and get back stunning results in 30 seconds.</p>
-          </div>
-          <button class="btn-stage" onclick="showSub('stage')">+ Stage Now</button>
-        </div>
-
         <div class="stats-row">
           <div class="stat-card" onclick="showSub('credits')" style="cursor:pointer"><div class="stat-label">Credits Remaining</div><div class="stat-value">42</div><div class="stat-change up">↑ Refills May 31</div></div>
           <div class="stat-card" onclick="showSub('history')" style="cursor:pointer"><div class="stat-label">Stagings This Month</div><div class="stat-value">28</div><div class="stat-change up">↑ 12% vs last month</div></div>
           <div class="stat-card" onclick="showSub('projects')" style="cursor:pointer"><div class="stat-label">Active Projects</div><div class="stat-value">5</div><div class="stat-change">3 listings in progress</div></div>
           <div class="stat-card" onclick="showSub('history')" style="cursor:pointer"><div class="stat-label">Total Stagings</div><div class="stat-value">312</div><div class="stat-change">Since Mar 2024</div></div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+          <button onclick="showSub('stage')" style="padding: 14px 16px; background: #F5EDE0; border: 1px solid #E8DED3; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center; font-size: 14px; font-weight: 600; color: var(--text); text-decoration: none;" onmouseover="this.style.borderColor='#8B7355'; this.style.boxShadow='0 4px 12px rgba(139,115,85,0.1)';" onmouseout="this.style.borderColor='#E8DED3'; this.style.boxShadow='none';">
+            ✨ Stage Now
+          </button>
+          <button onclick="showSub('pro-staging')" style="padding: 14px 16px; background: #F5EDE0; border: 1px solid #E8DED3; border-radius: 12px; cursor: pointer; transition: all 0.2s; text-align: center; font-size: 14px; font-weight: 600; color: var(--text); text-decoration: none;" onmouseover="this.style.borderColor='#8B7355'; this.style.boxShadow='0 4px 12px rgba(139,115,85,0.1)';" onmouseout="this.style.borderColor='#E8DED3'; this.style.boxShadow='none';">
+            👔 Submit for Pro
+          </button>
         </div>
 
         <div class="panel-grid">
@@ -1326,117 +1355,94 @@
 
       <!-- ============ STAGE NOW ============ -->
       <div id="sub-stage" class="subnav">
-        <div class="page-title">Stage Now</div>
-        <div class="page-subtitle">Upload a photo, pick a style, and get your AI-staged image.</div>
+        <div class="page-title">Staging Workspace</div>
+        <div class="page-subtitle">Upload a photo, pick a style, and get your AI-staged image with full API integration.</div>
 
-        <!-- REAL STAGING TOOL -->
-        <div id="stageToolContainer">
-
-          <!-- Step indicator -->
-          <div id="stageStep" style="display:flex;gap:8px;margin-bottom:24px">
-            <span id="step-ind-1" style="flex:1;height:4px;border-radius:4px;background:var(--primary)"></span>
-            <span id="step-ind-2" style="flex:1;height:4px;border-radius:4px;background:var(--border)"></span>
-            <span id="step-ind-3" style="flex:1;height:4px;border-radius:4px;background:var(--border)"></span>
-          </div>
-
-          <!-- STEP 1: Upload -->
-          <div id="realStep1">
-            <h3 style="margin-bottom:16px">Step 1: Upload your photo</h3>
-            <div id="realUploadZone" style="border:2px dashed var(--border);border-radius:16px;padding:64px 24px;text-align:center;background:white;cursor:pointer;transition:all .2s">
-              <div style="font-size:48px;margin-bottom:16px">&#128247;</div>
-              <h3>Drag & drop your photo here</h3>
-              <p style="color:var(--text-muted);margin:8px 0 16px">or click to browse — JPG, PNG up to 10MB</p>
-              <button class="btn btn-primary" type="button">Choose File</button>
-            </div>
-            <input type="file" id="realFileInput" accept="image/jpeg,image/png" style="display:none">
-            <div id="uploadPreview" style="display:none;margin-top:16px;text-align:center">
-              <img id="uploadPreviewImg" style="max-height:300px;border-radius:12px;margin-bottom:12px">
-              <p id="uploadFileName" style="color:var(--text-muted);font-size:13px"></p>
-            </div>
-            <div id="uploadProgress" style="display:none;margin-top:16px;text-align:center">
-              <div style="font-size:32px;margin-bottom:8px">&#9203;</div>
-              <p>Uploading your photo...</p>
-              <div style="background:var(--border);height:6px;border-radius:6px;margin-top:12px;overflow:hidden"><div id="uploadBar" style="background:var(--primary);height:100%;width:0%;transition:width .3s;border-radius:6px"></div></div>
-            </div>
-          </div>
-
-          <!-- STEP 2: Room & Style -->
-          <div id="realStep2" style="display:none">
-            <h3 style="margin-bottom:16px">Step 2: Choose room type & style</h3>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px">
-              <div class="form-group">
-                <label style="font-weight:600;margin-bottom:8px;display:block">Room Type</label>
-                <select id="realRoomType" style="width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit">
-                  <option value="living">Living Room</option>
-                  <option value="bedroom">Bedroom</option>
-                  <option value="kitchen">Kitchen</option>
-                  <option value="dining">Dining Room</option>
-                  <option value="bathroom">Bathroom</option>
-                  <option value="office">Home Office</option>
-                  <option value="outdoor">Outdoor/Patio</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label style="font-weight:600;margin-bottom:8px;display:block">Design Style</label>
-                <select id="realStyle" style="width:100%;padding:12px 16px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit">
-                  <option value="modern">Modern</option>
-                  <option value="scandinavian">Scandinavian</option>
-                  <option value="coastal">Coastal</option>
-                  <option value="luxury">Luxury</option>
-                  <option value="farmhouse">Farmhouse</option>
-                  <option value="industrial">Industrial</option>
-                  <option value="bohemian">Bohemian</option>
-                  <option value="contemporary">Contemporary</option>
-                  <option value="traditional">Traditional</option>
-                  <option value="minimalist">Minimalist</option>
-                </select>
-              </div>
-            </div>
-            <div id="realUploadedThumb" style="background:var(--bg);padding:16px;border-radius:12px;display:flex;align-items:center;gap:16px;margin-bottom:24px">
-              <img id="realThumbImg" style="width:80px;height:60px;object-fit:cover;border-radius:8px">
-              <div>
-                <div style="font-weight:600" id="realThumbName">photo.jpg</div>
-                <div style="color:var(--text-muted);font-size:13px">Ready to stage</div>
-              </div>
-            </div>
-            <div style="display:flex;gap:12px">
-              <button class="btn btn-secondary" onclick="realGoStep(1)">Back</button>
-              <button class="btn btn-primary" id="realSubmitBtn" onclick="realSubmitStaging()" style="flex:1;justify-content:center">Stage This Photo &#10024;</button>
-            </div>
-          </div>
-
-          <!-- STEP 3: Processing & Result -->
-          <div id="realStep3" style="display:none">
-            <div id="processingView">
-              <div style="text-align:center;padding:48px 0">
-                <div style="font-size:48px;margin-bottom:16px;animation:spin 2s linear infinite">&#9881;</div>
-                <h3>AI is staging your room...</h3>
-                <p style="color:var(--text-muted);margin-top:8px" id="processingStatus">This usually takes 30-60 seconds</p>
-                <div style="background:var(--border);height:6px;border-radius:6px;margin-top:24px;max-width:400px;margin-left:auto;margin-right:auto;overflow:hidden"><div id="renderBar" style="background:var(--primary);height:100%;width:10%;transition:width .5s;border-radius:6px"></div></div>
-              </div>
-            </div>
-            <div id="resultView" style="display:none">
-              <h3 style="margin-bottom:16px">Your staged photo is ready!</h3>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;border-radius:12px;overflow:hidden;margin-bottom:24px">
-                <div style="position:relative">
-                  <img id="beforeImg" style="width:100%;aspect-ratio:4/3;object-fit:cover">
-                  <span style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);color:white;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:700">BEFORE</span>
-                </div>
-                <div style="position:relative">
-                  <img id="afterImg" style="width:100%;aspect-ratio:4/3;object-fit:cover">
-                  <span style="position:absolute;top:8px;left:8px;background:rgba(0,0,0,.6);color:white;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:700">AFTER</span>
-                </div>
-              </div>
-              <div style="display:flex;gap:12px;flex-wrap:wrap">
-                <a id="downloadBtn" class="btn btn-primary" download target="_blank">Download Staged Image</a>
-                <button class="btn btn-secondary" onclick="realReset()">Stage Another Photo</button>
-                <button class="btn btn-secondary" onclick="realRegenerate()">Try Different Style</button>
-              </div>
-            </div>
-          </div>
-
+        <!-- EMBEDDED STAGING WORKSPACE (NO HEADER, NO SCROLL ISSUES) -->
+        <div style="margin-top:24px;border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm)">
+          <iframe
+            src="/staging-embed"
+            style="width:100%;height:800px;border:none;display:block;overflow:hidden"
+            title="AI Staging Workspace"
+            scrolling="no"
+          ></iframe>
         </div>
-        <style>@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+      </div>
+
+      <!-- ============ PRO STAGING INTAKE ============ -->
+      <div id="sub-pro-staging" class="subnav">
+        <div style="background: linear-gradient(135deg, #2C2420, #4A3F37); border-radius: 16px; padding: 48px 40px; margin-bottom: 32px; color: white;">
+          <div style="max-width: 600px;">
+            <div style="font-size: 14px; font-weight: 700; letter-spacing: 1px; opacity: 0.8; margin-bottom: 12px;">PROFESSIONAL SERVICES</div>
+            <h1 style="font-size: 36px; font-weight: 700; margin-bottom: 16px; line-height: 1.2; white-space: nowrap;">Professional Staging — The Human Touch</h1>
+            <p style="font-size: 16px; opacity: 0.9; line-height: 1.6;">Upload your photos and specify the room for each one. Our team will professionally stage them to maximize your listing appeal.</p>
+          </div>
+        </div>
+
+        <div class="panel" style="max-width: 900px; padding: 40px;">
+          <form id="proStagingForm" onsubmit="submitProStagingForm(event)">
+
+          <!-- Property Info -->
+          <div style="margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
+            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px;">Property Address</label>
+            <input type="text" id="proAddress" placeholder="123 Main Street, Brooklyn, NY 11201" required style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 15px; background: white;">
+          </div>
+
+
+          <!-- Photos Upload -->
+          <div style="margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
+            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 16px;">Upload & Label Photos</label>
+
+            <div id="proPhotoUploadZone" style="border: 2px dashed var(--border); border-radius: 16px; padding: 48px 24px; text-align: center; cursor: pointer; background: linear-gradient(135deg, rgba(249,250,251,0.5), rgba(241,245,249,0.5)); transition: all 0.3s;" ondragover="event.preventDefault(); this.style.borderColor='#8B7355'; this.style.background='linear-gradient(135deg, rgba(249,250,251,1), rgba(241,245,249,1))';" ondragleave="this.style.borderColor='var(--border)'; this.style.background='linear-gradient(135deg, rgba(249,250,251,0.5), rgba(241,245,249,0.5))';" ondrop="handleProPhotoDrop(event)">
+              <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.8;">📸</div>
+              <p style="font-size: 16px; font-weight: 600; margin-bottom: 6px; color: var(--text);">Drag photos here or click to browse</p>
+              <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Up to 20 high-resolution images. Specify room type for each photo. JPG, PNG supported.</p>
+              <input type="file" id="proPhotoInput" multiple accept="image/*" style="display: none;" onchange="handleProPhotoSelect(event)">
+              <button type="button" class="btn btn-secondary" onclick="document.getElementById('proPhotoInput').click()">Select Files</button>
+            </div>
+
+            <div id="proPhotoList" style="margin-top: 20px;"></div>
+          </div>
+
+          <!-- Design Style -->
+          <div style="margin-bottom: 32px; padding-bottom: 32px; border-bottom: 1px solid var(--border);">
+            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px;">Design Style</label>
+            <select id="proStyle" required style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-size: 15px; background: white;">
+              <option value="">Select preferred design style</option>
+              <option value="modern">Modern</option>
+              <option value="scandinavian">Scandinavian</option>
+              <option value="luxury">Luxury</option>
+              <option value="farmhouse">Farmhouse</option>
+              <option value="industrial">Industrial</option>
+              <option value="transitional">Transitional</option>
+            </select>
+          </div>
+
+          <!-- Notes -->
+          <div style="margin-bottom: 32px;">
+            <label style="display: block; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 8px;">Special Instructions (Optional)</label>
+            <textarea id="proNotes" placeholder="Furniture preferences, color palettes, areas to highlight, specific requests..." rows="4" style="width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 12px; font-family: inherit; font-size: 14px; resize: none;"></textarea>
+          </div>
+
+          <!-- Cost Summary -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; padding: 24px; background: linear-gradient(135deg, rgba(139,115,85,0.05), rgba(160,137,110,0.05)); border-radius: 12px; border: 1px solid rgba(139,115,85,0.1);">
+            <div>
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Cost Per Photo</p>
+              <p style="font-size: 28px; font-weight: 700; color: #8B7355;">2<span style="font-size: 16px; margin-left: 4px;">tokens</span></p>
+            </div>
+            <div style="text-align: right;">
+              <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Your Balance</p>
+              <p style="font-size: 28px; font-weight: 700; color: var(--text);"><span id="proTokenBalance">42</span><span style="font-size: 16px; margin-left: 4px;">tokens</span></p>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <div style="display: flex; gap: 12px;">
+            <button type="reset" class="btn btn-secondary" style="flex: 1; padding: 14px;">Clear</button>
+            <button type="submit" id="proSubmitBtn" class="btn btn-primary" style="flex: 1; padding: 14px;">Submit for Professional Staging</button>
+          </div>
+          </form>
+        </div>
       </div>
 
       <!-- ============ ORDERS ============ -->
@@ -1461,7 +1467,7 @@
             <option>All Styles</option><option>Modern</option><option>Scandinavian</option><option>Luxury</option>
           </select>
           <button class="btn btn-secondary" style="margin-left: auto;" onclick="toast('CSV downloaded')">📤 Export CSV</button>
-          <button class="btn btn-primary" onclick="showSub('stage')">+ New Order</button>
+          <button class="btn btn-primary" onclick="openModal('newOrder')">+ New Order</button>
         </div>
 
         <div class="panel" style="padding: 0;">
@@ -1695,36 +1701,128 @@
       <!-- ============ BUY CREDITS ============ -->
       <div id="sub-credits" class="subnav">
         <div class="page-title">Buy Credits</div>
-        <div class="page-subtitle">Top up your account or upgrade to a subscription for savings.</div>
+        <div class="page-subtitle">Pay per image or save up to 60% with a membership. No hidden fees, cancel anytime.</div>
 
         <div class="info-callout">
           <strong>You have 42 credits.</strong> Subscription credits refill on May 31, 2026.
         </div>
 
-        <h3 style="margin-bottom: 16px;">One-Time Credit Packs</h3>
-        <div class="credit-packs">
-          <div class="credit-pack" onclick="buyCredits(5)"><div class="pack-credits">5</div><div class="pack-label">credits</div><div class="pack-price">$10</div><div class="pack-per">$2.00 / image</div><button class="btn btn-secondary">Buy</button></div>
-          <div class="credit-pack" onclick="buyCredits(25)"><div class="pack-credits">25</div><div class="pack-label">credits</div><div class="pack-price">$40</div><div class="pack-per">$1.60 / image</div><button class="btn btn-secondary">Buy</button></div>
-          <div class="credit-pack best" onclick="buyCredits(100)"><div class="pack-credits">100</div><div class="pack-label">credits</div><div class="pack-price">$120</div><div class="pack-per">$1.20 / image</div><button class="btn btn-primary">Buy</button></div>
-          <div class="credit-pack" onclick="buyCredits(500)"><div class="pack-credits">500</div><div class="pack-label">credits</div><div class="pack-price">$450</div><div class="pack-per">$0.90 / image</div><button class="btn btn-secondary">Buy</button></div>
+        <!-- Pricing Toggle -->
+        <div style="display: flex; gap: 16px; margin-bottom: 40px;">
+          <button class="btn btn-primary" style="flex: 1; padding: 16px 24px; text-align: center; font-weight: 700; font-size: 16px;" onclick="switchPricingSection(this, 'onetime')">💳 Single Purchase</button>
+          <button class="btn btn-secondary" style="flex: 1; padding: 16px 24px; text-align: center; font-weight: 700; font-size: 16px;" onclick="switchPricingSection(this, 'membership')">🔄 Membership Pricing</button>
         </div>
 
-        <h3 style="margin: 48px 0 16px;">Or switch to a subscription</h3>
-        <div class="pricing-grid">
-          <div class="price-card">
-            <h3>Starter</h3><div class="price-desc">10 credits/mo</div>
-            <div class="price-amount"><span class="num">$15</span><span class="unit">/mo</span></div>
-            <button class="btn btn-secondary" onclick="openModal('confirmUpgrade')">Upgrade</button>
+        <!-- ONE-TIME PURCHASE SECTION -->
+        <div id="section-onetime">
+          <!-- AI ONE-TIME -->
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 24px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px;">✨ AI Virtual Staging</h3>
+          <div class="pricing-grid" style="margin-bottom: 48px;">
+            <div class="price-card">
+              <h3>Small AI Pack</h3><div class="price-desc">Perfect for a quick listing</div>
+              <div class="price-amount"><span class="currency">$</span><span class="num">60</span></div>
+              <div class="per-image">$6.00 per image • 10 credits</div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(10)">Buy Credits</button>
+            </div>
+            <div class="price-card featured">
+              <h3>Medium AI Pack</h3><div class="price-desc">Great for apartments & studios</div>
+              <div class="price-amount"><span class="currency">$</span><span class="num">180</span></div>
+              <div class="per-image">$4.50 per image • 40 credits</div>
+              <button class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(40)">Best Value →</button>
+            </div>
+            <div class="price-card">
+              <h3>Big AI Pack</h3><div class="price-desc">Best for houses & rentals</div>
+              <div class="price-amount"><span class="currency">$</span><span class="num">255</span></div>
+              <div class="per-image">$3.00 per image • 85 credits</div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(85)">Buy Credits</button>
+            </div>
           </div>
-          <div class="price-card featured">
-            <h3>Professional</h3><div class="price-desc">50 credits/mo</div>
-            <div class="price-amount"><span class="num">$49</span><span class="unit">/mo</span></div>
-            <button class="btn btn-primary" disabled style="opacity:0.7;cursor:default">Current Plan ✓</button>
+
+          <!-- TRADITIONAL ONE-TIME -->
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 24px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px;">👔 Professional Virtual Staging — The Human Touch</h3>
+          <div class="pricing-grid">
+            <div class="price-card">
+              <h3>Single Room</h3><div class="price-desc">1 professionally staged image</div>
+              <div class="price-amount"><span class="num">$15</span></div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(1, 'pro')">Order Now</button>
+            </div>
+            <div class="price-card featured">
+              <h3>Small Property</h3><div class="price-desc">$12.50/image • 10 images</div>
+              <div class="price-amount"><span class="num">$125</span></div>
+              <button class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(10, 'pro')">Best Value →</button>
+            </div>
+            <div class="price-card">
+              <h3>Large Property</h3><div class="price-desc">$10.00/image • 20 images</div>
+              <div class="price-amount"><span class="num">$200</span></div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="buyCredits(20, 'pro')">Order Now</button>
+            </div>
           </div>
-          <div class="price-card">
-            <h3>Brokerage</h3><div class="price-desc">250 credits/mo</div>
-            <div class="price-amount"><span class="num">$199</span><span class="unit">/mo</span></div>
-            <button class="btn btn-secondary" onclick="openModal('confirmUpgrade')">Upgrade</button>
+        </div>
+
+        <!-- MEMBERSHIP PRICING SECTION -->
+        <div id="section-membership" style="display: none;">
+          <!-- AI MEMBERSHIP -->
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 24px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px;">✨ AI Membership Pricing</h3>
+          <div class="pricing-grid" style="margin-bottom: 48px;">
+            <div class="price-card">
+              <h3>AI Starter</h3><div class="price-desc">10 credits/mo</div>
+              <div class="price-amount"><span class="num">$39</span><span class="unit">/mo</span></div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Start Plan</button>
+            </div>
+            <div class="price-card featured">
+              <h3>AI Premium</h3><div class="price-desc">40 credits/mo</div>
+              <div class="price-amount"><span class="num">$79</span><span class="unit">/mo</span></div>
+              <button class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Get Started</button>
+            </div>
+            <div class="price-card">
+              <h3>AI Pro</h3><div class="price-desc">160 credits/mo</div>
+              <div class="price-amount"><span class="num">$199</span><span class="unit">/mo</span></div>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Start Plan</button>
+            </div>
+          </div>
+
+          <!-- TRADITIONAL MEMBERSHIP -->
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 24px; color: var(--primary); text-transform: uppercase; letter-spacing: 1px;">👔 Pro Membership Pricing</h3>
+          <div class="pricing-grid">
+            <div class="price-card">
+              <h3>T Starter</h3><div class="price-desc">For individual agents</div>
+              <div class="price-amount"><span class="currency">$</span><span class="num">99</span><span class="unit">/mo</span></div>
+              <div class="per-image">$9.90/image • 10 images/mo</div>
+              <ul class="price-features">
+                <li><span class="check">✓</span> 10 pro staged images</li>
+                <li><span class="check">✓</span> 24-hour turnaround</li>
+                <li><span class="check">✓</span> High-res download</li>
+                <li><span class="check">✓</span> Commercial license</li>
+                <li><span class="check">✓</span> Cancel anytime</li>
+              </ul>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Start Plan</button>
+            </div>
+            <div class="price-card featured">
+              <h3>T Premium</h3><div class="price-desc">For brokers & teams</div>
+              <div class="price-amount"><span class="currency">$</span><span class="num">149</span><span class="unit">/mo</span></div>
+              <div class="per-image">$7.45/image • 20 images/mo</div>
+              <ul class="price-features">
+                <li><span class="check">✓</span> 20 pro staged images</li>
+                <li><span class="check">✓</span> Multi-angle staging</li>
+                <li><span class="check">✓</span> Unlimited variations</li>
+                <li><span class="check">✓</span> 24-hour turnaround</li>
+                <li><span class="check">✓</span> Cancel anytime</li>
+              </ul>
+              <button class="btn btn-primary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Get Started</button>
+            </div>
+            <div class="price-card">
+              <h3>T Pro</h3><div class="price-desc">For photographers & media</div>
+              <div class="price-amount"><span class="currency">$</span><span class="num">299</span><span class="unit">/mo</span></div>
+              <div class="per-image">$5.98/image • 50 images/mo</div>
+              <ul class="price-features">
+                <li><span class="check">✓</span> 50 pro staged images</li>
+                <li><span class="check">✓</span> Multi-angle staging</li>
+                <li><span class="check">✓</span> 50+ custom designs</li>
+                <li><span class="check">✓</span> 24-hour turnaround</li>
+                <li><span class="check">✓</span> Cancel anytime</li>
+              </ul>
+              <button class="btn btn-secondary btn-lg" style="width: 100%; justify-content: center;" onclick="openModal('confirmUpgrade')">Start Plan</button>
+            </div>
           </div>
         </div>
       </div>
@@ -1845,9 +1943,6 @@
           <button class="tab-btn" onclick="switchSettingsTab(this, 'preferences')">Preferences</button>
           <button class="tab-btn" onclick="switchSettingsTab(this, 'notifications')">Notifications</button>
           <button class="tab-btn" onclick="switchSettingsTab(this, 'security')">Security</button>
-          <button class="tab-btn" onclick="switchSettingsTab(this, 'integrations')">Integrations</button>
-          <button class="tab-btn" onclick="switchSettingsTab(this, 'api')">API Keys</button>
-          <button class="tab-btn" onclick="switchSettingsTab(this, 'danger')">Danger Zone</button>
         </div>
 
         <div id="settings-profile" class="settings-tab">
@@ -1949,99 +2044,6 @@
             <button class="btn btn-secondary" style="margin-top:16px;" onclick="toast('All other sessions signed out')">Sign Out All Other Sessions</button>
           </div>
         </div>
-
-        <div id="settings-integrations" class="settings-tab" style="display:none;">
-          <div class="panel">
-            <h3 style="margin-bottom:24px;">Connected Apps</h3>
-            <div style="display:grid; gap:12px;">
-              <div class="integration-card">
-                <div class="integration-icon">🏠</div>
-                <div class="integration-info"><h4>MLS Connect <span class="pill pill-success" style="margin-left:6px">Connected</span></h4><p>Upload staged images directly to your MLS listings</p></div>
-                <button class="btn btn-ghost" style="color:var(--danger)" onclick="toast('Disconnected MLS')">Disconnect</button>
-              </div>
-              <div class="integration-card">
-                <div class="integration-icon">📷</div>
-                <div class="integration-info"><h4>Google Photos</h4><p>Import room photos from Google Photos</p></div>
-                <button class="btn btn-primary" onclick="toast('Connecting to Google Photos...')">Connect</button>
-              </div>
-              <div class="integration-card">
-                <div class="integration-icon">☁️</div>
-                <div class="integration-info"><h4>Dropbox <span class="pill pill-success" style="margin-left:6px">Connected</span></h4><p>Auto-save staged images to a Dropbox folder</p></div>
-                <button class="btn btn-ghost" style="color:var(--danger)" onclick="toast('Disconnected Dropbox')">Disconnect</button>
-              </div>
-              <div class="integration-card">
-                <div class="integration-icon">📊</div>
-                <div class="integration-info"><h4>Zapier</h4><p>Automate workflows with 5,000+ apps</p></div>
-                <button class="btn btn-primary" onclick="toast('Connecting to Zapier...')">Connect</button>
-              </div>
-              <div class="integration-card">
-                <div class="integration-icon">📧</div>
-                <div class="integration-info"><h4>Mailchimp</h4><p>Send staged photos in your marketing emails</p></div>
-                <button class="btn btn-primary" onclick="toast('Connecting to Mailchimp...')">Connect</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="settings-api" class="settings-tab" style="display:none;">
-          <div class="panel">
-            <div class="panel-header">
-              <div class="panel-title">API Keys</div>
-              <button class="btn btn-primary" onclick="openModal('createApiKey')">+ Create New Key</button>
-            </div>
-            <div class="info-callout"><strong>API access requires the Brokerage plan.</strong> <a class="link-text" onclick="showSub('credits')">Upgrade →</a></div>
-            <div class="api-key-row">
-              <strong style="font-size:13px;">Production</strong>
-              <code>sk_live_••••••••••••••••4f8a</code>
-              <button class="btn btn-secondary" onclick="toast('Key copied to clipboard')">Copy</button>
-              <button class="btn btn-ghost" style="color:var(--danger)" onclick="openModal('confirmRevokeKey')">Revoke</button>
-            </div>
-            <div class="api-key-row">
-              <strong style="font-size:13px;">Development</strong>
-              <code>sk_test_••••••••••••••••a12b</code>
-              <button class="btn btn-secondary" onclick="toast('Key copied to clipboard')">Copy</button>
-              <button class="btn btn-ghost" style="color:var(--danger)" onclick="openModal('confirmRevokeKey')">Revoke</button>
-            </div>
-            <div style="margin-top:16px;">
-              <a class="link-text" onclick="toast('Opening API docs')">📖 Read API Documentation →</a>
-            </div>
-          </div>
-          <div class="panel">
-            <h3 style="margin-bottom:16px;">Webhooks</h3>
-            <div class="api-key-row">
-              <code>https://yourapp.com/webhook/staging</code>
-              <span class="pill pill-success">Active</span>
-              <button class="btn btn-secondary" onclick="toast('Test webhook sent')">Test</button>
-              <button class="btn btn-ghost" style="color:var(--danger)" onclick="toast('Webhook removed')">Remove</button>
-            </div>
-            <button class="btn btn-secondary" style="margin-top:12px;" onclick="openModal('addWebhook')">+ Add Webhook</button>
-          </div>
-        </div>
-
-        <div id="settings-danger" class="settings-tab" style="display:none;">
-          <div class="panel">
-            <h3 style="margin-bottom:24px; color:var(--danger);">Danger Zone</h3>
-            <div class="danger-callout">
-              <strong>These actions cannot be undone.</strong> Please proceed with caution.
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><h4>Export all data</h4><p>Download all your stagings, orders, and account data as a ZIP</p></div>
-              <button class="btn btn-secondary" onclick="toast('Data export started — you will receive an email')">Export</button>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><h4>Clear all history</h4><p>Permanently delete all staging history (keeps account active)</p></div>
-              <button class="btn btn-ghost" style="color:var(--danger)" onclick="openModal('confirmClearHistory')">Clear History</button>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><h4>Cancel subscription</h4><p>End your Professional plan at the end of the billing period</p></div>
-              <button class="btn btn-ghost" style="color:var(--danger)" onclick="openModal('confirmCancelPlan')">Cancel</button>
-            </div>
-            <div class="toggle-row">
-              <div class="toggle-info"><h4>Delete account</h4><p>Permanently delete your account, all data, and remaining credits</p></div>
-              <button class="btn btn-danger" onclick="openModal('confirmDeleteAccount')">Delete Account</button>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- ============ TEAM ============ -->
@@ -2086,71 +2088,6 @@
             <div style="background:var(--primary);height:100%;width:100%;"></div>
           </div>
           <button class="btn btn-secondary" onclick="showSub('credits')">Add More Credits</button>
-        </div>
-      </div>
-
-      <!-- ============ TUTORIALS ============ -->
-      <div id="sub-tutorials" class="subnav">
-        <div class="page-title">Tutorials & Learning</div>
-        <div class="page-subtitle">Master StageAI with our video guides and best practices.</div>
-
-        <div class="tabs-bar">
-          <button class="tab-btn active" onclick="switchTab(this)">Getting Started</button>
-          <button class="tab-btn" onclick="switchTab(this)">Style Guide</button>
-          <button class="tab-btn" onclick="switchTab(this)">Pro Tips</button>
-          <button class="tab-btn" onclick="switchTab(this)">API & Integrations</button>
-          <button class="tab-btn" onclick="switchTab(this)">Case Studies</button>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;">
-          <div class="tutorial-card" onclick="openModal('playVideo')">
-            <div class="tutorial-thumb">▶️</div>
-            <div class="tutorial-info">
-              <h4>Your First Staging in 60 Seconds</h4>
-              <p>Walk through your first virtual staging from upload to download.</p>
-              <div class="meta">📹 2 min • Beginner</div>
-            </div>
-          </div>
-          <div class="tutorial-card" onclick="openModal('playVideo')">
-            <div class="tutorial-thumb">▶️</div>
-            <div class="tutorial-info">
-              <h4>Mastering Bulk Upload</h4>
-              <p>Stage an entire listing in one go with bulk processing.</p>
-              <div class="meta">📹 4 min • Intermediate</div>
-            </div>
-          </div>
-          <div class="tutorial-card" onclick="openModal('playVideo')">
-            <div class="tutorial-thumb">▶️</div>
-            <div class="tutorial-info">
-              <h4>Choosing the Right Style</h4>
-              <p>Match staging style to home type, location, and target buyer.</p>
-              <div class="meta">📹 6 min • All levels</div>
-            </div>
-          </div>
-          <div class="tutorial-card" onclick="openModal('playVideo')">
-            <div class="tutorial-thumb">▶️</div>
-            <div class="tutorial-info">
-              <h4>MLS Compliance Guide</h4>
-              <p>Stay compliant with proper disclosure across major MLSs.</p>
-              <div class="meta">📄 Article • All levels</div>
-            </div>
-          </div>
-          <div class="tutorial-card" onclick="openModal('playVideo')">
-            <div class="tutorial-thumb">▶️</div>
-            <div class="tutorial-info">
-              <h4>Custom AI Prompts</h4>
-              <p>Get specific results with custom style descriptions.</p>
-              <div class="meta">📹 5 min • Advanced</div>
-            </div>
-          </div>
-          <div class="tutorial-card" onclick="openModal('playVideo')">
-            <div class="tutorial-thumb">▶️</div>
-            <div class="tutorial-info">
-              <h4>Photographing Empty Rooms</h4>
-              <p>Capture better source photos for the best AI results.</p>
-              <div class="meta">📹 8 min • Photographers</div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -2437,6 +2374,59 @@ const MODALS = {
     <div class="form-group"><input type="text" placeholder="Type DELETE"></div>
     <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-danger" onclick="closeModal(); goto('landing'); toast('Account deleted')">Delete Permanently</button></div>
   `,
+  newOrder: `
+    <h3>Create New Order</h3>
+    <p class="modal-subtitle" id="newOrderStep">Step 1 of 2: Order Information</p>
+
+    <div id="newOrderStep1" style="display: block;">
+      <div class="form-group"><label>Property Address</label><input type="text" id="newOrderAddress" placeholder="e.g., 1247 Oak Street, Brooklyn, NY" onchange="updateProjectName()"></div>
+      <div class="form-group"><label>Project Name <span style="color: var(--text-muted); font-weight: 400;">(defaults to address, or enter a custom name)</span></label><input type="text" id="newOrderProjectName" placeholder="e.g., Kitchen Examples, 123 Oak Renovations"></div>
+      <div class="form-row">
+        <div class="form-group"><label>First Name</label><input type="text" id="newOrderFirstName" placeholder="John"></div>
+        <div class="form-group"><label>Last Name</label><input type="text" id="newOrderLastName" placeholder="Doe"></div>
+      </div>
+      <div class="form-group"><label>Email</label><input type="email" id="newOrderEmail" placeholder="john@example.com"></div>
+      <div class="form-group"><label>Phone (optional)</label><input type="tel" id="newOrderPhone" placeholder="(555) 123-4567"></div>
+      <div class="form-group"><label>Notes (optional)</label><textarea id="newOrderNotes" rows="2" placeholder="Any special requests..."></textarea></div>
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="proceedToOrderType()">Next: Choose Order Type</button></div>
+    </div>
+
+    <div id="newOrderStep2" style="display: none;">
+      <p style="color: var(--text-muted); margin-bottom: 20px;">Select what type of order you'd like to create:</p>
+
+      <div style="display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px;">
+        <div class="style-card clickable" onclick="selectOrderType('ai-staging');" id="orderType-ai-staging" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
+          <div style="font-size: 32px; margin-bottom: 8px;">✨</div>
+          <div style="font-weight: 600; margin-bottom: 4px;">AI Staging</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Automatic furniture staging</div>
+        </div>
+
+        <div class="style-card clickable" onclick="selectOrderType('pro-staging');" id="orderType-pro-staging" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
+          <div style="font-size: 32px; margin-bottom: 8px;">👔</div>
+          <div style="font-weight: 600; margin-bottom: 4px;">Pro Staging</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Professional staging services</div>
+        </div>
+
+        <div class="style-card clickable" onclick="selectOrderType('editing-services');" id="orderType-editing-services" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
+          <div style="font-size: 32px; margin-bottom: 8px;">✏️</div>
+          <div style="font-weight: 600; margin-bottom: 4px;">Editing Services</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Professional photo editing</div>
+        </div>
+
+        <div class="style-card clickable" onclick="selectOrderType('video-editing');" id="orderType-video-editing" style="cursor: pointer; padding: 16px; text-align: center; border: 2px solid var(--border); border-radius: 12px;">
+          <div style="font-size: 32px; margin-bottom: 8px;">🎬</div>
+          <div style="font-weight: 600; margin-bottom: 4px;">Video Editing</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Professional video production</div>
+        </div>
+      </div>
+
+      <div style="background: var(--bg); padding: 16px; border-radius: 10px; margin-bottom: 16px;">
+        <p style="font-size: 13px; color: var(--text-muted);"><strong id="selectedOrderTypeLabel">Select a type</strong> to continue</p>
+      </div>
+
+      <div class="modal-actions"><button class="btn btn-secondary" onclick="goBackOrderStep1()">Back</button><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="confirmNewOrder()" id="confirmOrderBtn" disabled>Create Order</button></div>
+    </div>
+  `,
   playVideo: `
     <h3>Tutorial</h3>
     <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6); height:320px; border-radius:12px; display:flex;align-items:center;justify-content:center;color:white;font-size:64px;margin-bottom:16px;">▶️</div>
@@ -2474,10 +2464,30 @@ const MODALS = {
 
 function openModal(name) {
   document.getElementById('modalContent').innerHTML = MODALS[name] || '<p>Modal not found</p>';
-  document.getElementById('modal').classList.add('show');
+  const modal = document.getElementById('modal');
+  const app = document.getElementById('app');
+
+  modal.classList.add('show');
+  document.body.style.overflow = 'hidden';
+
+  // Mark app content as inert while modal is open (accessible alternative to aria-hidden)
+  if (app) app.inert = true;
+
+  // Focus the first focusable element in modal
+  setTimeout(() => {
+    const input = modal.querySelector('input, button, select, textarea');
+    if (input) input.focus();
+  }, 100);
 }
 function closeModal() {
-  document.getElementById('modal').classList.remove('show');
+  const modal = document.getElementById('modal');
+  const app = document.getElementById('app');
+
+  modal.classList.remove('show');
+  document.body.style.overflow = '';
+
+  // Remove inert from app content
+  if (app) app.inert = false;
 }
 
 // ============ STAGE NOW ============
@@ -2496,6 +2506,10 @@ function goWizardStep(n) {
 function toggleBulkMode() {
   const s = document.getElementById('singleMode');
   const b = document.getElementById('bulkMode');
+  if (!s || !b) {
+    toast('Bulk upload is available in the staging workspace');
+    return;
+  }
   if (s.style.display === 'none') {
     s.style.display = 'block';
     b.style.display = 'none';
@@ -2511,7 +2525,12 @@ function simulateUpload() {
   goWizardStep(2);
 }
 function simulateBulkUpload() {
-  document.getElementById('bulkList').style.display = 'block';
+  const bulkList = document.getElementById('bulkList');
+  if (!bulkList) {
+    toast('Use the staging workspace to upload multiple images');
+    return;
+  }
+  bulkList.style.display = 'block';
   toast('5 files uploaded — choose styles');
 }
 function submitStaging() {
@@ -2549,24 +2568,63 @@ function switchSettingsTab(btn, target) {
 }
 
 // ============ CREDITS ============
-function buyCredits(amount) {
-  const prices = {5: 10, 25: 40, 100: 120, 500: 450};
+function buyCredits(amount, productType = 'ai') {
+  const aiPrices = {5: 10, 25: 40, 100: 120, 500: 450};
+  const proPrices = {1: 15, 10: 125, 20: 200};
+
+  const prices = productType === 'pro' ? proPrices : aiPrices;
   const price = prices[amount];
+
+  const productLabel = productType === 'pro'
+    ? `Professional Staging (${amount} image${amount > 1 ? 's' : ''})`
+    : `${amount} Credits`;
+
   document.getElementById('modalContent').innerHTML = `
-    <h3>Buy ${amount} Credits?</h3>
-    <p class="modal-subtitle">Charged to Visa •••• 4242. Credits never expire.</p>
+    <h3>Purchase ${productLabel}?</h3>
+    <p class="modal-subtitle">Charged to Visa •••• 4242. Professional staging results delivered within 24 hours.</p>
     <div style="background:var(--bg);padding:16px;border-radius:10px;margin-bottom:16px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span>${amount} credits</span><strong>$${price}.00</strong></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span>${productLabel}</span><strong>$${price}.00</strong></div>
       <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span>Tax</span><strong>$0.00</strong></div>
       <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border);"><strong>Total</strong><strong>$${price}.00</strong></div>
     </div>
-    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal(); toast('${amount} credits added'); updateCredits(${amount})">Confirm Purchase</button></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="confirmPurchase(${amount}, '${productType}')">Confirm Purchase</button></div>
   `;
   document.getElementById('modal').classList.add('show');
 }
-function updateCredits(amount) {
-  const el = document.getElementById('creditCount');
-  el.textContent = parseInt(el.textContent) + amount;
+
+function confirmPurchase(amount, productType) {
+  closeModal();
+
+  // Record purchase in Firebase
+  const purchaseData = {
+    amount: amount,
+    productType: productType,
+    timestamp: new Date().toISOString(),
+    price: productType === 'pro'
+      ? {1: 15, 10: 125, 20: 200}[amount]
+      : {5: 10, 25: 40, 100: 120, 500: 450}[amount]
+  };
+
+  // Send to Firebase endpoint
+  fetch('/api/orders/purchase', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(purchaseData)
+  }).then(res => res.json()).catch(err => console.error('Purchase error:', err));
+
+  const message = productType === 'pro'
+    ? `Professional staging order created for ${amount} image${amount > 1 ? 's' : ''}`
+    : `${amount} credits added to your account`;
+
+  toast(message);
+  updateCredits(amount, productType);
+}
+
+function updateCredits(amount, productType = 'ai') {
+  if (productType === 'ai') {
+    const el = document.getElementById('creditCount');
+    if (el) el.textContent = parseInt(el.textContent) + amount;
+  }
 }
 
 // ============ EXAMPLES FILTER ============
@@ -2628,12 +2686,16 @@ function realHandleFile(file) {
   var reader = new FileReader();
   reader.onload = function(e) {
     _realPreviewUrl = e.target.result;
-    document.getElementById('realUploadZone').style.display = 'none';
-    document.getElementById('uploadPreview').style.display = 'none';
-    document.getElementById('uploadProgress').style.display = 'block';
-    
+    var upZone = document.getElementById('realUploadZone');
+    var upPrev = document.getElementById('uploadPreview');
+    var upProg = document.getElementById('uploadProgress');
+
+    if(upZone) upZone.style.display = 'none';
+    if(upPrev) upPrev.style.display = 'none';
+    if(upProg) upProg.style.display = 'block';
+
     var bar = document.getElementById('uploadBar');
-    bar.style.width = '30%';
+    if(bar) bar.style.width = '30%';
     
     // Extract base64 and upload
     var b64 = e.target.result.split(',')[1];
@@ -2642,29 +2704,38 @@ function realHandleFile(file) {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ userId: _userId, fileName: file.name, fileBase64: b64 })
-    }).then(function(r){ bar.style.width='70%'; return r.json(); })
+    }).then(function(r){ if(bar) bar.style.width='70%'; return r.json(); })
     .then(function(data) {
-      bar.style.width = '100%';
+      if(bar) bar.style.width = '100%';
       _realImageUrl = data.publicUrl || data.url || data.imageUrl || '';
       if (_realImageUrl || data.ok !== false) {
         setTimeout(function(){
-          document.getElementById('uploadProgress').style.display = 'none';
-          document.getElementById('uploadPreview').style.display = 'block';
-          document.getElementById('uploadPreviewImg').src = _realPreviewUrl;
-          document.getElementById('uploadFileName').textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB) — Uploaded!';
+          var upProg = document.getElementById('uploadProgress');
+          var upPrev = document.getElementById('uploadPreview');
+          var prevImg = document.getElementById('uploadPreviewImg');
+          var fileName = document.getElementById('uploadFileName');
+
+          if(upProg) upProg.style.display = 'none';
+          if(upPrev) upPrev.style.display = 'block';
+          if(prevImg) prevImg.src = _realPreviewUrl;
+          if(fileName) fileName.textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB) — Uploaded!';
           toast('Photo uploaded! Click Next to choose style.');
-          
+
           // Auto-advance to step 2 after a beat
           setTimeout(function(){ realGoStep(2); }, 800);
         }, 400);
       } else {
-        document.getElementById('uploadProgress').style.display = 'none';
-        document.getElementById('realUploadZone').style.display = 'block';
+        var upProg = document.getElementById('uploadProgress');
+        var upZone = document.getElementById('realUploadZone');
+        if(upProg) upProg.style.display = 'none';
+        if(upZone) upZone.style.display = 'block';
         toast('Upload failed: ' + (data.error || 'Please try again'), 'error');
       }
     }).catch(function(err) {
-      document.getElementById('uploadProgress').style.display = 'none';
-      document.getElementById('realUploadZone').style.display = 'block';
+      var upProg = document.getElementById('uploadProgress');
+      var upZone = document.getElementById('realUploadZone');
+      if(upProg) upProg.style.display = 'none';
+      if(upZone) upZone.style.display = 'block';
       toast('Upload error: ' + err.message, 'error');
     });
   };
@@ -2672,46 +2743,63 @@ function realHandleFile(file) {
 }
 
 function realGoStep(step) {
-  document.getElementById('realStep1').style.display = step===1?'block':'none';
-  document.getElementById('realStep2').style.display = step===2?'block':'none';
-  document.getElementById('realStep3').style.display = step===3?'block':'none';
-  
+  var s1 = document.getElementById('realStep1');
+  var s2 = document.getElementById('realStep2');
+  var s3 = document.getElementById('realStep3');
+
+  if(s1) s1.style.display = step===1?'block':'none';
+  if(s2) s2.style.display = step===2?'block':'none';
+  if(s3) s3.style.display = step===3?'block':'none';
+
   for(var i=1;i<=3;i++){
     var ind = document.getElementById('step-ind-'+i);
     if(ind) ind.style.background = i<=step?'var(--primary)':'var(--border)';
   }
-  
+
   if (step===2) {
-    document.getElementById('realThumbImg').src = _realPreviewUrl;
-    document.getElementById('realThumbName').textContent = 'Your uploaded photo';
+    var thumb = document.getElementById('realThumbImg');
+    var name = document.getElementById('realThumbName');
+    if(thumb) thumb.src = _realPreviewUrl;
+    if(name) name.textContent = 'Your uploaded photo';
   }
 }
 
 function realSubmitStaging() {
   if (!_realImageUrl) { toast('Please upload a photo first', 'error'); return; }
-  
-  var roomType = document.getElementById('realRoomType').value;
-  var style = document.getElementById('realStyle').value;
+
+  var roomTypeEl = document.getElementById('realRoomType');
+  var styleEl = document.getElementById('realStyle');
   var btn = document.getElementById('realSubmitBtn');
+
+  if (!roomTypeEl || !styleEl || !btn) {
+    toast('Staging workspace not fully loaded', 'error');
+    return;
+  }
+
+  var roomType = roomTypeEl.value;
+  var style = styleEl.value;
   btn.disabled = true; btn.textContent = 'Processing...';
-  
+
   realGoStep(3);
-  document.getElementById('processingView').style.display = 'block';
-  document.getElementById('resultView').style.display = 'none';
-  
+  var procView = document.getElementById('processingView');
+  var resView = document.getElementById('resultView');
+  if(procView) procView.style.display = 'block';
+  if(resView) resView.style.display = 'none';
+
   var renderBar = document.getElementById('renderBar');
-  renderBar.style.width = '15%';
+  if(renderBar) renderBar.style.width = '15%';
   
   fetch('/api/vsai-create', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ userId: _userId, imageUrl: _realImageUrl, room_type: roomType, style: style })
-  }).then(function(r){ renderBar.style.width='30%'; return r.json(); })
+  }).then(function(r){ if(renderBar) renderBar.style.width='30%'; return r.json(); })
   .then(function(data) {
     if (data.ok !== false && (data.renderId || data.render_id || data.jobId || data.id)) {
       _realJobId = data.renderId || data.render_id || data.jobId || data.id;
-      renderBar.style.width = '40%';
-      document.getElementById('processingStatus').textContent = 'AI is working its magic...';
+      if(renderBar) renderBar.style.width = '40%';
+      var procStatus = document.getElementById('processingStatus');
+      if(procStatus) procStatus.textContent = 'AI is working its magic...';
       realPollResult(_realJobId, 0);
     } else {
       toast('Staging failed: ' + (data.error || 'Unknown error'), 'error');
@@ -2727,34 +2815,39 @@ function realSubmitStaging() {
 
 function realPollResult(jobId, attempts) {
   if (attempts > 90) {
-    document.getElementById('processingStatus').textContent = 'Taking longer than expected. Check back shortly.';
+    var procStatus = document.getElementById('processingStatus');
+    if(procStatus) procStatus.textContent = 'Taking longer than expected. Check back shortly.';
     return;
   }
-  
+
   var renderBar = document.getElementById('renderBar');
-  renderBar.style.width = Math.min(40 + attempts * 1, 90) + '%';
+  if(renderBar) renderBar.style.width = Math.min(40 + attempts * 1, 90) + '%';
   
   fetch('/api/vsai-render?renderId=' + jobId)
     .then(function(r){ return r.json(); })
     .then(function(data) {
       var status = (data.status || '').toLowerCase();
       if (status === 'completed' || status === 'done' || data.outputs || data.output) {
-        renderBar.style.width = '100%';
+        if(renderBar) renderBar.style.width = '100%';
         var outputUrl = '';
         if (data.outputs && data.outputs.length) outputUrl = data.outputs[0].url || data.outputs[0];
         else if (data.output) outputUrl = data.output;
         else if (data.url) outputUrl = data.url;
         else if (data.result) outputUrl = data.result;
-        
+
         setTimeout(function(){ realShowResult(outputUrl); }, 500);
       } else if (status === 'failed' || status === 'error') {
         toast('Staging failed. Please try again.', 'error');
-        document.getElementById('realSubmitBtn').disabled = false;
-        document.getElementById('realSubmitBtn').textContent = 'Stage This Photo \u2728';
+        var submitBtn = document.getElementById('realSubmitBtn');
+        if(submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Stage This Photo \u2728';
+        }
         realGoStep(2);
       } else {
         var msgs = ['AI is analyzing the room...','Placing furniture...','Adding finishing touches...','Almost there...'];
-        document.getElementById('processingStatus').textContent = msgs[Math.min(Math.floor(attempts/5), msgs.length-1)];
+        var procStatus = document.getElementById('processingStatus');
+        if(procStatus) procStatus.textContent = msgs[Math.min(Math.floor(attempts/5), msgs.length-1)];
         setTimeout(function(){ realPollResult(jobId, attempts+1); }, 2000);
       }
     })
@@ -2764,29 +2857,404 @@ function realPollResult(jobId, attempts) {
 }
 
 function realShowResult(outputUrl) {
-  document.getElementById('processingView').style.display = 'none';
-  document.getElementById('resultView').style.display = 'block';
-  document.getElementById('beforeImg').src = _realPreviewUrl;
-  document.getElementById('afterImg').src = outputUrl;
-  document.getElementById('downloadBtn').href = outputUrl;
+  var procView = document.getElementById('processingView');
+  var resView = document.getElementById('resultView');
+  var beforeImg = document.getElementById('beforeImg');
+  var afterImg = document.getElementById('afterImg');
+  var dlBtn = document.getElementById('downloadBtn');
+
+  if(procView) procView.style.display = 'none';
+  if(resView) resView.style.display = 'block';
+  if(beforeImg) beforeImg.src = _realPreviewUrl;
+  if(afterImg) afterImg.src = outputUrl;
+  if(dlBtn) dlBtn.href = outputUrl;
   toast('Your staged photo is ready!', 'success');
-  
+
   var btn = document.getElementById('realSubmitBtn');
   if(btn){ btn.disabled = false; btn.textContent = 'Stage This Photo \u2728'; }
 }
 
 function realReset() {
   _realImageUrl = ''; _realPreviewUrl = ''; _realJobId = '';
-  document.getElementById('realUploadZone').style.display = 'block';
-  document.getElementById('uploadPreview').style.display = 'none';
-  document.getElementById('uploadProgress').style.display = 'none';
-  document.getElementById('realFileInput').value = '';
+  var upZone = document.getElementById('realUploadZone');
+  var upPrev = document.getElementById('uploadPreview');
+  var upProg = document.getElementById('uploadProgress');
+  var fileInput = document.getElementById('realFileInput');
+
+  if(upZone) upZone.style.display = 'block';
+  if(upPrev) upPrev.style.display = 'none';
+  if(upProg) upProg.style.display = 'none';
+  if(fileInput) fileInput.value = '';
   realGoStep(1);
 }
 
 function realRegenerate() {
   if (!_realImageUrl) { toast('No image to regenerate', 'error'); return; }
   realGoStep(2);
+}
+
+// ============ NEW ORDER MODAL ============
+var _newOrderData = {};
+var _selectedOrderType = null;
+
+function updateProjectName() {
+  var address = document.getElementById('newOrderAddress').value.trim();
+  var projectNameInput = document.getElementById('newOrderProjectName');
+  if (!projectNameInput.value && address) {
+    projectNameInput.value = address;
+  }
+}
+
+function proceedToOrderType() {
+  var address = document.getElementById('newOrderAddress').value.trim();
+  var projectName = document.getElementById('newOrderProjectName').value.trim();
+  var firstName = document.getElementById('newOrderFirstName').value.trim();
+  var lastName = document.getElementById('newOrderLastName').value.trim();
+  var email = document.getElementById('newOrderEmail').value.trim();
+  var phone = document.getElementById('newOrderPhone').value.trim();
+  var notes = document.getElementById('newOrderNotes').value.trim();
+
+  if (!address || !projectName || !firstName || !lastName || !email) {
+    toast('Please fill in all required fields', 'error');
+    return;
+  }
+
+  var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    toast('Please enter a valid email address', 'error');
+    return;
+  }
+
+  _newOrderData = {
+    address: address,
+    projectName: projectName,
+    firstName: firstName,
+    lastName: lastName,
+    email: email,
+    phone: phone,
+    notes: notes,
+    createdAt: new Date().toISOString()
+  };
+
+  document.getElementById('newOrderStep1').style.display = 'none';
+  document.getElementById('newOrderStep2').style.display = 'block';
+  document.getElementById('newOrderStep').textContent = 'Step 2 of 2: Choose Order Type';
+  _selectedOrderType = null;
+  updateOrderTypeSelection();
+}
+
+function goBackOrderStep1() {
+  document.getElementById('newOrderStep1').style.display = 'block';
+  document.getElementById('newOrderStep2').style.display = 'none';
+  document.getElementById('newOrderStep').textContent = 'Step 1 of 2: Order Information';
+  _selectedOrderType = null;
+}
+
+function selectOrderType(type) {
+  _selectedOrderType = type;
+  updateOrderTypeSelection();
+
+  var labels = {
+    'ai-staging': 'AI Staging',
+    'pro-staging': 'Pro Staging',
+    'editing-services': 'Editing Services',
+    'video-editing': 'Video Editing'
+  };
+
+  document.getElementById('selectedOrderTypeLabel').textContent = labels[type] || type;
+  document.getElementById('confirmOrderBtn').disabled = false;
+}
+
+function updateOrderTypeSelection() {
+  var types = ['ai-staging', 'pro-staging', 'editing-services', 'video-editing'];
+  types.forEach(function(type) {
+    var card = document.getElementById('orderType-' + type);
+    if (card) {
+      if (_selectedOrderType === type) {
+        card.style.borderColor = 'var(--primary)';
+        card.style.backgroundColor = 'var(--primary-light)';
+      } else {
+        card.style.borderColor = 'var(--border)';
+        card.style.backgroundColor = 'transparent';
+      }
+    }
+  });
+}
+
+function confirmNewOrder() {
+  if (!_selectedOrderType) {
+    toast('Please select an order type', 'error');
+    return;
+  }
+
+  _newOrderData.orderType = _selectedOrderType;
+  saveOrderToFirestore(_newOrderData);
+}
+
+function saveOrderToFirestore(orderData) {
+  var btn = document.getElementById('confirmOrderBtn');
+  if (btn) btn.disabled = true;
+
+  fetch('/api/orders/create', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(orderData)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok || data.orderId) {
+      var orderId = data.orderId || data.data?.orderId || 'NEW-' + Date.now();
+      toast('Order created successfully (ID: ' + orderId + ')');
+      closeModal();
+
+      setTimeout(function() {
+        showSub('orders');
+        document.getElementById('newOrderStep1').style.display = 'block';
+        document.getElementById('newOrderStep2').style.display = 'none';
+        document.getElementById('newOrderStep').textContent = 'Step 1 of 2: Order Information';
+        document.getElementById('newOrderAddress').value = '';
+        document.getElementById('newOrderProjectName').value = '';
+        document.getElementById('newOrderFirstName').value = '';
+        document.getElementById('newOrderLastName').value = '';
+        document.getElementById('newOrderEmail').value = '';
+        document.getElementById('newOrderPhone').value = '';
+        document.getElementById('newOrderNotes').value = '';
+        _newOrderData = {};
+        _selectedOrderType = null;
+      }, 800);
+    } else {
+      toast('Failed to create order: ' + (data.error || 'Unknown error'), 'error');
+      if (btn) btn.disabled = false;
+    }
+  })
+  .catch(function(err) {
+    toast('Error creating order: ' + err.message, 'error');
+    if (btn) btn.disabled = false;
+  });
+}
+
+// ============ CREDIT TABS ============
+function switchCreditTab(btn, panelName) {
+  // Hide all panels
+  document.querySelectorAll('.pricing-panel').forEach(p => p.classList.remove('active'));
+
+  // Remove active from all tabs
+  document.querySelectorAll('.pricing-tab').forEach(t => t.classList.remove('active'));
+
+  // Show selected panel and activate tab
+  var panel = document.getElementById('panel-' + panelName);
+  if (panel) {
+    panel.classList.add('active');
+  }
+  btn.classList.add('active');
+}
+
+// ============ PRICING SECTION TOGGLE ============
+function switchPricingSection(btn, sectionName) {
+  // Hide all sections
+  document.getElementById('section-onetime').style.display = 'none';
+  document.getElementById('section-membership').style.display = 'none';
+
+  // Remove active state from all buttons
+  document.querySelectorAll('[onclick*="switchPricingSection"]').forEach(b => {
+    b.classList.remove('btn-primary');
+    b.classList.add('btn-secondary');
+  });
+
+  // Show selected section and activate button
+  document.getElementById('section-' + sectionName).style.display = 'block';
+  btn.classList.remove('btn-secondary');
+  btn.classList.add('btn-primary');
+}
+
+// ============ PRO STAGING INTAKE ============
+var _proPhotoFiles = [];
+
+function handleProPhotoDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  var files = Array.from(e.dataTransfer.files || []).slice(0, 20 - _proPhotoFiles.length);
+  if (files.length > 0) {
+    _proPhotoFiles = _proPhotoFiles.concat(files).slice(0, 20);
+    renderProPhotoList();
+  }
+}
+
+function handleProPhotoSelect(e) {
+  var files = Array.from(e.target.files || []).slice(0, 20 - _proPhotoFiles.length);
+  if (files.length > 0) {
+    _proPhotoFiles = _proPhotoFiles.concat(files).slice(0, 20);
+    renderProPhotoList();
+  }
+  e.target.value = '';
+}
+
+function renderProPhotoList() {
+  var container = document.getElementById('proPhotoList');
+  container.innerHTML = '';
+
+  _proPhotoFiles.forEach(function(file, idx) {
+    var itemDiv = document.createElement('div');
+    itemDiv.style.display = 'grid';
+    itemDiv.style.gridTemplateColumns = '60px 1fr 140px 40px';
+    itemDiv.style.gap = '12px';
+    itemDiv.style.padding = '14px';
+    itemDiv.style.border = '1px solid var(--border)';
+    itemDiv.style.borderRadius = '10px';
+    itemDiv.style.marginBottom = '12px';
+    itemDiv.style.alignItems = 'center';
+
+    var preview = document.createElement('img');
+    preview.src = URL.createObjectURL(file);
+    preview.style.width = '60px';
+    preview.style.height = '60px';
+    preview.style.borderRadius = '8px';
+    preview.style.objectFit = 'cover';
+
+    var labelInput = document.createElement('input');
+    labelInput.type = 'text';
+    labelInput.placeholder = 'Photo label (optional)';
+    labelInput.style.padding = '8px 12px';
+    labelInput.style.border = '1px solid var(--border)';
+    labelInput.style.borderRadius = '8px';
+    labelInput.style.fontSize = '13px';
+    labelInput.style.width = '100%';
+    labelInput.id = 'proPhotoLabel-' + idx;
+
+    var roomSelect = document.createElement('select');
+    roomSelect.style.padding = '8px 12px';
+    roomSelect.style.border = '1px solid var(--border)';
+    roomSelect.style.borderRadius = '8px';
+    roomSelect.style.fontSize = '13px';
+    roomSelect.style.width = '100%';
+    roomSelect.id = 'proPhotoRoom-' + idx;
+    roomSelect.innerHTML = '<option value="">Select room</option><option value="living">Living Room</option><option value="bedroom">Bedroom</option><option value="kitchen">Kitchen</option><option value="dining">Dining</option><option value="bathroom">Bathroom</option><option value="office">Office</option><option value="outdoor">Outdoor</option><option value="other">Other</option>';
+
+    var removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.textContent = '✕';
+    removeBtn.style.padding = '8px 12px';
+    removeBtn.style.background = '#fee2e2';
+    removeBtn.style.border = '1px solid #fca5a5';
+    removeBtn.style.borderRadius = '8px';
+    removeBtn.style.cursor = 'pointer';
+    removeBtn.style.color = '#dc2626';
+    removeBtn.style.fontWeight = 'bold';
+    removeBtn.style.width = '40px';
+    removeBtn.style.height = '36px';
+    removeBtn.onclick = function() {
+      _proPhotoFiles.splice(idx, 1);
+      renderProPhotoList();
+    };
+
+    itemDiv.appendChild(preview);
+    itemDiv.appendChild(labelInput);
+    itemDiv.appendChild(roomSelect);
+    itemDiv.appendChild(removeBtn);
+    container.appendChild(itemDiv);
+  });
+
+  if (_proPhotoFiles.length > 0) {
+    var summaryDiv = document.createElement('div');
+    summaryDiv.style.padding = '12px';
+    summaryDiv.style.background = 'rgba(139, 115, 85, 0.1)';
+    summaryDiv.style.borderRadius = '8px';
+    summaryDiv.style.fontSize = '13px';
+    summaryDiv.style.color = '#8B7355';
+    summaryDiv.style.marginTop = '12px';
+    summaryDiv.textContent = _proPhotoFiles.length + ' photo(s) ready • Cost: ' + (_proPhotoFiles.length * 2) + ' tokens';
+    container.appendChild(summaryDiv);
+  }
+}
+
+
+function submitProStagingForm(e) {
+  e.preventDefault();
+
+  if (_proPhotoFiles.length === 0) {
+    toast('Please upload at least one photo', 'error');
+    return;
+  }
+
+  var address = document.getElementById('proAddress').value.trim();
+  var style = document.getElementById('proStyle').value;
+  var notes = document.getElementById('proNotes').value.trim();
+
+  if (!address || !style) {
+    toast('Please fill in all required fields', 'error');
+    return;
+  }
+
+  // Validate that each photo has a room type
+  var allRoomsSelected = true;
+  var photos = [];
+  _proPhotoFiles.forEach(function(file, idx) {
+    var roomType = document.getElementById('proPhotoRoom-' + idx).value;
+    var label = document.getElementById('proPhotoLabel-' + idx).value.trim();
+
+    if (!roomType) {
+      allRoomsSelected = false;
+    }
+
+    photos.push({
+      index: idx,
+      label: label || ('Photo ' + (idx + 1)),
+      room: roomType
+    });
+  });
+
+  if (!allRoomsSelected) {
+    toast('Please select a room type for each photo', 'error');
+    return;
+  }
+
+  var submitBtn = document.getElementById('proSubmitBtn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
+
+  // Create form data with file references
+  var formData = new FormData();
+  formData.append('address', address);
+  formData.append('style', style);
+  formData.append('notes', notes);
+  formData.append('photoCount', _proPhotoFiles.length);
+
+  _proPhotoFiles.forEach(function(file, idx) {
+    formData.append('photos', file);
+    var photoMeta = photos[idx];
+    formData.append('photoLabels[' + idx + ']', photoMeta.label);
+    formData.append('photoRooms[' + idx + ']', photoMeta.room);
+  });
+
+  fetch('/api/pro-staging/submit', {
+    method: 'POST',
+    body: formData
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok || data.submissionId) {
+      toast('Pro staging submission created! (ID: ' + (data.submissionId || 'pending') + ')');
+
+      // Reset form
+      document.getElementById('proStagingForm').reset();
+      _proPhotoFiles = [];
+      renderProPhotoList();
+      updateProTokenCost();
+
+      setTimeout(function() {
+        showSub('orders');
+      }, 1200);
+    } else {
+      toast('Error submitting: ' + (data.error || 'Unknown error'), 'error');
+    }
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit for Pro Staging';
+  })
+  .catch(function(err) {
+    toast('Error: ' + err.message, 'error');
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Submit for Pro Staging';
+  });
 }
 
 </script>
