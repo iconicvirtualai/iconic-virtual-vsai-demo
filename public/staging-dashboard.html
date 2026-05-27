@@ -4,31 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Iconic Virtual.AI — Virtual Staging Platform</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231a1a1a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='700' font-size='16' fill='white'%3EIV%3C/text%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a0a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='700' font-size='16' fill='white'%3EIV%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
     /* Hide all screens until auth resolves to prevent flash */
     .screen { display: none !important; }
     .screen.active { display: block !important; }
   :root {
-    --primary: #83756b;
-    --primary-dark: #6b5f57;h
-    --primary-light: #f5f3f0;
-    --accent: #83756b;
+            --midnight: #0a0a0a;
+            --midnight-light: #18181b;
+            --emerald: #10b981;
+            --emerald-light: #34d399;
+            --emerald-dark: #059669;
+            --emerald-glow: rgba(16,185,129,0.15);
+            --taupe: #8B7355;
+            --taupe-light: #a8956f;
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --primary-light: rgba(16,185,129,0.12);
+    --accent: #10b981;
     --success: #10b981;
     --danger: #ef4444;
     --warning: #f59e0b;
     --bg: #ffffff;
     --surface: #ffffff;
-    --border: #e5e5e5;
-    --text: #1a1a1a;
-    --text-muted: #666666;
-    --text-light: #999999;
-    --sidebar-bg: #f9f9f9;
-    --sidebar-active: #efefef;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+    --sidebar-bg: #fafafa;
+    --sidebar-active: rgba(16,185,129,0.08);
   }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #f5f5f5;
     color: var(--text);
     line-height: 1.5;
@@ -77,7 +86,7 @@
   .btn-primary { background: #1a1a1a; color: white; }
   .btn-primary:hover { background: #333333; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
   .btn-secondary { background: white; color: var(--text); border: 1px solid #d0d0d0; }
-  .btn-secondary:hover { background: #f9f9f9; border-color: #83756b; }
+  .btn-secondary:hover { background: #f9f9f9; border-color: #10b981; }
   .btn-large { padding: 14px 28px; font-size: 15px; }
   .btn-ghost { background: transparent; color: var(--text); }
   .btn-danger { background: #e74c3c; color: white; }
@@ -282,10 +291,10 @@
     margin-bottom: 2px; transition: all 0.15s;
   }
   .sidebar-link:hover { background: #f5f5f5; color: #1a1a1a; }
-  .sidebar-link.active { background: #f5f5f5; color: #83756b; border-left: 2px solid #83756b; padding-left: 10px; }
+  .sidebar-link.active { background: #f5f5f5; color: #10b981; border-left: 2px solid #83756b; padding-left: 10px; }
   .sidebar-link .icon { width: 18px; text-align: center; }
   .sidebar-link .badge {
-    margin-left: auto; background: #83756b; color: white;
+    margin-left: auto; background: #10b981; color: white;
     font-size: 10px; padding: 3px 8px; border-radius: 3px; font-weight: 600;
   }
   .credit-widget {
@@ -308,7 +317,7 @@
   }
   .breadcrumb { color: #999999; font-size: 13px; }
   .breadcrumb a { color: #999999; cursor: pointer; text-decoration: none; }
-  .breadcrumb a:hover { color: #83756b; }
+  .breadcrumb a:hover { color: #10b981; }
   .breadcrumb .current { color: #1a1a1a; font-weight: 600; }
   .top-bar-right { display: flex; align-items: center; gap: 16px; }
   .search-box {
@@ -410,7 +419,7 @@
     margin-bottom: 20px;
   }
   .panel-title { font-size: 16px; font-weight: 700; color: #1a1a1a; }
-  .link-text { color: #83756b; font-weight: 500; cursor: pointer; font-size: 13px; }
+  .link-text { color: #10b981; font-weight: 500; cursor: pointer; font-size: 13px; }
   .link-text:hover { color: #6b5f57; }
 
   .quick-action-card {
@@ -424,7 +433,7 @@
     border-radius: 0; font-weight: 500; border: none;
     cursor: pointer; font-size: 14px;
   }
-  .quick-action-card .btn-stage:hover { color: #83756b; }
+  .quick-action-card .btn-stage:hover { color: #10b981; }
 
   .data-table { width: 100%; border-collapse: collapse; }
   .data-table th {
