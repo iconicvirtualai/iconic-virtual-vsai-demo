@@ -3358,7 +3358,7 @@ function submitProStagingForm(e) {
     if (!email.trim() || !pass.trim()) { if (errEl) { errEl.textContent = 'Please fill in all fields'; errEl.style.display = 'block'; } return; }
     if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
     if (errEl) errEl.style.display = 'none';
-    fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim(), password: pass }) })
+    fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim(), password: pass, firstName: fn, lastName: ln, phone: ph }) })
       .then(function(r) { return r.json(); })
       .then(function(json) {
         if (!json.ok) { if (errEl) { errEl.textContent = json.error || 'Login failed'; errEl.style.display = 'block'; } if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; } return; }
