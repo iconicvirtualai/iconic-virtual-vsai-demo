@@ -858,7 +858,7 @@ async function handleContactSubmit(){
     }else{toast(data.error||'Failed to send message.');}
   }catch(e){toast('Something went wrong. Please try again.');}
 }
-function handleAuthSignUp(){
+async function handleAuthSignUp(){
   const firstName=document.getElementById('authFirstName')?document.getElementById('authFirstName').value.trim():'';
 const lastName=document.getElementById('authLastName')?document.getElementById('authLastName').value.trim():'';
 const email = document.getElementById('authEmail').value.trim();
