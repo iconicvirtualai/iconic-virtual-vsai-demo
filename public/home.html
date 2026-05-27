@@ -308,8 +308,8 @@ img{max-width:100%;display:block}
     <h1>Virtual Staging that <span class="accent">sells a story</span>, not just square footage.</h1>
     <p class="hero-sub">Stop losing buyers at the first scroll. Our AI transforms empty rooms into magazine-worthy listings in under 60 seconds. DIY staging from $1/photo, or let our pro design team handle it.</p>
     <div class="hero-ctas">
-      <button class="btn btn-primary btn-lg" onclick="window.location.href='/'">Try AI Staging Free</button>
-      <button class="btn btn-outline btn-lg" onclick="scrollTo('#pricing')">See Pricing</button>
+      <button class="btn btn-primary btn-lg" onclick="window.location.href='/studio'">Try AI Staging Free</button>
+      <button class="btn btn-outline btn-lg" onclick="scrollToSection('#pricing')">See Pricing</button>
     </div>
     <div class="hero-trust">
       <div class="avatars"><span>JD</span><span>MR</span><span>SK</span><span>+</span></div>
@@ -363,7 +363,7 @@ img{max-width:100%;display:block}
         <li><span class="check">&#10003;</span> Commercial license included</li>
         <li><span class="check">&#10003;</span> No sign-up required to try</li>
       </ul>
-      <button class="btn btn-primary btn-lg" onclick="window.location.href='/'">Try AI Staging Free &rarr;</button>
+      <button class="btn btn-primary btn-lg" onclick="window.location.href='/studio'">Try AI Staging Free &rarr;</button>
     </div>
     <div class="way-card trad">
       <span class="tag">&#127912; CUSTOM DESIGN</span>
@@ -377,7 +377,7 @@ img{max-width:100%;display:block}
         <li><span class="check">&#10003;</span> 1-2 free revisions per image</li>
         <li><span class="check">&#10003;</span> Commercial license included</li>
       </ul>
-      <button class="btn btn-dark btn-lg" onclick="scrollTo('#pricing')">View Pro Pricing &rarr;</button>
+      <button class="btn btn-dark btn-lg" onclick="window.location.href='/pro-order'">Submit a Pro Order &rarr;</button>
     </div>
   </div>
 </div>
@@ -400,7 +400,7 @@ img{max-width:100%;display:block}
     <div class="ba-card"><div class="ba-images"><div class="ba-img before"><span class="tag">BEFORE</span>Empty</div><div class="ba-img after" style="background:linear-gradient(135deg,#fef9c3,#ca8a04)"><span class="tag">AFTER</span>Farm</div><div class="ba-arrow">&rarr;</div></div><div class="ba-info"><div class="style">Farmhouse</div><div class="room">Family Room &bull; Dallas, TX</div></div></div>
   </div>
   <div style="text-align:center;margin-top:48px">
-    <button class="btn btn-primary btn-lg" onclick="window.location.href='/'">Stage Your First Room Free &rarr;</button>
+    <button class="btn btn-primary btn-lg" onclick="window.location.href='/studio'">Stage Your First Room Free &rarr;</button>
   </div>
 </div>
 </section>
@@ -419,7 +419,7 @@ img{max-width:100%;display:block}
     <div class="step"><div class="step-num">3</div><h3>Download &amp; List</h3><p>Get your staged photo in under 60 seconds. High-res, watermark-free, MLS-ready.</p></div>
   </div>
   <div style="text-align:center;margin-top:48px">
-    <button class="btn btn-primary btn-lg" onclick="window.location.href='/'">Try It Now &mdash; No Sign Up Required &rarr;</button>
+    <button class="btn btn-primary btn-lg" onclick="window.location.href='/studio'">Try It Now &mdash; No Sign Up Required &rarr;</button>
     <p style="color:var(--text-muted);font-size:13px;margin-top:12px">No credit card. No commitments. See your room staged instantly.</p>
   </div>
 </div>
@@ -649,7 +649,7 @@ img{max-width:100%;display:block}
     <div class="timer-block"><span class="num" id="timer-s">12</span><span class="lbl">Seconds</span></div>
   </div>
   <div style="margin-bottom:12px;font-size:14px;opacity:.8">Limited offer: <strong>AI membership plans up to 60% off</strong></div>
-  <button class="btn btn-gold btn-lg" onclick="scrollTo('#pricing')">Lock In This Price &rarr;</button>
+  <button class="btn btn-gold btn-lg" onclick="scrollToSection('#pricing')">Lock In This Price &rarr;</button>
 </div>
 </section>
 
@@ -703,7 +703,7 @@ img{max-width:100%;display:block}
 <section class="final-cta">
   <h2>Stop losing buyers at the first scroll.</h2>
   <p>Stage your first room free. No sign up, no credit card, no commitments. Just upload and see the magic.</p>
-  <button class="btn btn-lg" onclick="window.location.href='/'">Try AI Staging Free &rarr;</button>
+  <button class="btn btn-lg" onclick="window.location.href='/studio'">Try AI Staging Free &rarr;</button>
   <div class="guarantee">&#128274; Your photos are never shared. Commercial license included with every purchase.</div>
 </section>
 
@@ -728,19 +728,18 @@ img{max-width:100%;display:block}
     <div class="footer-col">
       <h4>Company</h4>
       <ul>
-        <li><a onclick="toast('About page')">About Us</a></li>
-        <li><a onclick="toast('Careers page')">Careers</a></li>
-        <li><a onclick="toast('Press kit')">Press</a></li>
-        <li><a href="#contact">Contact</a></li>
+        <li><a href="/about">About Us</a></li>
+        <li><a href="/careers">Careers</a></li>
+                <li><a href="#contact">Contact</a></li>
       </ul>
     </div>
     <div class="footer-col">
       <h4>Support</h4>
       <ul>
         <li><a href="#faq">FAQ</a></li>
-        <li><a onclick="toast('Help center')">Help Center</a></li>
-        <li><a onclick="toast('Terms of Service')">Terms</a></li>
-        <li><a onclick="toast('Privacy Policy')">Privacy</a></li>
+        <li><a href="/help">Help Center</a></li>
+        <li><a href="/terms">Terms</a></li>
+        <li><a href="/privacy">Privacy</a></li>
       </ul>
     </div>
   </div>
@@ -762,7 +761,7 @@ img{max-width:100%;display:block}
 function toast(msg){const t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.className='toast show';setTimeout(()=>t.classList.remove('show'),2500)}
 
 // SMOOTH SCROLL
-function scrollTo(sel){document.querySelector(sel)?.scrollIntoView({behavior:'smooth',block:'start'})}
+function scrollToSection(sel){document.querySelector(sel)?.scrollIntoView({behavior:'smooth',block:'start'})}
 document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const t=a.getAttribute('href');if(t&&t!=='#')scrollTo(t)})})
 
 // PRICING TABS
