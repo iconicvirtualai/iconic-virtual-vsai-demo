@@ -7,6 +7,9 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231a1a1a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='700' font-size='16' fill='white'%3EIV%3C/text%3E%3C/svg%3E">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Hide all screens until auth resolves to prevent flash */
+    .screen { display: none !important; }
+    .screen.active { display: block !important; }
   :root {
     --primary: #83756b;
     --primary-dark: #6b5f57;h
@@ -1213,7 +1216,9 @@
         <div class="form-group"><label>Last name</label><input type="text" id="signup-lastName" placeholder="Doe"></div>
       </div>
       <div class="form-group"><label>Work email</label><input type="email" id="signup-email" placeholder="you@brokerage.com"></div>
-      <div class="form-group"><label>Password</label><input type="password" id="signup-password" placeholder="At least 8 characters" onkeydown="if(event.key==='Enter')dashSignup()"></div>
+      <div class="form-group"><label>Phone number</label>
+            <input type="tel" id="signup-phone" placeholder="(555) 123-4567">
+            <label>Password</label><input type="password" id="signup-password" placeholder="At least 8 characters" onkeydown="if(event.key==='Enter')dashSignup()"></div>
       <div id="signup-error" style="display:none;color:#e74c3c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;"></div>
       <div class="form-group">
         <label>I'm a...</label>
@@ -1247,15 +1252,15 @@
         <a class="sidebar-link" id="link-stage" onclick="showSub('stage')"><span class="icon">✨</span> Stage Now</a>
         <a class="sidebar-link" id="link-pro-staging" onclick="showSub('pro-staging')"><span class="icon">👔</span> Pro Staging</a>
         <a class="sidebar-link" id="link-orders" onclick="showSub('orders')"><span class="icon">📋</span> Orders <span class="badge">3</span></a>
-        <a class="sidebar-link" id="link-history" onclick="showSub('history')"><span class="icon">🕓</span> History</a>
         <a class="sidebar-link" id="link-projects" onclick="showSub('projects')"><span class="icon">📁</span> Projects</a>
+        <a class="sidebar-link" id="link-team" onclick="showSub('team')"><span class="icon">👥</span> Team</a>
       </div>
       <div class="sidebar-section">
         <div class="sidebar-section-title">Account</div>
         <a class="sidebar-link" id="link-credits" onclick="showSub('credits')"><span class="icon">💎</span> Buy Credits</a>
         <a class="sidebar-link" id="link-billing" onclick="showSub('billing')"><span class="icon">💳</span> Billing</a>
         <a class="sidebar-link" id="link-settings" onclick="showSub('settings')"><span class="icon">⚙️</span> Settings</a>
-        <a class="sidebar-link" id="link-team" onclick="showSub('team')"><span class="icon">👥</span> Team</a>
+        <a class="sidebar-link" id="link-history" onclick="showSub('history')"><span class="icon">🕓</span> History</a>
       </div>
       <div class="sidebar-section">
         <div class="sidebar-section-title">Resources</div>
