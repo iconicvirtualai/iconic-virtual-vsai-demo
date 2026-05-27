@@ -5,93 +5,149 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pro Staging Order | IconicVirtual.AI</title>
 <meta name="description" content="Submit a professional virtual staging order. Upload your room photos, label each room, and choose your style. No login required.">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231a1a1a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-weight='bold' fill='white' font-family='system-ui'%3EIV%3C/text%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a0a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='14' font-weight='bold' fill='%2310b981' font-family='system-ui'%3EIV%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--primary:#8B7355;--primary-dark:#6B5842;--blue:#2563eb;--blue-dark:#1d4ed8;--bg:#faf8f5;--surface:#fff;--text:#0f172a;--text-muted:#64748b;--border:#e2e8f0;--success:#10b981;--danger:#ef4444;--radius:12px}
-body{font-family:'Roboto',sans-serif;color:var(--text);background:var(--bg)}
+:root{
+  --midnight:#0a0a0a;--midnight-light:#18181b;--midnight-mid:#27272a;
+  --emerald:#10b981;--emerald-light:#34d399;--emerald-dark:#059669;--emerald-glow:rgba(16,185,129,0.15);
+  --taupe:#8B7355;--taupe-light:#a8956f;--taupe-muted:rgba(139,115,85,0.12);
+  --white:#ffffff;--off-white:#fafafa;--surface:#f8f9fa;--surface-alt:#f1f5f0;
+  --grey-50:#f9fafb;--grey-100:#f3f4f6;--grey-200:#e5e7eb;--grey-300:#d1d5db;--grey-400:#9ca3af;--grey-500:#6b7280;--grey-600:#4b5563;--grey-700:#374151;--grey-800:#1f2937;--grey-900:#111827;
+  --text:#0f172a;--text-muted:#64748b;--text-light:#94a3b8;
+  --border:#e2e8f0;--border-light:#f1f5f9;
+  --danger:#ef4444;--success:#10b981;
+  --radius:12px;--radius-lg:16px;--radius-xl:24px;
+  --shadow-sm:0 1px 2px rgba(0,0,0,0.05);
+  --shadow:0 4px 6px -1px rgba(0,0,0,0.07),0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-md:0 10px 15px -3px rgba(0,0,0,0.08),0 4px 6px -4px rgba(0,0,0,0.04);
+  --shadow-lg:0 20px 25px -5px rgba(0,0,0,0.1),0 8px 10px -6px rgba(0,0,0,0.06);
+  --font-heading:'Sora',sans-serif;--font-body:'Inter',sans-serif;
+}
+body{font-family:var(--font-body);color:var(--text);background:var(--white);-webkit-font-smoothing:antialiased}
 a{text-decoration:none;color:inherit}
-.header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+img{max-width:100%;display:block}
+.header{background:rgba(255,255,255,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;transition:box-shadow .3s}
+.header.scrolled{box-shadow:var(--shadow-md)}
 .logo{display:flex;align-items:center;gap:10px}
-.logo-icon{display:inline-flex;width:36px;height:36px;font-size:14px;background:linear-gradient(135deg,#8B7355,#6B5842);border-radius:10px;color:#fff;align-items:center;justify-content:center;font-weight:900}
-.logo-text{font-size:18px;font-weight:700}
-.header-link{color:var(--primary);font-weight:500}
-.hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);color:#fff;padding:60px 24px;text-align:center}
-.hero-badge{display:inline-block;background:var(--blue);color:#fff;font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px;margin-bottom:16px;letter-spacing:1px}
-.hero h1{font-size:36px;font-weight:900;margin-bottom:12px}
-.hero p{font-size:18px;color:#94a3b8;max-width:560px;margin:0 auto}
+.logo-icon{display:inline-flex;width:38px;height:38px;font-size:13px;background:var(--midnight);border-radius:10px;color:var(--emerald);align-items:center;justify-content:center;font-weight:900;font-family:var(--font-heading);letter-spacing:-0.5px}
+.logo-text{font-size:18px;font-weight:700;font-family:var(--font-heading);color:var(--text)}
+.logo-text span{color:var(--emerald)}
+.header-nav{display:flex;align-items:center;gap:24px}
+.header-link{color:var(--text-muted);font-weight:500;font-size:14px;transition:color .2s}
+.header-link:hover{color:var(--emerald)}
+.header-cta{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:var(--emerald);color:#fff;border-radius:8px;font-weight:600;font-size:14px;transition:background .2s}
+.header-cta:hover{background:var(--emerald-dark)}
+.hero{background:var(--midnight);position:relative;overflow:hidden;padding:64px 24px 56px;text-align:center}
+.hero::before{content:'';position:absolute;top:-50%;left:-30%;width:80%;height:200%;background:radial-gradient(ellipse,rgba(16,185,129,0.08) 0%,transparent 70%);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-40%;right:-20%;width:60%;height:160%;background:radial-gradient(ellipse,rgba(139,115,85,0.06) 0%,transparent 70%);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.25);color:var(--emerald-light);font-size:12px;font-weight:700;padding:6px 16px;border-radius:20px;margin-bottom:20px;letter-spacing:1px;font-family:var(--font-heading);position:relative}
+.hero h1{font-family:var(--font-heading);font-size:40px;font-weight:800;color:#fff;margin-bottom:14px;letter-spacing:-0.5px;position:relative}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--emerald),var(--emerald-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:17px;color:var(--text-light);max-width:560px;margin:0 auto;line-height:1.7;position:relative}
+@media(max-width:600px){.hero h1{font-size:28px}.hero p{font-size:15px}.header-nav .header-link{display:none}}
+.features-strip{background:var(--grey-50);border-bottom:1px solid var(--border-light);padding:20px 24px}
+.features-strip .inner{max-width:800px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:600px){.features-strip .inner{grid-template-columns:repeat(2,1fr)}}
+.feature{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--grey-600);font-weight:500}
+.feature .icon{width:22px;height:22px;background:var(--emerald-glow);color:var(--emerald-dark);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
 .container{max-width:800px;margin:0 auto;padding:48px 24px}
-.form-grid{display:grid;gap:20px}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:600px){.form-row{grid-template-columns:1fr}.hero h1{font-size:28px}}
-.form-group{display:flex;flex-direction:column;gap:6px}
-.form-group label{font-size:14px;font-weight:600;color:var(--text)}
-.form-group label span{color:var(--blue);font-size:12px}
-.form-group input,.form-group select,.form-group textarea{padding:12px 16px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;transition:border-color .2s}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--blue)}
-.form-group textarea{resize:vertical;min-height:100px}
-.info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:20px;margin:24px 0}
-.info-box h4{font-size:15px;font-weight:700;color:var(--blue);margin-bottom:8px}
-.info-box p{font-size:14px;color:#555;line-height:1.6}
-.features{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0}
-@media(max-width:600px){.features{grid-template-columns:1fr}}
-.feature{display:flex;align-items:center;gap:8px;font-size:14px;color:#555}
-.feature .icon{width:24px;height:24px;background:var(--blue);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
-.btn-submit{display:block;width:100%;padding:16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;transition:background .2s;margin-top:8px}
-.btn-submit:hover{background:var(--blue-dark)}
-.btn-submit:disabled{background:#94a3b8;cursor:not-allowed}
-.success-card{display:none;background:var(--surface);border-radius:16px;padding:48px 32px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
-.success-card.show{display:block}
-.success-card .check{width:64px;height:64px;background:var(--success);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff}
-.success-card h2{font-size:24px;font-weight:700;margin-bottom:8px}
-.success-card p{font-size:16px;color:var(--text-muted);margin-bottom:24px}
-.form-card{background:var(--surface);border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
-.section-heading{font-size:20px;font-weight:700;margin:28px 0 20px;display:flex;align-items:center;gap:8px}
+.form-card{background:var(--white);border-radius:var(--radius-lg);padding:36px;border:1px solid var(--border);box-shadow:var(--shadow)}
+.section-heading{font-family:var(--font-heading);font-size:18px;font-weight:700;margin:32px 0 18px;display:flex;align-items:center;gap:8px;color:var(--text)}
 .section-heading:first-child{margin-top:0}
-.upload-area{border:2px dashed var(--border);border-radius:12px;padding:40px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
-.upload-area:hover,.upload-area.dragover{border-color:var(--blue);background:#f0f7ff}
+.form-grid{display:grid;gap:18px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:13px;font-weight:600;color:var(--text)}
+.form-group label span{color:var(--emerald);font-size:12px;font-weight:500}
+.form-group input,.form-group select,.form-group textarea{padding:11px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;transition:border-color .2s,box-shadow .2s;background:var(--white)}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--emerald);box-shadow:0 0 0 3px var(--emerald-glow)}
+.form-group textarea{resize:vertical;min-height:100px}
+.upload-area{border:2px dashed var(--border);border-radius:var(--radius);padding:40px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.upload-area:hover,.upload-area.dragover{border-color:var(--emerald);background:rgba(16,185,129,0.04)}
 .upload-area .upload-icon{font-size:40px;margin-bottom:12px}
-.upload-area h4{font-size:16px;font-weight:700;margin-bottom:4px}
+.upload-area h4{font-size:16px;font-weight:700;margin-bottom:4px;font-family:var(--font-heading)}
 .upload-area p{font-size:13px;color:var(--text-muted)}
 .upload-area input{display:none}
 .photo-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
-.photo-card{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:16px;display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start;position:relative}
+.photo-card{background:var(--grey-50);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start;position:relative;transition:border-color .2s}
+.photo-card:hover{border-color:var(--emerald)}
 @media(max-width:500px){.photo-card{grid-template-columns:1fr}}
-.photo-card img{width:120px;height:90px;object-fit:cover;border-radius:8px;background:#e2e8f0}
+.photo-card img{width:120px;height:90px;object-fit:cover;border-radius:8px;background:var(--grey-200)}
 @media(max-width:500px){.photo-card img{width:100%;height:160px}}
 .photo-card .photo-fields{display:flex;flex-direction:column;gap:10px}
-.photo-card .photo-fields input,.photo-card .photo-fields select{padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit}
-.photo-card .photo-fields input:focus,.photo-card .photo-fields select:focus{outline:none;border-color:var(--blue)}
-.photo-card .remove-btn{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:none;background:var(--danger);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.photo-card .photo-fields input,.photo-card .photo-fields select{padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;transition:border-color .2s}
+.photo-card .photo-fields input:focus,.photo-card .photo-fields select:focus{outline:none;border-color:var(--emerald)}
+.photo-card .remove-btn{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:none;background:var(--danger);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:transform .2s}
+.photo-card .remove-btn:hover{transform:scale(1.1)}
 .photo-card .upload-status{font-size:12px;padding:3px 8px;border-radius:4px;display:inline-block;width:fit-content}
 .photo-card .upload-status.uploading{background:#fef3c7;color:#92400e}
 .photo-card .upload-status.done{background:#d1fae5;color:#065f46}
 .photo-card .upload-status.error{background:#fee2e2;color:#991b1b}
 .style-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px}
-.style-toggle button{flex:1;padding:12px 16px;border:none;background:var(--surface);font-size:14px;font-weight:600;cursor:pointer;transition:background .2s,color .2s;font-family:inherit;color:var(--text-muted)}
-.style-toggle button.active{background:var(--blue);color:#fff}
+.style-toggle button{flex:1;padding:12px 16px;border:none;background:var(--white);font-size:14px;font-weight:600;cursor:pointer;transition:background .2s,color .2s;font-family:inherit;color:var(--text-muted)}
+.style-toggle button.active{background:var(--emerald);color:#fff}
 .photo-count{font-size:14px;color:var(--text-muted);margin-top:8px}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:300;opacity:0;transition:opacity .3s}
+.info-box{background:var(--emerald-glow);border:1px solid rgba(16,185,129,0.2);border-radius:var(--radius);padding:20px;margin:24px 0}
+.info-box h4{font-size:14px;font-weight:700;color:var(--emerald-dark);margin-bottom:6px;font-family:var(--font-heading)}
+.info-box p{font-size:14px;color:var(--grey-600);line-height:1.6}
+.btn-submit{display:block;width:100%;padding:16px;background:var(--emerald);color:#fff;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;transition:background .2s,transform .2s;margin-top:12px;font-family:var(--font-heading);letter-spacing:-0.2px}
+.btn-submit:hover{background:var(--emerald-dark);transform:translateY(-1px)}
+.btn-submit:disabled{background:var(--grey-400);cursor:not-allowed;transform:none}
+.success-card{display:none;background:var(--white);border-radius:var(--radius-lg);padding:48px 32px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow-lg)}
+.success-card.show{display:block}
+.success-card .check{width:64px;height:64px;background:var(--emerald);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff}
+.success-card h2{font-family:var(--font-heading);font-size:24px;font-weight:700;margin-bottom:8px}
+.success-card p{font-size:16px;color:var(--text-muted);margin-bottom:24px}
+.success-card .btn-primary{display:inline-block;padding:12px 28px;background:var(--emerald);color:#fff;border-radius:8px;font-weight:700;font-family:var(--font-heading);transition:background .2s}
+.success-card .btn-primary:hover{background:var(--emerald-dark)}
+.success-card .btn-secondary{display:inline-block;padding:12px 28px;background:var(--grey-100);color:var(--text);border-radius:8px;font-weight:700;transition:background .2s}
+.success-card .btn-secondary:hover{background:var(--grey-200)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--midnight);color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:300;opacity:0;transition:opacity .3s}
 .toast.show{opacity:1}
-.footer{text-align:center;padding:40px 24px;border-top:1px solid var(--border);color:#999;font-size:14px}
+.footer{background:var(--midnight);color:var(--grey-400);padding:40px 24px;text-align:center}
+.footer-inner{max-width:800px;margin:0 auto}
+.footer-brand{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px}
+.footer-brand .f-icon{width:32px;height:32px;font-size:11px;background:var(--midnight-mid);color:var(--emerald);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-family:var(--font-heading)}
+.footer-brand span{font-family:var(--font-heading);font-weight:700;font-size:16px;color:var(--grey-300)}
+.footer-links{display:flex;justify-content:center;gap:24px;margin-bottom:16px;flex-wrap:wrap}
+.footer-links a{color:var(--grey-400);font-size:13px;transition:color .2s}
+.footer-links a:hover{color:var(--emerald)}
+.footer-copy{font-size:13px;color:var(--grey-500)}
+.footer-copy .taupe{color:var(--taupe-light)}
 </style>
 </head>
 <body>
 
-<header class="header">
+<header class="header" id="siteHeader">
   <a href="/home.html" class="logo">
     <span class="logo-icon">IV</span>
-    <span class="logo-text">IconicVirtual.AI</span>
+    <span class="logo-text">Iconic<span>Virtual</span>.AI</span>
   </a>
-  <a href="/home.html" class="header-link">&larr; Back to Home</a>
+  <div class="header-nav">
+    <a href="/home.html" class="header-link">&larr; Back to Home</a>
+    <a href="/staging-dashboard.html" class="header-cta">Dashboard</a>
+  </div>
 </header>
 
 <section class="hero">
   <span class="hero-badge">&#127912; PROFESSIONAL STAGING</span>
-  <h1>Submit a Pro Staging Order</h1>
+  <h1>Submit a <em>Pro Staging</em> Order</h1>
   <p>Upload your room photos, label each room, pick your style, and our designers will deliver magazine-quality staging within 24 hours.</p>
 </section>
+
+<div class="features-strip">
+  <div class="inner">
+    <div class="feature"><div class="icon">&#10003;</div>No login required</div>
+    <div class="feature"><div class="icon">&#10003;</div>24-hour turnaround</div>
+    <div class="feature"><div class="icon">&#10003;</div>1-2 free revisions</div>
+    <div class="feature"><div class="icon">&#10003;</div>Magazine-quality results</div>
+    <div class="feature"><div class="icon">&#10003;</div>From $6/image</div>
+    <div class="feature"><div class="icon">&#10003;</div>Commercial license included</div>
+  </div>
+</div>
 
 <div class="container">
 
@@ -99,23 +155,14 @@ a{text-decoration:none;color:inherit}
     <div class="check">&#10003;</div>
     <h2>Order Submitted Successfully!</h2>
     <p>We've received your pro staging order with <strong id="photoCountResult">0</strong> photos. Our design team will begin staging and reach out if they need any clarification.</p>
-    <p style="font-size:14px;color:#888">Order ID: <strong id="orderId"></strong></p>
+    <p style="font-size:14px;color:var(--grey-400)">Order ID: <strong id="orderId"></strong></p>
     <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-      <a href="/staging-dashboard.html" style="display:inline-block;padding:12px 28px;background:var(--blue);color:#fff;border-radius:8px;font-weight:700">Go to Dashboard</a>
-      <a href="/home.html" style="display:inline-block;padding:12px 28px;background:#f1f5f9;color:var(--text);border-radius:8px;font-weight:700">Back to Home</a>
+      <a href="/staging-dashboard.html" class="btn-primary">Go to Dashboard</a>
+      <a href="/home.html" class="btn-secondary">Back to Home</a>
     </div>
   </div>
 
   <div id="orderForm">
-    <div class="features">
-      <div class="feature"><div class="icon">&#10003;</div>No login required</div>
-      <div class="feature"><div class="icon">&#10003;</div>24-hour turnaround</div>
-      <div class="feature"><div class="icon">&#10003;</div>1-2 free revisions</div>
-      <div class="feature"><div class="icon">&#10003;</div>Magazine-quality results</div>
-      <div class="feature"><div class="icon">&#10003;</div>From $6/image</div>
-      <div class="feature"><div class="icon">&#10003;</div>Commercial license included</div>
-    </div>
-
     <div class="form-card">
       <h3 class="section-heading" style="margin-top:0">&#128100; Your Details</h3>
       <div class="form-grid">
@@ -166,7 +213,7 @@ a{text-decoration:none;color:inherit}
         </div>
       </div>
 
-      <h3 class="section-heading">&#128247; Upload Room Photos <span style="color:var(--blue);font-size:13px;font-weight:500">(required)</span></h3>
+      <h3 class="section-heading">&#128247; Upload Room Photos <span style="color:var(--emerald);font-size:13px;font-weight:500">(required)</span></h3>
 
       <div class="upload-area" id="uploadArea">
         <div class="upload-icon">&#128247;</div>
@@ -212,176 +259,193 @@ a{text-decoration:none;color:inherit}
 
 <div class="toast" id="toast"></div>
 
-<footer class="footer">&copy; 2026 IconicVirtual.AI. All rights reserved.</footer>
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="f-icon">IV</span>
+      <span>IconicVirtual.AI</span>
+    </div>
+    <div class="footer-links">
+      <a href="/home.html">Home</a>
+      <a href="/about">About</a>
+      <a href="/gallery">Gallery</a>
+      <a href="/help">Help Center</a>
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+    </div>
+    <p class="footer-copy">&copy; 2026 IconicVirtual.AI &mdash; <span class="taupe">Designed with care</span></p>
+  </div>
+</footer>
 
 <script>
+// Sticky header shadow
+const header=document.getElementById('siteHeader');
+window.addEventListener('scroll',()=>{header.classList.toggle('scrolled',window.scrollY>10)});
+
 (function(){
-  var STYLE_OPTS = '<option value="">Any / Designer\'s choice</option><option value="modern">Modern Minimalist</option><option value="scandinavian">Scandinavian</option><option value="coastal">Coastal</option><option value="farmhouse">Farmhouse</option><option value="luxury">Luxury Contemporary</option><option value="mid-century">Mid-Century Modern</option><option value="traditional">Traditional</option><option value="bohemian">Bohemian</option><option value="industrial">Industrial</option>';
+var STYLE_OPTS = '<option value="">Any / Designer\'s choice</option><option value="modern">Modern Minimalist</option><option value="scandinavian">Scandinavian</option><option value="coastal">Coastal</option><option value="farmhouse">Farmhouse</option><option value="luxury">Luxury Contemporary</option><option value="mid-century">Mid-Century Modern</option><option value="traditional">Traditional</option><option value="bohemian">Bohemian</option><option value="industrial">Industrial</option>';
 
-  var photos = [];
-  var styleMode = 'overall';
-  var nextId = 1;
+var photos = [];
+var styleMode = 'overall';
+var nextId = 1;
 
-  function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show';setTimeout(function(){t.className='toast'},3000)}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show';setTimeout(function(){t.className='toast'},3000)}
 
-  /* Style toggle */
-  document.getElementById('btnOverall').addEventListener('click', function(){setStyleMode('overall')});
-  document.getElementById('btnPerPhoto').addEventListener('click', function(){setStyleMode('per_photo')});
+document.getElementById('btnOverall').addEventListener('click', function(){setStyleMode('overall')});
+document.getElementById('btnPerPhoto').addEventListener('click', function(){setStyleMode('per_photo')});
 
-  function setStyleMode(mode){
-    styleMode = mode;
-    document.getElementById('btnOverall').className = mode === 'overall' ? 'active' : '';
-    document.getElementById('btnPerPhoto').className = mode === 'per_photo' ? 'active' : '';
-    document.getElementById('overallStyleGroup').style.display = mode === 'overall' ? 'flex' : 'none';
-    var selects = document.querySelectorAll('.per-photo-style');
-    for(var i=0;i<selects.length;i++){selects[i].style.display = mode === 'per_photo' ? 'block' : 'none'}
-  }
+function setStyleMode(mode){
+styleMode = mode;
+document.getElementById('btnOverall').className = mode === 'overall' ? 'active' : '';
+document.getElementById('btnPerPhoto').className = mode === 'per_photo' ? 'active' : '';
+document.getElementById('overallStyleGroup').style.display = mode === 'overall' ? 'flex' : 'none';
+var selects = document.querySelectorAll('.per-photo-style');
+for(var i=0;i<selects.length;i++){selects[i].style.display = mode === 'per_photo' ? 'block' : 'none'}
+}
 
-  /* Drag & drop */
-  var uploadArea = document.getElementById('uploadArea');
-  uploadArea.addEventListener('click', function(){document.getElementById('fileInput').click()});
-  uploadArea.addEventListener('dragover', function(e){e.preventDefault();uploadArea.classList.add('dragover')});
-  uploadArea.addEventListener('dragleave', function(e){e.preventDefault();uploadArea.classList.remove('dragover')});
-  uploadArea.addEventListener('drop', function(e){e.preventDefault();uploadArea.classList.remove('dragover');handleFiles(e.dataTransfer.files)});
-  document.getElementById('fileInput').addEventListener('change', function(e){handleFiles(e.target.files);e.target.value=''});
+var uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('click', function(){document.getElementById('fileInput').click()});
+uploadArea.addEventListener('dragover', function(e){e.preventDefault();uploadArea.classList.add('dragover')});
+uploadArea.addEventListener('dragleave', function(e){e.preventDefault();uploadArea.classList.remove('dragover')});
+uploadArea.addEventListener('drop', function(e){e.preventDefault();uploadArea.classList.remove('dragover');handleFiles(e.dataTransfer.files)});
+document.getElementById('fileInput').addEventListener('change', function(e){handleFiles(e.target.files);e.target.value=''});
 
-  function handleFiles(fileList){
-    for(var i=0;i<fileList.length;i++){
-      var f=fileList[i];
-      if(!f.type.match(/^image\/(jpeg|png|webp)$/)){toast(f.name+' is not a supported image type.');continue}
-      if(f.size>5*1024*1024){toast(f.name+' is over 5MB.');continue}
-      addPhoto(f);
-    }
-  }
+function handleFiles(fileList){
+for(var i=0;i<fileList.length;i++){
+var f=fileList[i];
+if(!f.type.match(/^image\/(jpeg|png|webp)$/)){toast(f.name+' is not a supported image type.');continue}
+if(f.size>5*1024*1024){toast(f.name+' is over 5MB.');continue}
+addPhoto(f);
+}
+}
 
-  function addPhoto(file){
-    var id=nextId++;
-    var reader=new FileReader();
-    reader.onload=function(e){
-      var photo={id:id,file:file,previewUrl:e.target.result,roomLabel:'',style:'',uploadStatus:'pending',url:null,storagePath:null};
-      photos.push(photo);
-      renderPhotos();
-      uploadPhoto(photo);
-    };
-    reader.readAsDataURL(file);
-  }
+function addPhoto(file){
+var id=nextId++;
+var reader=new FileReader();
+reader.onload=function(e){
+var photo={id:id,file:file,previewUrl:e.target.result,roomLabel:'',style:'',uploadStatus:'pending',url:null,storagePath:null};
+photos.push(photo);
+renderPhotos();
+uploadPhoto(photo);
+};
+reader.readAsDataURL(file);
+}
 
-  window._removePhoto=function(id){
-    photos=photos.filter(function(p){return p.id!==id});
-    renderPhotos();
-  };
+window._removePhoto=function(id){
+photos=photos.filter(function(p){return p.id!==id});
+renderPhotos();
+};
 
-  window._updateField=function(id,field,value){
-    for(var i=0;i<photos.length;i++){if(photos[i].id===id){photos[i][field]=value;break}}
-  };
+window._updateField=function(id,field,value){
+for(var i=0;i<photos.length;i++){if(photos[i].id===id){photos[i][field]=value;break}}
+};
 
-  window._retryUpload=function(id){
-    for(var i=0;i<photos.length;i++){if(photos[i].id===id){uploadPhoto(photos[i]);break}}
-  };
+window._retryUpload=function(id){
+for(var i=0;i<photos.length;i++){if(photos[i].id===id){uploadPhoto(photos[i]);break}}
+};
 
-  function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
-  function renderPhotos(){
-    var grid=document.getElementById('photoGrid');
-    var html='';
-    for(var i=0;i<photos.length;i++){
-      var p=photos[i];
-      var sc=p.uploadStatus==='done'?'done':p.uploadStatus==='error'?'error':'uploading';
-      var st=p.uploadStatus==='done'?'&#10003; Uploaded':p.uploadStatus==='error'?'&#9888; Failed &mdash; click to retry':'Uploading...';
-      var pps = styleMode === 'per_photo' ? 'block' : 'none';
-      html+='<div class="photo-card">';
-      html+='<img src="'+p.previewUrl+'" alt="Room photo">';
-      html+='<div class="photo-fields">';
-      html+='<input type="text" placeholder="Room label (e.g. Living Room, Master Bedroom)" value="'+esc(p.roomLabel)+'" onchange="_updateField('+p.id+',\'roomLabel\',this.value)">';
-      html+='<select class="per-photo-style" style="display:'+pps+'" onchange="_updateField('+p.id+',\'style\',this.value)">';
-      var opts=STYLE_OPTS;
-      if(p.style){opts=opts.replace('value="'+esc(p.style)+'"','value="'+esc(p.style)+'" selected')}
-      html+=opts+'</select>';
-      html+='<span class="upload-status '+sc+'"'+(p.uploadStatus==='error'?' onclick="_retryUpload('+p.id+')" style="cursor:pointer"':'')+'>'+st+'</span>';
-      html+='</div>';
-      html+='<button class="remove-btn" onclick="_removePhoto('+p.id+')" title="Remove">&times;</button>';
-      html+='</div>';
-    }
-    grid.innerHTML=html;
-    var c=document.getElementById('photoCount');
-    c.textContent=photos.length>0?photos.length+' photo'+(photos.length>1?'s':'')+' added':'';
-  }
+function renderPhotos(){
+var grid=document.getElementById('photoGrid');
+var html='';
+for(var i=0;i<photos.length;i++){
+var p=photos[i];
+var sc=p.uploadStatus==='done'?'done':p.uploadStatus==='error'?'error':'uploading';
+var st=p.uploadStatus==='done'?'&#10003; Uploaded':p.uploadStatus==='error'?'&#9888; Failed &mdash; click to retry':'Uploading...';
+var pps = styleMode === 'per_photo' ? 'block' : 'none';
+html+='<div class="photo-card">';
+html+='<img src="'+p.previewUrl+'" alt="Room photo">';
+html+='<div class="photo-fields">';
+html+='<input type="text" placeholder="Room label (e.g. Living Room, Master Bedroom)" value="'+esc(p.roomLabel)+'" onchange="_updateField('+p.id+',\'roomLabel\',this.value)">';
+html+='<select class="per-photo-style" style="display:'+pps+'" onchange="_updateField('+p.id+',\'style\',this.value)">';
+var opts=STYLE_OPTS;
+if(p.style){opts=opts.replace('value="'+esc(p.style)+'"','value="'+esc(p.style)+'" selected')}
+html+=opts+'</select>';
+html+='<span class="upload-status '+sc+'"'+(p.uploadStatus==='error'?' onclick="_retryUpload('+p.id+')" style="cursor:pointer"':'')+'>'+st+'</span>';
+html+='</div>';
+html+='<button class="remove-btn" onclick="_removePhoto('+p.id+')" title="Remove">&times;</button>';
+html+='</div>';
+}
+grid.innerHTML=html;
+var c=document.getElementById('photoCount');
+c.textContent=photos.length>0?photos.length+' photo'+(photos.length>1?'s':'')+' added':'';
+}
 
-  async function uploadPhoto(photo){
-    photo.uploadStatus='uploading';
-    renderPhotos();
-    try{
-      var res=await fetch('/api/pro-order/upload-photo',{
-		method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({imageBase64:photo.previewUrl,fileName:photo.file.name,contentType:photo.file.type})
-      });
-      var data=await res.json();
-      if(data.ok){photo.url=data.url;photo.storagePath=data.storagePath;photo.uploadStatus='done'}
-      else{photo.uploadStatus='error';toast('Failed to upload '+photo.file.name)}
-    }catch(e){photo.uploadStatus='error';toast('Upload error for '+photo.file.name)}
-    renderPhotos();
-  }
+async function uploadPhoto(photo){
+photo.uploadStatus='uploading';
+renderPhotos();
+try{
+var res=await fetch('/api/pro-order/upload-photo',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({imageBase64:photo.previewUrl,fileName:photo.file.name,contentType:photo.file.type})
+});
+var data=await res.json();
+if(data.ok){photo.url=data.url;photo.storagePath=data.storagePath;photo.uploadStatus='done'}
+else{photo.uploadStatus='error';toast('Failed to upload '+photo.file.name)}
+}catch(e){photo.uploadStatus='error';toast('Upload error for '+photo.file.name)}
+renderPhotos();
+}
 
-  /* Submit */
-  document.getElementById('submitBtn').addEventListener('click', async function(){
-    var email=document.getElementById('email').value.trim();
-    var addr=document.getElementById('propertyAddress').value.trim();
-    if(!email||!email.includes('@')){toast('Please enter a valid email.');return}
-    if(!addr){toast('Please enter the property address.');return}
-    if(photos.length===0){toast('Please upload at least one room photo.');return}
+document.getElementById('submitBtn').addEventListener('click', async function(){
+var email=document.getElementById('email').value.trim();
+var addr=document.getElementById('propertyAddress').value.trim();
+if(!email||!email.includes('@')){toast('Please enter a valid email.');return}
+if(!addr){toast('Please enter the property address.');return}
+if(photos.length===0){toast('Please upload at least one room photo.');return}
 
-    var pending=photos.filter(function(p){return p.uploadStatus!=='done'});
-    if(pending.length>0){
-      var errs=pending.filter(function(p){return p.uploadStatus==='error'});
-      if(errs.length>0){toast(errs.length+' photo(s) failed to upload. Retry or remove them.');return}
-      toast('Photos are still uploading. Please wait...');return;
-    }
+var pending=photos.filter(function(p){return p.uploadStatus!=='done'});
+if(pending.length>0){
+var errs=pending.filter(function(p){return p.uploadStatus==='error'});
+if(errs.length>0){toast(errs.length+' photo(s) failed to upload. Retry or remove them.');return}
+toast('Photos are still uploading. Please wait...');return;
+}
 
-    var unlabeled=photos.filter(function(p){return !p.roomLabel.trim()});
-    if(unlabeled.length>0){toast('Please label all rooms before submitting.');return}
+var unlabeled=photos.filter(function(p){return !p.roomLabel.trim()});
+if(unlabeled.length>0){toast('Please label all rooms before submitting.');return}
 
-    var btn=document.getElementById('submitBtn');
-    btn.textContent='Submitting order...';
-    btn.disabled=true;
+var btn=document.getElementById('submitBtn');
+btn.textContent='Submitting order...';
+btn.disabled=true;
 
-    var photoData=photos.map(function(p){
-      return {url:p.url,storagePath:p.storagePath,roomLabel:p.roomLabel.trim(),style:styleMode==='per_photo'?p.style:''}
-    });
+var photoData=photos.map(function(p){
+return {url:p.url,storagePath:p.storagePath,roomLabel:p.roomLabel.trim(),style:styleMode==='per_photo'?p.style:''}
+});
 
-    try{
-      var res=await fetch('/api/pro-order',{
-		method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({
-          firstName:document.getElementById('firstName').value.trim(),
-          lastName:document.getElementById('lastName').value.trim(),
-          email:email,
-          phone:document.getElementById('phone').value.trim(),
-          propertyAddress:addr,
-          roomCount:photos.length,
-          styleMode:styleMode,
-          stylePreference:styleMode==='overall'?document.getElementById('stylePreference').value:'',
-          budget:document.getElementById('budget').value,
-          notes:document.getElementById('notes').value.trim(),
-          photos:photoData
-        })
-      });
-      var data=await res.json();
-      if(data.ok){
-        document.getElementById('orderForm').style.display='none';
-        document.getElementById('successCard').className='success-card show';
-        document.getElementById('orderId').textContent=data.orderId;
-        document.getElementById('photoCountResult').textContent=String(photos.length);
-      }else{
-        toast(data.error||'Failed to submit order.');
-        btn.textContent='Submit Pro Order â';btn.disabled=false;
-      }
-    }catch(e){
-      toast('Something went wrong. Please try again.');
-      btn.textContent='Submit Pro Order â';btn.disabled=false;
-    }
-  });
+try{
+var res=await fetch('/api/pro-order',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+firstName:document.getElementById('firstName').value.trim(),
+lastName:document.getElementById('lastName').value.trim(),
+email:email,
+phone:document.getElementById('phone').value.trim(),
+propertyAddress:addr,
+roomCount:photos.length,
+styleMode:styleMode,
+stylePreference:styleMode==='overall'?document.getElementById('stylePreference').value:'',
+budget:document.getElementById('budget').value,
+notes:document.getElementById('notes').value.trim(),
+photos:photoData
+})
+});
+var data=await res.json();
+if(data.ok){
+document.getElementById('orderForm').style.display='none';
+document.getElementById('successCard').className='success-card show';
+document.getElementById('orderId').textContent=data.orderId;
+document.getElementById('photoCountResult').textContent=String(photos.length);
+}else{
+toast(data.error||'Failed to submit order.');
+btn.textContent='Submit Pro Order â';btn.disabled=false;
+}
+}catch(e){
+toast('Something went wrong. Please try again.');
+btn.textContent='Submit Pro Order â';btn.disabled=false;
+}
+});
 })();
 </script>
 </body>
