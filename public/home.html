@@ -786,7 +786,7 @@ login:`<div style="text-align:center;margin-bottom:24px"><span class="icon" styl
 signup:`<div style="text-align:center;margin-bottom:24px"><span class="icon" style="display:inline-flex;width:48px;height:48px;font-size:20px;background:var(--gradient);border-radius:14px;color:#fff;align-items:center;justify-content:center;font-weight:900;letter-spacing:1px">IV</span></div>
 <h2>Create your account</h2><p class="subtitle">Get started free &mdash; no credit card required</p>
 <div class="auth-divider"></div>
-<div class="form-group"><label>Email</label><input type="email" id="authEmail" placeholder="you@brokerage.com"></div>
+<div style="display:flex;gap:12px"><div class="form-group" style="flex:1"><label>First Name</label><input type="text" id="authFirstName" placeholder="First name"></div><div class="form-group" style="flex:1"><label>Last Name</label><input type="text" id="authLastName" placeholder="Last name"></div></div><div class="form-group"><label>Email</label><input type="email" id="authEmail" placeholder="you@brokerage.com"></div><div class="form-group"><label>Phone</label><input type="tel" id="authPhone" placeholder="(555) 123-4567"></div>
 <div class="form-group"><label>Password</label><input type="password" id="authPassword" placeholder="At least 8 characters"></div>
 <div id="authError" style="display:none;background:#fee;border:1px solid #fcc;padding:10px;border-radius:6px;margin-bottom:16px;color:#c33;font-size:13px;"></div>
 <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="handleAuthSignUp()">Create Account &rarr;</button>
@@ -814,7 +814,7 @@ async function handleAuthSignIn(){
     const resp = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({email, password})
+      body: JSON.stringify({email, password, firstName, lastName, phone})
     });
 
     const json = await resp.json();
@@ -841,8 +841,11 @@ async function handleAuthSignIn(){
 }
 
 async function handleAuthSignUp(){
-  const email = document.getElementById('authEmail').value.trim();
+  const firstName=document.getElementById('authFirstName')?document.getElementById('authFirstName').value.trim():'';
+const lastName=document.getElementById('authLastName')?document.getElementById('authLastName').value.trim():'';
+const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value.trim();
+const phone=document.getElementById('authPhone')?document.getElementById('authPhone').value.trim():'';
   const errorEl = document.getElementById('authError');
 
   if(!email||!password){
