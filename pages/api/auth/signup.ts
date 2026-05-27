@@ -7,7 +7,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
-  const { email, password } = req.body || {};
+  const { email, password, firstName, lastName, phone } = req.body || {};
   if (!email || !password) {
     return res.status(400).json({ ok: false, error: "Email and password are required" });
   }
@@ -36,9 +36,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       email: normalizedEmail,
       passwordHash: hash,
       passwordSalt: salt,
-      firstName: "",
-      lastName: "",
-      phone: "",
+      firstName: (firstName || "").trim(),
+      lastName: (lastName || "").trim(),
+      phone: (phone || "").trim(),
       company: "",
       creditsRemaining: 0,
       totalStagings: 0,
