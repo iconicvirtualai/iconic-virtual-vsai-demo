@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pro Staging Order | IconicVirtual.AI</title>
+<meta name="description" content="Submit a professional virtual staging order. No login required. Our expert design team will stage your rooms within 24 hours.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231a1a1a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-weight='bold' fill='white' font-family='system-ui'%3EIV%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#8B7355;--primary-dark:#6B5842;--blue:#2563eb;--blue-dark:#1d4ed8;--bg:#faf8f5;--surface:#fff;--text:#0f172a;--text-muted:#64748b;--border:#e2e8f0;--success:#10b981;--radius:12px}
+body{font-family:'Roboto',sans-serif;color:var(--text);background:var(--bg)}
+a{text-decoration:none;color:inherit}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{display:inline-flex;width:36px;height:36px;font-size:14px;background:linear-gradient(135deg,#8B7355,#6B5842);border-radius:10px;color:#fff;align-items:center;justify-content:center;font-weight:900}
+.logo-text{font-size:18px;font-weight:700}
+.header-link{color:var(--primary);font-weight:500}
+.hero{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);color:#fff;padding:60px 24px;text-align:center}
+.hero-badge{display:inline-block;background:var(--blue);color:#fff;font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px;margin-bottom:16px;letter-spacing:1px}
+.hero h1{font-size:36px;font-weight:900;margin-bottom:12px}
+.hero p{font-size:18px;color:#94a3b8;max-width:560px;margin:0 auto}
+.container{max-width:800px;margin:0 auto;padding:48px 24px}
+.form-grid{display:grid;gap:20px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:14px;font-weight:600;color:var(--text)}
+.form-group label span{color:var(--blue);font-size:12px}
+.form-group input,.form-group select,.form-group textarea{padding:12px 16px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--blue)}
+.form-group textarea{resize:vertical;min-height:100px}
+.info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:20px;margin:24px 0}
+.info-box h4{font-size:15px;font-weight:700;color:var(--blue);margin-bottom:8px}
+.info-box p{font-size:14px;color:#555;line-height:1.6}
+.features{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0}
+@media(max-width:600px){.features{grid-template-columns:1fr}}
+.feature{display:flex;align-items:center;gap:8px;font-size:14px;color:#555}
+.feature .icon{width:24px;height:24px;background:var(--blue);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.btn-submit{display:block;width:100%;padding:16px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;transition:background .2s;margin-top:8px}
+.btn-submit:hover{background:var(--blue-dark)}
+.btn-submit:disabled{background:#94a3b8;cursor:not-allowed}
+.success-card{display:none;background:var(--surface);border-radius:16px;padding:48px 32px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+.success-card.show{display:block}
+.success-card .check{width:64px;height:64px;background:var(--success);border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff}
+.success-card h2{font-size:24px;font-weight:700;margin-bottom:8px}
+.success-card p{font-size:16px;color:var(--text-muted);margin-bottom:24px}
+.form-card{background:var(--surface);border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:300;opacity:0;transition:opacity .3s}
+.toast.show{opacity:1}
+.footer{text-align:center;padding:40px 24px;border-top:1px solid var(--border);color:#999;font-size:14px}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a href="/home.html" class="logo">
+    <span class="logo-icon">IV</span>
+    <span class="logo-text">IconicVirtual.AI</span>
+  </a>
+  <a href="/home.html" class="header-link">← Back to Home</a>
+</header>
+
+<section class="hero">
+  <span class="hero-badge">🎨 PROFESSIONAL STAGING</span>
+  <h1>Submit a Pro Staging Order</h1>
+  <p>No account needed. Tell us about your property and our expert designers will stage your rooms within 24 hours.</p>
+</section>
+
+<div class="container">
+
+  <div class="success-card" id="successCard">
+    <div class="check">✓</div>
+    <h2>Order Submitted Successfully!</h2>
+    <p>We've received your pro staging order. Our design team will review it and reach out within 2 hours to confirm details and collect your room photos.</p>
+    <p style="font-size:14px;color:#888">Order ID: <strong id="orderId"></strong></p>
+    <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      <a href="/staging-dashboard.html" style="display:inline-block;padding:12px 28px;background:var(--blue);color:#fff;border-radius:8px;font-weight:700">Go to Dashboard</a>
+      <a href="/home.html" style="display:inline-block;padding:12px 28px;background:#f1f5f9;color:var(--text);border-radius:8px;font-weight:700">Back to Home</a>
+    </div>
+  </div>
+
+  <div id="orderForm">
+    <div class="features">
+      <div class="feature"><div class="icon">✓</div>No login required</div>
+      <div class="feature"><div class="icon">✓</div>24-hour turnaround</div>
+      <div class="feature"><div class="icon">✓</div>1-2 free revisions</div>
+      <div class="feature"><div class="icon">✓</div>Magazine-quality results</div>
+      <div class="feature"><div class="icon">✓</div>From $6/image</div>
+      <div class="feature"><div class="icon">✓</div>Commercial license included</div>
+    </div>
+
+    <div class="form-card">
+      <h3 style="font-size:20px;font-weight:700;margin-bottom:20px">Your Details</h3>
+      <div class="form-grid">
+        <div class="form-row">
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" id="firstName" placeholder="Jane">
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" id="lastName" placeholder="Doe">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Email <span>(required)</span></label>
+            <input type="email" id="email" placeholder="you@brokerage.com" required>
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" id="phone" placeholder="(555) 555-5555">
+          </div>
+        </div>
+      </div>
+
+      <h3 style="font-size:20px;font-weight:700;margin:28px 0 20px">Property Details</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Property Address <span>(required)</span></label>
+          <input type="text" id="propertyAddress" placeholder="123 Main St, City, State ZIP">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Number of Rooms to Stage <span>(required)</span></label>
+            <select id="roomCount">
+              <option value="">Select...</option>
+              <option value="1">1 room</option>
+              <option value="2">2 rooms</option>
+              <option value="3">3 rooms</option>
+              <option value="5">5 rooms</option>
+              <option value="10">10 rooms</option>
+              <option value="15">15+ rooms</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Preferred Style</label>
+            <select id="stylePreference">
+              <option value="">Any / Let designer decide</option>
+              <option value="modern">Modern Minimalist</option>
+              <option value="scandinavian">Scandinavian</option>
+              <option value="coastal">Coastal</option>
+              <option value="farmhouse">Farmhouse</option>
+              <option value="luxury">Luxury Contemporary</option>
+              <option value="mid-century">Mid-Century Modern</option>
+              <option value="traditional">Traditional</option>
+              <option value="bohemian">Bohemian</option>
+              <option value="industrial">Industrial</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Budget Range</label>
+          <select id="budget">
+            <option value="">Select...</option>
+            <option value="under-50">Under $50</option>
+            <option value="50-100">$50 - $100</option>
+            <option value="100-200">$100 - $200</option>
+            <option value="200-500">$200 - $500</option>
+            <option value="500+">$500+</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Additional Notes</label>
+          <textarea id="notes" placeholder="Any special requests, room types, or details about the property..."></textarea>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <h4>📸 What happens next?</h4>
+        <p>After you submit, our team will email you within 2 hours with instructions to upload your room photos. You can reply to the email or use our secure upload portal. Payment is collected after you approve the staging preview — no upfront charges.</p>
+      </div>
+
+      <button class="btn-submit" id="submitBtn" onclick="submitOrder()">Submit Pro Order →</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<footer class="footer">© 2026 IconicVirtual.AI. All rights reserved.</footer>
+
+<script>
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show';setTimeout(function(){t.className='toast'},3000)}
+
+async function submitOrder(){
+  var email=document.getElementById('email').value.trim();
+  var propertyAddress=document.getElementById('propertyAddress').value.trim();
+  var roomCount=document.getElementById('roomCount').value;
+
+  if(!email||!email.includes('@')){toast('Please enter a valid email.');return}
+  if(!propertyAddress){toast('Please enter the property address.');return}
+  if(!roomCount){toast('Please select the number of rooms.');return}
+
+  var btn=document.getElementById('submitBtn');
+  btn.textContent='Submitting...';
+  btn.disabled=true;
+
+  try{
+    var res=await fetch('/api/pro-order',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        firstName:document.getElementById('firstName').value.trim(),
+        lastName:document.getElementById('lastName').value.trim(),
+        email:email,
+        phone:document.getElementById('phone').value.trim(),
+        propertyAddress:propertyAddress,
+        roomCount:roomCount,
+        stylePreference:document.getElementById('stylePreference').value,
+        budget:document.getElementById('budget').value,
+        notes:document.getElementById('notes').value.trim()
+      })
+    });
+    var data=await res.json();
+    if(data.ok){
+      document.getElementById('orderForm').style.display='none';
+      document.getElementById('successCard').className='success-card show';
+      document.getElementById('orderId').textContent=data.orderId;
+    }else{
+      toast(data.error||'Failed to submit order.');
+      btn.textContent='Submit Pro Order \u2192';
+      btn.disabled=false;
+    }
+  }catch(e){
+    toast('Something went wrong. Please try again.');
+    btn.textContent='Submit Pro Order \u2192';
+    btn.disabled=false;
+  }
+}
+</script>
+</body>
+</html>
