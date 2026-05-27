@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pro Staging Order | IconicVirtual.AI</title>
-<meta name="description" content="Submit a professional virtual staging order. No login required. Our expert design team will stage your rooms within 24 hours.">
+<meta name="description" content="Submit a professional virtual staging order. Upload your room photos, label each room, and choose your style. No login required.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231a1a1a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-weight='bold' fill='white' font-family='system-ui'%3EIV%3C/text%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--primary:#8B7355;--primary-dark:#6B5842;--blue:#2563eb;--blue-dark:#1d4ed8;--bg:#faf8f5;--surface:#fff;--text:#0f172a;--text-muted:#64748b;--border:#e2e8f0;--success:#10b981;--radius:12px}
+:root{--primary:#8B7355;--primary-dark:#6B5842;--blue:#2563eb;--blue-dark:#1d4ed8;--bg:#faf8f5;--surface:#fff;--text:#0f172a;--text-muted:#64748b;--border:#e2e8f0;--success:#10b981;--danger:#ef4444;--radius:12px}
 body{font-family:'Roboto',sans-serif;color:var(--text);background:var(--bg)}
 a{text-decoration:none;color:inherit}
 .header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
@@ -24,7 +24,7 @@ a{text-decoration:none;color:inherit}
 .container{max-width:800px;margin:0 auto;padding:48px 24px}
 .form-grid{display:grid;gap:20px}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}.hero h1{font-size:28px}}
 .form-group{display:flex;flex-direction:column;gap:6px}
 .form-group label{font-size:14px;font-weight:600;color:var(--text)}
 .form-group label span{color:var(--blue);font-size:12px}
@@ -47,6 +47,31 @@ a{text-decoration:none;color:inherit}
 .success-card h2{font-size:24px;font-weight:700;margin-bottom:8px}
 .success-card p{font-size:16px;color:var(--text-muted);margin-bottom:24px}
 .form-card{background:var(--surface);border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.section-heading{font-size:20px;font-weight:700;margin:28px 0 20px;display:flex;align-items:center;gap:8px}
+.section-heading:first-child{margin-top:0}
+.upload-area{border:2px dashed var(--border);border-radius:12px;padding:40px 24px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.upload-area:hover,.upload-area.dragover{border-color:var(--blue);background:#f0f7ff}
+.upload-area .upload-icon{font-size:40px;margin-bottom:12px}
+.upload-area h4{font-size:16px;font-weight:700;margin-bottom:4px}
+.upload-area p{font-size:13px;color:var(--text-muted)}
+.upload-area input{display:none}
+.photo-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:16px}
+.photo-card{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:16px;display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start;position:relative}
+@media(max-width:500px){.photo-card{grid-template-columns:1fr}}
+.photo-card img{width:120px;height:90px;object-fit:cover;border-radius:8px;background:#e2e8f0}
+@media(max-width:500px){.photo-card img{width:100%;height:160px}}
+.photo-card .photo-fields{display:flex;flex-direction:column;gap:10px}
+.photo-card .photo-fields input,.photo-card .photo-fields select{padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit}
+.photo-card .photo-fields input:focus,.photo-card .photo-fields select:focus{outline:none;border-color:var(--blue)}
+.photo-card .remove-btn{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;border:none;background:var(--danger);color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+.photo-card .upload-status{font-size:12px;padding:3px 8px;border-radius:4px;display:inline-block;width:fit-content}
+.photo-card .upload-status.uploading{background:#fef3c7;color:#92400e}
+.photo-card .upload-status.done{background:#d1fae5;color:#065f46}
+.photo-card .upload-status.error{background:#fee2e2;color:#991b1b}
+.style-toggle{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px}
+.style-toggle button{flex:1;padding:12px 16px;border:none;background:var(--surface);font-size:14px;font-weight:600;cursor:pointer;transition:background .2s,color .2s;font-family:inherit;color:var(--text-muted)}
+.style-toggle button.active{background:var(--blue);color:#fff}
+.photo-count{font-size:14px;color:var(--text-muted);margin-top:8px}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;z-index:300;opacity:0;transition:opacity .3s}
 .toast.show{opacity:1}
 .footer{text-align:center;padding:40px 24px;border-top:1px solid var(--border);color:#999;font-size:14px}
@@ -59,21 +84,21 @@ a{text-decoration:none;color:inherit}
     <span class="logo-icon">IV</span>
     <span class="logo-text">IconicVirtual.AI</span>
   </a>
-  <a href="/home.html" class="header-link">← Back to Home</a>
+  <a href="/home.html" class="header-link">&larr; Back to Home</a>
 </header>
 
 <section class="hero">
-  <span class="hero-badge">🎨 PROFESSIONAL STAGING</span>
+  <span class="hero-badge">&#127912; PROFESSIONAL STAGING</span>
   <h1>Submit a Pro Staging Order</h1>
-  <p>No account needed. Tell us about your property and our expert designers will stage your rooms within 24 hours.</p>
+  <p>Upload your room photos, label each room, pick your style, and our designers will deliver magazine-quality staging within 24 hours.</p>
 </section>
 
 <div class="container">
 
   <div class="success-card" id="successCard">
-    <div class="check">✓</div>
+    <div class="check">&#10003;</div>
     <h2>Order Submitted Successfully!</h2>
-    <p>We've received your pro staging order. Our design team will review it and reach out within 2 hours to confirm details and collect your room photos.</p>
+    <p>We've received your pro staging order with <strong id="photoCountResult">0</strong> photos. Our design team will begin staging and reach out if they need any clarification.</p>
     <p style="font-size:14px;color:#888">Order ID: <strong id="orderId"></strong></p>
     <div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
       <a href="/staging-dashboard.html" style="display:inline-block;padding:12px 28px;background:var(--blue);color:#fff;border-radius:8px;font-weight:700">Go to Dashboard</a>
@@ -83,16 +108,16 @@ a{text-decoration:none;color:inherit}
 
   <div id="orderForm">
     <div class="features">
-      <div class="feature"><div class="icon">✓</div>No login required</div>
-      <div class="feature"><div class="icon">✓</div>24-hour turnaround</div>
-      <div class="feature"><div class="icon">✓</div>1-2 free revisions</div>
-      <div class="feature"><div class="icon">✓</div>Magazine-quality results</div>
-      <div class="feature"><div class="icon">✓</div>From $6/image</div>
-      <div class="feature"><div class="icon">✓</div>Commercial license included</div>
+      <div class="feature"><div class="icon">&#10003;</div>No login required</div>
+      <div class="feature"><div class="icon">&#10003;</div>24-hour turnaround</div>
+      <div class="feature"><div class="icon">&#10003;</div>1-2 free revisions</div>
+      <div class="feature"><div class="icon">&#10003;</div>Magazine-quality results</div>
+      <div class="feature"><div class="icon">&#10003;</div>From $6/image</div>
+      <div class="feature"><div class="icon">&#10003;</div>Commercial license included</div>
     </div>
 
     <div class="form-card">
-      <h3 style="font-size:20px;font-weight:700;margin-bottom:20px">Your Details</h3>
+      <h3 class="section-heading" style="margin-top:0">&#128100; Your Details</h3>
       <div class="form-grid">
         <div class="form-row">
           <div class="form-group">
@@ -116,7 +141,7 @@ a{text-decoration:none;color:inherit}
         </div>
       </div>
 
-      <h3 style="font-size:20px;font-weight:700;margin:28px 0 20px">Property Details</h3>
+      <h3 class="section-heading">&#127968; Property Details</h3>
       <div class="form-grid">
         <div class="form-group">
           <label>Property Address <span>(required)</span></label>
@@ -124,112 +149,240 @@ a{text-decoration:none;color:inherit}
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Number of Rooms to Stage <span>(required)</span></label>
-            <select id="roomCount">
+            <label>Budget Range</label>
+            <select id="budget">
               <option value="">Select...</option>
-              <option value="1">1 room</option>
-              <option value="2">2 rooms</option>
-              <option value="3">3 rooms</option>
-              <option value="5">5 rooms</option>
-              <option value="10">10 rooms</option>
-              <option value="15">15+ rooms</option>
+              <option value="under-50">Under $50</option>
+              <option value="50-100">$50 - $100</option>
+              <option value="100-200">$100 - $200</option>
+              <option value="200-500">$200 - $500</option>
+              <option value="500+">$500+</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Preferred Style</label>
-            <select id="stylePreference">
-              <option value="">Any / Let designer decide</option>
-              <option value="modern">Modern Minimalist</option>
-              <option value="scandinavian">Scandinavian</option>
-              <option value="coastal">Coastal</option>
-              <option value="farmhouse">Farmhouse</option>
-              <option value="luxury">Luxury Contemporary</option>
-              <option value="mid-century">Mid-Century Modern</option>
-              <option value="traditional">Traditional</option>
-              <option value="bohemian">Bohemian</option>
-              <option value="industrial">Industrial</option>
-            </select>
+            <label>Additional Notes</label>
+            <input type="text" id="notes" placeholder="Anything else we should know...">
           </div>
         </div>
-        <div class="form-group">
-          <label>Budget Range</label>
-          <select id="budget">
-            <option value="">Select...</option>
-            <option value="under-50">Under $50</option>
-            <option value="50-100">$50 - $100</option>
-            <option value="100-200">$100 - $200</option>
-            <option value="200-500">$200 - $500</option>
-            <option value="500+">$500+</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Additional Notes</label>
-          <textarea id="notes" placeholder="Any special requests, room types, or details about the property..."></textarea>
-        </div>
       </div>
+
+      <h3 class="section-heading">&#128247; Upload Room Photos <span style="color:var(--blue);font-size:13px;font-weight:500">(required)</span></h3>
+
+      <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">&#128247;</div>
+        <h4>Drag &amp; drop photos here, or click to browse</h4>
+        <p>JPG, PNG, or WEBP &mdash; up to 5MB each &mdash; upload as many rooms as you need</p>
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" multiple>
+      </div>
+      <div class="photo-count" id="photoCount"></div>
+
+      <h3 class="section-heading">&#127912; Style Preference</h3>
+      <div class="style-toggle" id="styleToggle">
+        <button class="active" id="btnOverall">Same style for all rooms</button>
+        <button id="btnPerPhoto">Different style per room</button>
+      </div>
+
+      <div id="overallStyleGroup" class="form-group">
+        <label>Choose a style for all rooms</label>
+        <select id="stylePreference">
+          <option value="">Any / Let designer decide</option>
+          <option value="modern">Modern Minimalist</option>
+          <option value="scandinavian">Scandinavian</option>
+          <option value="coastal">Coastal</option>
+          <option value="farmhouse">Farmhouse</option>
+          <option value="luxury">Luxury Contemporary</option>
+          <option value="mid-century">Mid-Century Modern</option>
+          <option value="traditional">Traditional</option>
+          <option value="bohemian">Bohemian</option>
+          <option value="industrial">Industrial</option>
+        </select>
+      </div>
+
+      <div class="photo-grid" id="photoGrid"></div>
 
       <div class="info-box">
-        <h4>📸 What happens next?</h4>
-        <p>After you submit, our team will email you within 2 hours with instructions to upload your room photos. You can reply to the email or use our secure upload portal. Payment is collected after you approve the staging preview — no upfront charges.</p>
+        <h4>&#128161; Tips for best results</h4>
+        <p>Upload clear, well-lit photos of empty or partially furnished rooms. Wide-angle shots work best. Label each room so our designers know exactly what you need. Payment is collected after you approve the staging preview &mdash; no upfront charges.</p>
       </div>
 
-      <button class="btn-submit" id="submitBtn" onclick="submitOrder()">Submit Pro Order →</button>
+      <button class="btn-submit" id="submitBtn">Submit Pro Order &rarr;</button>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<footer class="footer">© 2026 IconicVirtual.AI. All rights reserved.</footer>
+<footer class="footer">&copy; 2026 IconicVirtual.AI. All rights reserved.</footer>
 
 <script>
-function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show';setTimeout(function(){t.className='toast'},3000)}
+(function(){
+  var STYLE_OPTS = '<option value="">Any / Designer\'s choice</option><option value="modern">Modern Minimalist</option><option value="scandinavian">Scandinavian</option><option value="coastal">Coastal</option><option value="farmhouse">Farmhouse</option><option value="luxury">Luxury Contemporary</option><option value="mid-century">Mid-Century Modern</option><option value="traditional">Traditional</option><option value="bohemian">Bohemian</option><option value="industrial">Industrial</option>';
 
-async function submitOrder(){
-  var email=document.getElementById('email').value.trim();
-  var propertyAddress=document.getElementById('propertyAddress').value.trim();
-  var roomCount=document.getElementById('roomCount').value;
+  var photos = [];
+  var styleMode = 'overall';
+  var nextId = 1;
 
-  if(!email||!email.includes('@')){toast('Please enter a valid email.');return}
-  if(!propertyAddress){toast('Please enter the property address.');return}
-  if(!roomCount){toast('Please select the number of rooms.');return}
+  function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show';setTimeout(function(){t.className='toast'},3000)}
 
-  var btn=document.getElementById('submitBtn');
-  btn.textContent='Submitting...';
-  btn.disabled=true;
+  /* Style toggle */
+  document.getElementById('btnOverall').addEventListener('click', function(){setStyleMode('overall')});
+  document.getElementById('btnPerPhoto').addEventListener('click', function(){setStyleMode('per_photo')});
 
-  try{
-    var res=await fetch('/api/pro-order',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        firstName:document.getElementById('firstName').value.trim(),
-        lastName:document.getElementById('lastName').value.trim(),
-        email:email,
-        phone:document.getElementById('phone').value.trim(),
-        propertyAddress:propertyAddress,
-        roomCount:roomCount,
-        stylePreference:document.getElementById('stylePreference').value,
-        budget:document.getElementById('budget').value,
-        notes:document.getElementById('notes').value.trim()
-      })
-    });
-    var data=await res.json();
-    if(data.ok){
-      document.getElementById('orderForm').style.display='none';
-      document.getElementById('successCard').className='success-card show';
-      document.getElementById('orderId').textContent=data.orderId;
-    }else{
-      toast(data.error||'Failed to submit order.');
-      btn.textContent='Submit Pro Order \u2192';
-      btn.disabled=false;
-    }
-  }catch(e){
-    toast('Something went wrong. Please try again.');
-    btn.textContent='Submit Pro Order \u2192';
-    btn.disabled=false;
+  function setStyleMode(mode){
+    styleMode = mode;
+    document.getElementById('btnOverall').className = mode === 'overall' ? 'active' : '';
+    document.getElementById('btnPerPhoto').className = mode === 'per_photo' ? 'active' : '';
+    document.getElementById('overallStyleGroup').style.display = mode === 'overall' ? 'flex' : 'none';
+    var selects = document.querySelectorAll('.per-photo-style');
+    for(var i=0;i<selects.length;i++){selects[i].style.display = mode === 'per_photo' ? 'block' : 'none'}
   }
-}
+
+  /* Drag & drop */
+  var uploadArea = document.getElementById('uploadArea');
+  uploadArea.addEventListener('click', function(){document.getElementById('fileInput').click()});
+  uploadArea.addEventListener('dragover', function(e){e.preventDefault();uploadArea.classList.add('dragover')});
+  uploadArea.addEventListener('dragleave', function(e){e.preventDefault();uploadArea.classList.remove('dragover')});
+  uploadArea.addEventListener('drop', function(e){e.preventDefault();uploadArea.classList.remove('dragover');handleFiles(e.dataTransfer.files)});
+  document.getElementById('fileInput').addEventListener('change', function(e){handleFiles(e.target.files);e.target.value=''});
+
+  function handleFiles(fileList){
+    for(var i=0;i<fileList.length;i++){
+      var f=fileList[i];
+      if(!f.type.match(/^image\/(jpeg|png|webp)$/)){toast(f.name+' is not a supported image type.');continue}
+      if(f.size>5*1024*1024){toast(f.name+' is over 5MB.');continue}
+      addPhoto(f);
+    }
+  }
+
+  function addPhoto(file){
+    var id=nextId++;
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var photo={id:id,file:file,previewUrl:e.target.result,roomLabel:'',style:'',uploadStatus:'pending',url:null,storagePath:null};
+      photos.push(photo);
+      renderPhotos();
+      uploadPhoto(photo);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  window._removePhoto=function(id){
+    photos=photos.filter(function(p){return p.id!==id});
+    renderPhotos();
+  };
+
+  window._updateField=function(id,field,value){
+    for(var i=0;i<photos.length;i++){if(photos[i].id===id){photos[i][field]=value;break}}
+  };
+
+  window._retryUpload=function(id){
+    for(var i=0;i<photos.length;i++){if(photos[i].id===id){uploadPhoto(photos[i]);break}}
+  };
+
+  function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+  function renderPhotos(){
+    var grid=document.getElementById('photoGrid');
+    var html='';
+    for(var i=0;i<photos.length;i++){
+      var p=photos[i];
+      var sc=p.uploadStatus==='done'?'done':p.uploadStatus==='error'?'error':'uploading';
+      var st=p.uploadStatus==='done'?'&#10003; Uploaded':p.uploadStatus==='error'?'&#9888; Failed &mdash; click to retry':'Uploading...';
+      var pps = styleMode === 'per_photo' ? 'block' : 'none';
+      html+='<div class="photo-card">';
+      html+='<img src="'+p.previewUrl+'" alt="Room photo">';
+      html+='<div class="photo-fields">';
+      html+='<input type="text" placeholder="Room label (e.g. Living Room, Master Bedroom)" value="'+esc(p.roomLabel)+'" onchange="_updateField('+p.id+',\'roomLabel\',this.value)">';
+      html+='<select class="per-photo-style" style="display:'+pps+'" onchange="_updateField('+p.id+',\'style\',this.value)">';
+      var opts=STYLE_OPTS;
+      if(p.style){opts=opts.replace('value="'+esc(p.style)+'"','value="'+esc(p.style)+'" selected')}
+      html+=opts+'</select>';
+      html+='<span class="upload-status '+sc+'"'+(p.uploadStatus==='error'?' onclick="_retryUpload('+p.id+')" style="cursor:pointer"':'')+'>'+st+'</span>';
+      html+='</div>';
+      html+='<button class="remove-btn" onclick="_removePhoto('+p.id+')" title="Remove">&times;</button>';
+      html+='</div>';
+    }
+    grid.innerHTML=html;
+    var c=document.getElementById('photoCount');
+    c.textContent=photos.length>0?photos.length+' photo'+(photos.length>1?'s':'')+' added':'';
+  }
+
+  async function uploadPhoto(photo){
+    photo.uploadStatus='uploading';
+    renderPhotos();
+    try{
+      var res=await fetch('/api/pro-order/upload-photo',{
+		method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({imageBase64:photo.previewUrl,fileName:photo.file.name,contentType:photo.file.type})
+      });
+      var data=await res.json();
+      if(data.ok){photo.url=data.url;photo.storagePath=data.storagePath;photo.uploadStatus='done'}
+      else{photo.uploadStatus='error';toast('Failed to upload '+photo.file.name)}
+    }catch(e){photo.uploadStatus='error';toast('Upload error for '+photo.file.name)}
+    renderPhotos();
+  }
+
+  /* Submit */
+  document.getElementById('submitBtn').addEventListener('click', async function(){
+    var email=document.getElementById('email').value.trim();
+    var addr=document.getElementById('propertyAddress').value.trim();
+    if(!email||!email.includes('@')){toast('Please enter a valid email.');return}
+    if(!addr){toast('Please enter the property address.');return}
+    if(photos.length===0){toast('Please upload at least one room photo.');return}
+
+    var pending=photos.filter(function(p){return p.uploadStatus!=='done'});
+    if(pending.length>0){
+      var errs=pending.filter(function(p){return p.uploadStatus==='error'});
+      if(errs.length>0){toast(errs.length+' photo(s) failed to upload. Retry or remove them.');return}
+      toast('Photos are still uploading. Please wait...');return;
+    }
+
+    var unlabeled=photos.filter(function(p){return !p.roomLabel.trim()});
+    if(unlabeled.length>0){toast('Please label all rooms before submitting.');return}
+
+    var btn=document.getElementById('submitBtn');
+    btn.textContent='Submitting order...';
+    btn.disabled=true;
+
+    var photoData=photos.map(function(p){
+      return {url:p.url,storagePath:p.storagePath,roomLabel:p.roomLabel.trim(),style:styleMode==='per_photo'?p.style:''}
+    });
+
+    try{
+      var res=await fetch('/api/pro-order',{
+		method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          firstName:document.getElementById('firstName').value.trim(),
+          lastName:document.getElementById('lastName').value.trim(),
+          email:email,
+          phone:document.getElementById('phone').value.trim(),
+          propertyAddress:addr,
+          roomCount:photos.length,
+          styleMode:styleMode,
+          stylePreference:styleMode==='overall'?document.getElementById('stylePreference').value:'',
+          budget:document.getElementById('budget').value,
+          notes:document.getElementById('notes').value.trim(),
+          photos:photoData
+        })
+      });
+      var data=await res.json();
+      if(data.ok){
+        document.getElementById('orderForm').style.display='none';
+        document.getElementById('successCard').className='success-card show';
+        document.getElementById('orderId').textContent=data.orderId;
+        document.getElementById('photoCountResult').textContent=String(photos.length);
+      }else{
+        toast(data.error||'Failed to submit order.');
+        btn.textContent='Submit Pro Order â';btn.disabled=false;
+      }
+    }catch(e){
+      toast('Something went wrong. Please try again.');
+      btn.textContent='Submit Pro Order â';btn.disabled=false;
+    }
+  });
+})();
 </script>
 </body>
 </html>
