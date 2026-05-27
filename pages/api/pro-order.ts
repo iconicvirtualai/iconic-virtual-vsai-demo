@@ -4,7 +4,7 @@ import { db } from "../../lib/firebaseAdmin";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method not allowed" });
 
-  const { firstName, lastName, email, phone, propertyAddress, roomCount, stylePreference, budget, notes } = req.body || {};
+  const { firstName, lastName, email, phone, propertyAddress, roomCount, stylePreference, styleMode, budget, notes, photos } = req.body || {};
 
   if (!email) return res.status(400).json({ ok: false, error: "Email is required" });
   if (!propertyAddress) return res.status(400).json({ ok: false, error: "Property address is required" });
@@ -39,7 +39,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       phone: (phone || "").trim(),
       propertyAddress: propertyAddress.trim(),
       roomCount: Number(roomCount),
+      styleMode: styleMode || "overall",        // "overall" or "per_photo"
       stylePreference: (stylePreference || "").trim(),
+      photos: Array.isArray(photos) ? photos : [], // [{url, storagePath, roomLabel, style}]
       budget: (budget || "").trim(),
       notes: (notes || "").trim(),
       status: "new",
