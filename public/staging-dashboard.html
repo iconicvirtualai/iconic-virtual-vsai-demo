@@ -489,6 +489,25 @@
   .upload-zone:hover { border-color: var(--primary); background: var(--primary-light); }
   .upload-icon { font-size: 48px; margin-bottom: 16px; }
 
+  .stage-frame-wrap {
+    margin-top: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    background: white;
+  }
+  .stage-frame {
+    width: 100%;
+    min-height: 1180px;
+    border: none;
+    display: block;
+    background: white;
+  }
+  @media (max-width: 900px) {
+    .stage-frame { min-height: 1320px; }
+  }
+
   .style-grid {
     display: grid; grid-template-columns: repeat(4, 1fr);
     gap: 16px; margin-bottom: 24px;
@@ -1379,13 +1398,12 @@
         <div class="page-title">Staging Workspace</div>
         <div class="page-subtitle">Upload a photo, pick a style, and get your AI-staged image with full API integration.</div>
 
-        <!-- EMBEDDED STAGING WORKSPACE (NO HEADER, NO SCROLL ISSUES) -->
-        <div style="margin-top:24px;border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm)">
+        <!-- Embedded staging workspace. Keep the frame tall enough for upload preview + room/style controls. -->
+        <div class="stage-frame-wrap">
           <iframe
             src="/studio"
-            style="width:100%;height:800px;border:none;display:block;overflow:hidden"
+            class="stage-frame"
             title="AI Staging Workspace"
-            scrolling="no"
           ></iframe>
         </div>
       </div>
