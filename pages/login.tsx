@@ -3,6 +3,36 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
 
+type AuthPayload = {
+  token?: string;
+  userId?: string;
+  email?: string;
+  user?: { id?: string; email?: string };
+};
+
+type AuthResponse = {
+  ok?: boolean;
+  error?: string;
+  data?: AuthPayload;
+  token?: string;
+  userId?: string;
+  email?: string;
+  user?: { id?: string; email?: string };
+};
+
+function persistAuth(data: AuthResponse, fallbackEmail: string) {
+  const payload = data.data || data;
+  const token = payload.token;
+
+  if (!token) {
+    throw new Error("Login succeeded but no auth token was returned.");
+  }
+
+  localStorage.setItem("authToken", token);
+  localStorage.setItem("userId", payload.userId || payload.user?.id || "");
+  localStorage.setItem("userEmail", payload.email || payload.user?.email || fallbackEmail);
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -30,9 +60,7 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      localStorage.setItem("authToken", data.token);
-      localStorage.setItem("userId", data.user?.id || "");
-      localStorage.setItem("userEmail", data.user?.email || email);
+      persistAuth(data, email);
       setStatusText("Success! Redirecting...");
       router.push("/staging-dashboard.html");
     } catch (err: any) {
@@ -63,9 +91,7 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      localStorage.setItem("authToken", data.token);
-      localStorage.setItem("userId", data.user?.id || "");
-      localStorage.setItem("userEmail", data.user?.email || email);
+      persistAuth(data, email);
       setStatusText("Account created! Redirecting...");
       router.push("/staging-dashboard.html");
     } catch (err: any) {
