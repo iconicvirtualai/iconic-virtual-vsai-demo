@@ -1,160 +1,233 @@
 // pages/login.tsx
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/router";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import Head from "next/head";
 
 export default function LoginPage() {
   const router = useRouter();
-
-  const [client, setClient] = useState<SupabaseClient | null>(null);
-  const [supaReady, setSupaReady] = useState(false);
-  const [statusText, setStatusText] = useState<string>("Loading login...");
-
+  const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // IMPORTANT:
-  // - Do NOT create supabase client at module scope (breaks build if env missing)
-  // - Only create it in the browser
-  useEffect(() => {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-    const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-
-    if (!url || !anon) {
-      setStatusText(
-        "Missing Supabase env vars. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in Vercel."
-      );
-      setSupaReady(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const mod = await import("@supabase/supabase-js");
-        const supa = mod.createClient(url, anon);
-
-        if (cancelled) return;
-        setClient(supa);
-        setSupaReady(true);
-        setStatusText("Please sign in.");
-      } catch (e: any) {
-        console.error(e);
-        setStatusText("Failed to initialize auth.");
-        setSupaReady(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [statusText, setStatusText] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
-    if (!client) return;
-
+    setLoading(true);
     setStatusText("Signing in...");
-
-    const { data, error } = await client.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setStatusText(error.message || "Login failed.");
-      return;
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        setStatusText(data.error || "Login failed.");
+        setLoading(false);
+        return;
+      }
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("userId", data.user?.id || "");
+      localStorage.setItem("userEmail", data.user?.email || email);
+      setStatusText("Success! Redirecting...");
+      router.push("/staging-dashboard.html");
+    } catch (err: any) {
+      setStatusText(err.message || "Network error.");
+      setLoading(false);
     }
-
-    if (!data?.session) {
-      setStatusText("No session returned.");
-      return;
-    }
-
-    setStatusText("Success! Redirecting...");
-    router.push("/portal");
   };
 
-  // ✅ NOW the return is inside the component body (fixes your build error)
-  if (!supaReady) {
-    return (
-      <main className="min-h-screen bg-white text-slate-900">
-        <div className="mx-auto max-w-md px-6 py-16">
-          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/60">
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-              Iconic Virtual.AI
-            </p>
-            <h1 className="mt-3 text-2xl font-semibold">Login</h1>
-            <p className="mt-4 text-slate-600">{statusText}</p>
-
-            <a
-              href="/"
-              className="mt-8 inline-flex w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-100 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-slate-900 transition hover:border-slate-900"
-            >
-              Return to staging
-            </a>
-          </div>
-        </div>
-      </main>
-    );
-  }
+  const handleSignup = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatusText("Creating account...");
+    try {
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          phone: phone.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        setStatusText(data.error || "Signup failed.");
+        setLoading(false);
+        return;
+      }
+      localStorage.setItem("authToken", data.token);
+      localStorage.setItem("userId", data.user?.id || "");
+      localStorage.setItem("userEmail", data.user?.email || email);
+      setStatusText("Account created! Redirecting...");
+      router.push("/staging-dashboard.html");
+    } catch (err: any) {
+      setStatusText(err.message || "Network error.");
+      setLoading(false);
+    }
+  };
 
   return (
-    <main className="min-h-screen bg-white text-slate-900">
-      <div className="mx-auto max-w-md px-6 py-16">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-lg shadow-slate-200/60">
-          <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
-            Iconic Virtual.AI
+    <>
+      <Head>
+        <title>Log In | Iconic Virtual.AI</title>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </Head>
+      <main
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: "linear-gradient(135deg, #0a0a0a 0%, #18181b 100%)",
+          fontFamily: "'Inter', sans-serif",
+        }}
+      >
+        <div
+          className="w-full max-w-md mx-4 p-8 rounded-2xl"
+          style={{
+            background: "#ffffff",
+            boxShadow: "0 25px 50px rgba(0,0,0,0.3)",
+          }}
+        >
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <div
+              style={{
+                width: 36, height: 36, borderRadius: 8,
+                background: "linear-gradient(135deg, #10b981, #059669)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#fff", fontFamily: "'Sora', sans-serif",
+                fontWeight: 700, fontSize: 14,
+              }}
+            >
+              IV
+            </div>
+            <span
+              style={{
+                fontFamily: "'Sora', sans-serif", fontWeight: 700,
+                fontSize: 18, color: "#0a0a0a", letterSpacing: "0.02em",
+              }}
+            >
+              ICONIC VIRTUAL.AI
+            </span>
+          </div>
+
+          <h1 style={{ fontFamily: "'Sora', sans-serif", fontWeight: 700, fontSize: 28, color: "#0a0a0a", textAlign: "center", marginBottom: 4 }}>
+            {mode === "login" ? "Welcome back" : "Create account"}
+          </h1>
+          <p style={{ textAlign: "center", color: "#6b7280", fontSize: 14, marginBottom: 24 }}>
+            {mode === "login" ? "Sign in to your account to continue staging." : "Sign up for a new account to get started."}
           </p>
-          <h1 className="mt-3 text-2xl font-semibold">Login</h1>
-          <p className="mt-4 text-slate-600">{statusText}</p>
 
-          <form className="mt-8 space-y-4" onSubmit={handleLogin}>
-            <div>
-              <label className="text-xs uppercase tracking-[0.4em] text-slate-500">
-                Email
-              </label>
-              <input
-                className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-                autoComplete="email"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="text-xs uppercase tracking-[0.4em] text-slate-500">
-                Password
-              </label>
-              <input
-                className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-slate-500"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                type="password"
-                autoComplete="current-password"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="inline-flex w-full items-center justify-center rounded-2xl border border-slate-700 bg-slate-900 px-5 py-3 text-sm font-semibold uppercase tracking-wider text-white transition hover:border-slate-900"
-            >
-              Sign In
+          <div className="flex gap-3 mb-4">
+            <button type="button" onClick={() => alert("Google sign-in coming soon")}
+              className="flex-1 py-2.5 rounded-lg border text-sm font-medium"
+              style={{ borderColor: "#e5e7eb", color: "#6b7280", background: "#f9fafb" }}>
+              Google
             </button>
+            <button type="button" onClick={() => alert("Apple sign-in coming soon")}
+              className="flex-1 py-2.5 rounded-lg border text-sm font-medium"
+              style={{ borderColor: "#e5e7eb", color: "#6b7280", background: "#f9fafb" }}>
+              Apple
+            </button>
+          </div>
 
-            <a
-              href="/"
-              className="block text-center text-xs uppercase tracking-[0.3em] text-slate-500 underline"
-            >
-              Return to staging
-            </a>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400">or with email</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+
+          {statusText && (
+            <p className="text-sm text-center mb-3" style={{
+              color: statusText.includes("Success") || statusText.includes("created") ? "#10b981"
+                : statusText.includes("failed") || statusText.includes("error") || statusText.includes("Invalid") ? "#ef4444" : "#6b7280",
+            }}>{statusText}</p>
+          )}
+
+          <form onSubmit={mode === "login" ? handleLogin : handleSignup}>
+            {mode === "signup" && (
+              <div className="flex gap-3 mb-3">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">First Name</label>
+                  <input className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none focus:ring-2"
+                    style={{ borderColor: "#e5e7eb" }} value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Last Name</label>
+                  <input className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none focus:ring-2"
+                    style={{ borderColor: "#e5e7eb" }} value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+                </div>
+              </div>
+            )}
+
+            <div className="mb-3">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+              <input className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none focus:ring-2"
+                style={{ borderColor: "#e5e7eb" }} type="email" autoComplete="email"
+                placeholder="you@brokerage.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+
+            <div className="mb-3">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Password</label>
+              <input className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none focus:ring-2"
+                style={{ borderColor: "#e5e7eb" }} type="password"
+                autoComplete={mode === "login" ? "current-password" : "new-password"}
+                value={password} onChange={(e) => setPassword(e.target.value)} required />
+            </div>
+
+            {mode === "signup" && (
+              <div className="mb-3">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Phone (optional)</label>
+                <input className="w-full px-3 py-2.5 rounded-lg border text-sm outline-none focus:ring-2"
+                  style={{ borderColor: "#e5e7eb" }} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+              </div>
+            )}
+
+            {mode === "login" && (
+              <div className="flex items-center justify-between mb-4">
+                <label className="flex items-center gap-2 text-xs text-gray-500">
+                  <input type="checkbox" defaultChecked className="rounded" /> Remember me
+                </label>
+                <button type="button" className="text-xs" style={{ color: "#10b981" }}
+                  onClick={() => alert("Password reset coming soon")}>Forgot password?</button>
+              </div>
+            )}
+
+            <button type="submit" disabled={loading} className="w-full py-3 rounded-lg text-white font-semibold text-sm transition"
+              style={{
+                background: loading ? "#6b7280" : "linear-gradient(135deg, #10b981, #059669)",
+                cursor: loading ? "not-allowed" : "pointer",
+              }}>
+              {loading ? (mode === "login" ? "Signing in..." : "Creating account...") : (mode === "login" ? "Sign In" : "Create Account")}
+            </button>
           </form>
+
+          <p className="text-center text-sm text-gray-500 mt-5">
+            {mode === "login" ? (
+              <>
+                Don&apos;t have an account?{" "}
+                <button type="button" className="font-semibold" style={{ color: "#10b981" }}
+                  onClick={() => { setMode("signup"); setStatusText(""); setLoading(false); }}>Sign up free</button>
+              </>
+            ) : (
+              <>
+                Already have an account?{" "}
+                <button type="button" className="font-semibold" style={{ color: "#10b981" }}
+                  onClick={() => { setMode("login"); setStatusText(""); setLoading(false); }}>Sign in</button>
+              </>
+            )}
+          </p>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
