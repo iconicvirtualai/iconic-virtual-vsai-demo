@@ -33,7 +33,7 @@ export default function TestCheckoutPage() {
   };
 
   return (
-    <main style={{ padding: 24, fontFamily: "system-ui" }}>
+    <main style={{ padding: 24, fontFamily: "Manrope, sans-serif" }}>
       <h1>Test Stripe Checkout (No VSAI credits)</h1>
       <p>This will create a Stripe Checkout session with a fake jobId.</p>
 

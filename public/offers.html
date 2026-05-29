@@ -6,7 +6,7 @@
 <title>Special Offers | IconicVirtual.AI</title>
 <meta name="description" content="Limited-time virtual staging deals. AI staging from $1/photo, Pro staging from $8/image. Save up to 70% on bundle packs.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a0a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-weight='bold' fill='%2310b981' font-family='system-ui'%3EIV%3C/text%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -23,7 +23,7 @@
   --shadow:0 4px 6px -1px rgba(0,0,0,0.07),0 2px 4px -2px rgba(0,0,0,0.05);
   --shadow-md:0 10px 15px -3px rgba(0,0,0,0.08),0 4px 6px -4px rgba(0,0,0,0.04);
   --shadow-lg:0 20px 25px -5px rgba(0,0,0,0.1),0 8px 10px -6px rgba(0,0,0,0.06);
-  --font-heading:'Sora',sans-serif;--font-body:'Inter',sans-serif;
+  --font-heading:'Manrope',sans-serif;--font-body:'Manrope',sans-serif;
 }
 body{font-family:var(--font-body);color:var(--text);background:var(--white);-webkit-font-smoothing:antialiased}
 a{text-decoration:none;color:inherit}
@@ -44,7 +44,7 @@ img{max-width:100%;display:block}
 .hero *{position:relative;z-index:1}
 .hero-badge{display:inline-block;background:var(--danger);color:#fff;font-size:12px;font-weight:700;padding:6px 16px;border-radius:20px;margin-bottom:20px;letter-spacing:1.5px;font-family:var(--font-heading)}
 .hero h1{font-family:var(--font-heading);font-size:44px;font-weight:800;margin-bottom:16px;line-height:1.15;color:#fff}
-.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--emerald-light),var(--emerald));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero h1 .accent{background:linear-gradient(135deg,var(--emerald-light),var(--emerald));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hero p{font-size:18px;color:var(--grey-400);max-width:600px;margin:0 auto 36px;line-height:1.6}
 .hero-stats{display:flex;gap:48px;justify-content:center;flex-wrap:wrap}
 .hero-stat{text-align:center}
@@ -83,7 +83,7 @@ img{max-width:100%;display:block}
 .card .original{font-size:14px;color:var(--grey-400);text-decoration:line-through;margin-bottom:4px}
 .card ul{list-style:none;margin-bottom:20px}
 .card ul li{font-size:14px;padding:5px 0;color:var(--grey-600)}
-.card ul li::before{content:"â ";color:var(--emerald);font-weight:700}
+.card ul li::before{content:"✓ ";color:var(--emerald);font-weight:700}
 
 /* Buttons */
 .btn-emerald{display:block;width:100%;padding:14px;background:var(--emerald);color:#fff;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;text-align:center;transition:background .2s,transform .15s;font-family:var(--font-heading)}
@@ -128,19 +128,19 @@ img{max-width:100%;display:block}
 </head>
 <body>
 
-<div class="success-banner" id="successBanner">ð Payment successful! Check your email for your staging credits. <a href="/staging-dashboard.html" style="color:#fff;text-decoration:underline">Go to Dashboard â</a></div>
+<div class="success-banner" id="successBanner"> Payment successful! Check your email for your staging credits. <a href="/staging-dashboard.html" style="color:#fff;text-decoration:underline">Go to Dashboard →</a></div>
 
 <header class="header">
   <a href="/home.html" class="logo">
     <span class="logo-icon">IV</span>
     <span class="logo-text">IconicVirtual.AI</span>
   </a>
-  <a href="/home.html" class="header-link">â Back to Home</a>
+  <a href="/home.html" class="header-link">← Back to Home</a>
 </header>
 
 <section class="hero">
-  <span class="hero-badge">ð¥ LIMITED TIME OFFERS</span>
-  <h1>Stage Smarter. <em>Save More.</em></h1>
+  <span class="hero-badge">LIMITED TIME OFFERS</span>
+  <h1>Stage Smarter. <span class="accent">Save More.</span></h1>
   <p>Exclusive bundle pricing for agents and brokerages. Up to 70% off regular per-image rates. No subscriptions, no commitments.</p>
   <div class="hero-stats">
     <div class="hero-stat"><div class="num">$1</div><div class="label">Per AI Photo</div></div>
@@ -152,7 +152,7 @@ img{max-width:100%;display:block}
 
 <div class="section">
   <div class="section-title">
-    <span class="badge badge-ai">â¡ AI STAGING</span>
+    <span class="badge badge-ai">AI STAGING</span>
     <h2>AI Virtual Staging Packs</h2>
     <p>Instant results in under 60 seconds. High-res, MLS-ready images with commercial license included.</p>
   </div>
@@ -162,7 +162,7 @@ img{max-width:100%;display:block}
       <h3>Starter Pack</h3>
       <div class="original">Normally $15</div>
       <div class="price">$5 <span>total</span></div>
-      <div class="per">$1.00/photo â¢ 5 photos</div>
+      <div class="per">$1.00/photo • 5 photos</div>
       <ul>
         <li>5 AI staged images</li>
         <li>100+ design styles</li>
@@ -170,7 +170,7 @@ img{max-width:100%;display:block}
         <li>4K high-res downloads</li>
         <li>Commercial license</li>
       </ul>
-      <button class="btn-emerald" onclick="startCheckout('ai-5')">Get Starter Pack â</button>
+      <button class="btn-emerald" onclick="startCheckout('ai-5')">Get Starter Pack →</button>
     </div>
     <div class="card featured-ai">
       <div class="card-badge card-badge-ai">BEST VALUE</div>
@@ -178,7 +178,7 @@ img{max-width:100%;display:block}
       <h3>Best Value Bundle</h3>
       <div class="original">Normally $75</div>
       <div class="price">$50 <span>total</span></div>
-      <div class="per">$2.00/photo â¢ 25 photos</div>
+      <div class="per">$2.00/photo • 25 photos</div>
       <ul>
         <li>25 AI staged images</li>
         <li>100+ design styles</li>
@@ -186,14 +186,14 @@ img{max-width:100%;display:block}
         <li>4K high-res downloads</li>
         <li>Commercial license</li>
       </ul>
-      <button class="btn-emerald" onclick="startCheckout('ai-25')">Get Best Value Bundle â</button>
+      <button class="btn-emerald" onclick="startCheckout('ai-25')">Get Best Value Bundle →</button>
     </div>
     <div class="card">
       <div class="card-type card-type-ai">AI STAGING</div>
       <h3>Agent Pro Pack</h3>
       <div class="original">Normally $150</div>
       <div class="price">$75 <span>total</span></div>
-      <div class="per">$1.50/photo â¢ 50 photos</div>
+      <div class="per">$1.50/photo • 50 photos</div>
       <ul>
         <li>50 AI staged images</li>
         <li>100+ design styles</li>
@@ -201,15 +201,15 @@ img{max-width:100%;display:block}
         <li>Bulk upload support</li>
         <li>Commercial license</li>
       </ul>
-      <button class="btn-emerald" onclick="startCheckout('ai-50')">Get Agent Pro Pack â</button>
+      <button class="btn-emerald" onclick="startCheckout('ai-50')">Get Agent Pro Pack →</button>
     </div>
     <div class="card">
-      <div class="card-badge card-badge-danger">ð¢ TEAMS</div>
+      <div class="card-badge card-badge-danger">TEAMS</div>
       <div class="card-type card-type-ai">AI STAGING</div>
       <h3>Brokerage Pack</h3>
       <div class="original">Normally $300</div>
       <div class="price">$100 <span>total</span></div>
-      <div class="per">$1.00/photo â¢ 100 photos</div>
+      <div class="per">$1.00/photo • 100 photos</div>
       <ul>
         <li>100 AI staged images</li>
         <li>Share across team</li>
@@ -217,14 +217,14 @@ img{max-width:100%;display:block}
         <li>Priority support</li>
         <li>Commercial license</li>
       </ul>
-      <button class="btn-emerald" onclick="startCheckout('ai-100')">Get Brokerage Pack â</button>
+      <button class="btn-emerald" onclick="startCheckout('ai-100')">Get Brokerage Pack →</button>
     </div>
   </div>
 </div>
 
 <div class="section" style="padding-top:0">
   <div class="section-title">
-    <span class="badge badge-pro">ð¨ PRO STAGING</span>
+    <span class="badge badge-pro">PRO STAGING</span>
     <h2>Professional Designer Staging</h2>
     <p>Magazine-quality staging by our expert design team. 24-hour turnaround with free revisions.</p>
   </div>
@@ -242,7 +242,7 @@ img{max-width:100%;display:block}
         <li>High-res download</li>
         <li>Commercial license</li>
       </ul>
-      <button class="btn-taupe" onclick="startCheckout('pro-1')">Order Single Room â</button>
+      <button class="btn-taupe" onclick="startCheckout('pro-1')">Order Single Room →</button>
     </div>
     <div class="card featured-pro">
       <div class="card-badge card-badge-pro">POPULAR</div>
@@ -250,7 +250,7 @@ img{max-width:100%;display:block}
       <h3>5-Room Bundle</h3>
       <div class="original">Normally $62.50</div>
       <div class="price">$40 <span>total</span></div>
-      <div class="per">$8.00/image â¢ 5 images</div>
+      <div class="per">$8.00/image • 5 images</div>
       <ul>
         <li>5 designer-staged images</li>
         <li>24-hour turnaround</li>
@@ -258,14 +258,14 @@ img{max-width:100%;display:block}
         <li>Multi-angle staging</li>
         <li>Commercial license</li>
       </ul>
-      <button class="btn-taupe" onclick="startCheckout('pro-5')">Order 5-Room Bundle â</button>
+      <button class="btn-taupe" onclick="startCheckout('pro-5')">Order 5-Room Bundle →</button>
     </div>
     <div class="card">
       <div class="card-type card-type-pro">PRO STAGING</div>
       <h3>10-Room Bundle</h3>
       <div class="original">Normally $125</div>
       <div class="price">$75 <span>total</span></div>
-      <div class="per">$7.50/image â¢ 10 images</div>
+      <div class="per">$7.50/image • 10 images</div>
       <ul>
         <li>10 designer-staged images</li>
         <li>Priority turnaround</li>
@@ -273,7 +273,7 @@ img{max-width:100%;display:block}
         <li>Dedicated designer</li>
         <li>Commercial license</li>
       </ul>
-      <button class="btn-taupe" onclick="startCheckout('pro-10')">Order 10-Room Bundle â</button>
+      <button class="btn-taupe" onclick="startCheckout('pro-10')">Order 10-Room Bundle →</button>
     </div>
   </div>
 </div>
@@ -281,8 +281,8 @@ img{max-width:100%;display:block}
 <div class="section" style="padding-top:0">
   <div class="cta-box">
     <h2>Need a custom package?</h2>
-    <p>Enterprise teams and brokerages â we'll build a package that fits your volume.</p>
-    <a href="/home.html#contact" class="btn-emerald">Contact Sales â</a>
+    <p>Enterprise teams and brokerages - we'll build a package that fits your volume.</p>
+    <a href="/home.html#contact" class="btn-emerald">Contact Sales →</a>
   </div>
 </div>
 
@@ -291,7 +291,7 @@ img{max-width:100%;display:block}
     <h3>Almost there!</h3>
     <p>Enter your email to continue to secure checkout.</p>
     <input type="email" id="checkoutEmail" placeholder="you@brokerage.com" autofocus>
-    <button class="btn-emerald" id="proceedBtn" onclick="proceedToCheckout()">Continue to Checkout â</button>
+    <button class="btn-emerald" id="proceedBtn" onclick="proceedToCheckout()">Continue to Checkout →</button>
     <button class="cancel" onclick="closeModal()">Cancel</button>
   </div>
 </div>
@@ -299,7 +299,7 @@ img{max-width:100%;display:block}
 <div class="toast" id="toast"></div>
 
 <footer class="footer">
-  <div>Â© 2026 IconicVirtual.AI. All rights reserved.</div>
+  <div>© 2026 IconicVirtual.AI. All rights reserved.</div>
   <div class="taupe-touch">Designed with care in Texas</div>
 </footer>
 
@@ -353,9 +353,9 @@ body:JSON.stringify({planId:selectedPlan,email:email})
 .then(function(r){return r.json()})
 .then(function(data){
 if(data.url){window.location.href=data.url}
-else{toast(data.error||'Failed to create checkout.');if(btn)btn.textContent='Continue to Checkout â'}
+else{toast(data.error||'Failed to create checkout.');if(btn)btn.textContent='Continue to Checkout →'}
 })
-.catch(function(){toast('Something went wrong.');if(btn)btn.textContent='Continue to Checkout â'});
+.catch(function(){toast('Something went wrong.');if(btn)btn.textContent='Continue to Checkout →'});
 }
 
 document.getElementById('checkoutEmail').addEventListener('keydown',function(e){if(e.key==='Enter')proceedToCheckout()});

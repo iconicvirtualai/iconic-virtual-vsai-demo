@@ -67,6 +67,24 @@ function formatLabel(value: string) {
     .replace(/\w\S*/g, (txt) => txt[0].toUpperCase() + txt.slice(1));
 }
 
+function normalizeOptionList(input: unknown, fallback: string[]) {
+  if (!Array.isArray(input)) return fallback;
+
+  const normalized = input
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (item && typeof item === "object") {
+        const option = item as { value?: unknown; id?: unknown; label?: unknown; name?: unknown };
+        return option.value || option.id || option.label || option.name;
+      }
+      return null;
+    })
+    .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+    .map((item) => item.trim());
+
+  return normalized.length > 0 ? normalized : fallback;
+}
+
 async function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -202,13 +220,13 @@ const pendingPurchaseRef = useRef<CartItem | null>(null);
 
         const data = json?.ok ? json.data : json;
 
-        const rt: string[] = data?.room_types || data?.roomTypes || [];
-        const st: string[] = data?.styles || data?.style_list || data?.design_styles || [];
-
-        const finalRoomTypes =
-          rt.length > 0 ? rt : ["living", "bed", "kitchen", "dining", "home_office"];
-        const finalStyles =
-          st.length > 0 ? st : ["standard", "modern", "scandinavian", "luxury"];
+        const fallbackRooms = ["living", "bed", "kitchen", "dining", "home_office"];
+        const fallbackStyles = ["standard", "modern", "scandinavian", "luxury"];
+        const finalRoomTypes = normalizeOptionList(data?.room_types || data?.roomTypes, fallbackRooms);
+        const finalStyles = normalizeOptionList(
+          data?.styles || data?.style_list || data?.design_styles,
+          fallbackStyles
+        );
 
         setRoomTypes(finalRoomTypes);
         setStyles(finalStyles);
