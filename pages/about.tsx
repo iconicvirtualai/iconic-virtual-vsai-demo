@@ -7,9 +7,9 @@ export default function AboutPage() {
         <title>About Us | IconicVirtual.AI</title>
         <meta name="description" content="Learn about IconicVirtual.AI — the AI-powered virtual staging platform helping real estate professionals sell homes faster." />
         <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a0a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-weight='bold' fill='white' font-family='system-ui'%3EIV%3C/text%3E%3C/svg%3E" />
-        <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </Head>
-      <div style={{ fontFamily: "Inter, sans-serif", color: "#1a1a1a", background: "#ffffff" }}>
+      <div style={{ fontFamily: "Manrope, sans-serif", color: "#1a1a1a", background: "#ffffff" }}>
         <header style={{ background: "#fff", borderBottom: "1px solid #e5e5e5", padding: "16px 32px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <a href="/home.html" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ display: "inline-flex", width: 36, height: 36, fontSize: 14, background: "linear-gradient(135deg,#0a0a0a,#18181b)", borderRadius: 10, color: "#10b981", alignItems: "center", justifyContent: "center", fontWeight: 900 }}>IV</span>
