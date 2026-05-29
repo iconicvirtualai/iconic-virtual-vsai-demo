@@ -1,49 +1,23 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { db } from "../../../lib/firebaseAdmin";
+import { verifyPassword, createToken } from "../../../lib/auth";
 
-type Response = 
-  | { ok: true; data: { userId: string; token: string; email: string } }
-  | { ok: false; error: string };
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<Response>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
-  const { email, password } = req.body;
-
+  const { email, password } = req.body || {};
   if (!email || !password) {
-    return res.status(400).json({ ok: false, error: "Email and password required" });
+    return res.status(400).json({ ok: false, error: "Email and password are required" });
   }
 
+  const normalizedEmail = email.trim().toLowerCase();
+
   try {
-    // Check if Firebase is configured
-    const firebaseServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
-    const firebaseStorageBucket = process.env.FIREBASE_STORAGE_BUCKET;
-
-    if (!firebaseServiceAccount || !firebaseStorageBucket) {
-      // Firebase not configured - use demo mode
-      console.log("Firebase not configured, using demo mode for login");
-      const demoUserId = `user_${email.replace(/[^a-z0-9]/gi, "_")}_${Date.now()}`;
-      return res.status(200).json({
-        ok: true,
-        data: {
-          userId: demoUserId,
-          email: email.toLowerCase(),
-          token: Buffer.from(`${demoUserId}:${Date.now()}`).toString("base64"),
-        },
-      });
-    }
-
-    // Firebase is configured, try to use it
-    const { db } = await import("../../../lib/firebaseAdmin");
-
-    // Query Firestore for user
-    const usersCollection = db.collection("users");
-    const snapshot = await usersCollection
-      .where("email", "==", email.toLowerCase())
+    const snapshot = await db
+      .collection("users")
+      .where("email", "==", normalizedEmail)
       .limit(1)
       .get();
 
@@ -52,35 +26,27 @@ export default async function handler(
     }
 
     const userDoc = snapshot.docs[0];
-    const userData = userDoc.data();
+    const user = userDoc.data();
 
-    // Simple password comparison (in production, use bcrypt for hashed passwords)
-    if (userData.password !== password) {
+    const valid = verifyPassword(password, user.passwordHash, user.passwordSalt);
+    if (!valid) {
       return res.status(401).json({ ok: false, error: "Invalid email or password" });
     }
 
-    // Return user info
+    const token = await createToken(userDoc.id, normalizedEmail);
+
     return res.status(200).json({
       ok: true,
       data: {
         userId: userDoc.id,
-        email: userData.email,
-        token: Buffer.from(`${userDoc.id}:${Date.now()}`).toString("base64"),
+        email: normalizedEmail,
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        token,
       },
     });
-  } catch (err: any) {
-    console.error("Login error:", err?.message || err);
-    
-    // Fallback to demo mode on any error
-    console.log("Login failed, falling back to demo mode");
-    const demoUserId = `user_${(req.body?.email || "user").replace(/[^a-z0-9]/gi, "_")}_${Date.now()}`;
-    return res.status(200).json({
-      ok: true,
-      data: {
-        userId: demoUserId,
-        email: (req.body?.email || "demo").toLowerCase(),
-        token: Buffer.from(`${demoUserId}:${Date.now()}`).toString("base64"),
-      },
-    });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({ ok: false, error: "Server error. Please try again." });
   }
 }

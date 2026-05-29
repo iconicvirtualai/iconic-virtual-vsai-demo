@@ -1,52 +1,51 @@
+// pages/api/orders/me.ts
 import type { NextApiRequest, NextApiResponse } from "next";
+import { db } from "../../../lib/firebaseAdmin";
 
-type Order = {
-  id: string;
-  jobId: string;
-  createdAt: string;
-  imageUrl?: string;
-  stagedUrl?: string;
-  amount?: number;
-  status: "pending" | "completed" | "failed";
-  roomType?: string;
-  style?: string;
-};
-
-type ApiResponse = 
-  | { ok: true; data: Order[] }
+type Resp =
+  | { ok: true; orders: any[] }
   | { ok: false; error: string };
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse>
+  res: NextApiResponse<Resp>
 ) {
   if (req.method !== "GET") {
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
-  try {
-    // TODO: Get user ID from auth context/token
-    // For now, return empty array if Firebase is not configured
-    const { db } = await import("../../../lib/firebaseAdmin");
+  const email = (req.query.email as string | undefined)?.trim() || null;
+  const userId = (req.query.userId as string | undefined)?.trim() || null;
 
-    try {
-      // Attempt to fetch from Firestore
-      const snapshot = await db.collection("orders").limit(50).get();
-      const orders = snapshot.docs.map((doc) => doc.data()) as Order[];
-      return res.status(200).json({ ok: true, data: orders });
-    } catch (firebaseError) {
-      // If Firebase is not configured, return empty list with warning
-      console.warn("Firebase not configured, returning empty orders:", firebaseError);
-      return res.status(200).json({ 
-        ok: true, 
-        data: [] 
-      });
+  if (!email && !userId) {
+    return res.status(400).json({
+      ok: false,
+      error: "Provide ?email= or ?userId= query parameter.",
+    });
+  }
+
+  try {
+    let query: FirebaseFirestore.Query = db.collection("orders");
+
+    // Prefer email lookup (always present after checkout).
+    // userId will be useful once auth is wired up in Phase 2.
+    if (email) {
+      query = query.where("customerEmail", "==", email);
+    } else if (userId) {
+      query = query.where("userId", "==", userId);
     }
-  } catch (err) {
-    console.error("orders/me error:", err);
-    return res.status(500).json({ 
-      ok: false, 
-      error: err instanceof Error ? err.message : "Internal server error" 
+
+    query = query.orderBy("createdAt", "desc");
+
+    const snap = await query.get();
+    const orders = snap.docs.map((d) => d.data());
+
+    return res.status(200).json({ ok: true, orders });
+  } catch (err: any) {
+    console.error("[orders/me] error:", err);
+    return res.status(500).json({
+      ok: false,
+      error: err?.message || "Failed to fetch orders",
     });
   }
 }

@@ -2,7 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 import { sendOrderEmail, sendOrderSms } from "../../lib/notify";
-import { supabaseAdmin } from "../../lib/supabaseAdmin";
+import { db } from "../../lib/firebaseAdmin";
 
 export const config = {
   api: {
@@ -43,16 +43,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // We only act on successful Checkout completion
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
-      // Guard: only send when actually paid
       if (session.payment_status !== "paid") {
         return res.status(200).json({ received: true, skipped: "not_paid" });
       }
 
-      // Retrieve expanded session so we can pull receipt URL safely
       const full = await stripe.checkout.sessions.retrieve(session.id, {
         expand: ["payment_intent", "payment_intent.latest_charge"],
       });
@@ -64,39 +61,89 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const jobId = meta.jobId || null;
       const selectedIndex = meta.selectedIndex ? Number(meta.selectedIndex) : 0;
 
-      // Receipt URL from expanded PaymentIntent.latest_charge
       let receiptUrl: string | null = null;
       const pi = full.payment_intent as any;
       if (pi?.latest_charge?.receipt_url) receiptUrl = pi.latest_charge.receipt_url;
 
-      // IMPORTANT: We do NOT store selectedUrl in metadata (Stripe 500-char limit).
-      // Instead we send a link back to your own success page using session_id.
       const downloadPageUrl = `${SITE_URL}/success?session_id=${encodeURIComponent(full.id)}`;
-      // ✅ Idempotent write: store order record for portal/admin
-      const upsertPayload = {
-        stripe_session_id: full.id,
-        stripe_payment_intent_id: typeof full.payment_intent === "string" ? full.payment_intent : (full.payment_intent as any)?.id || null,
-        amount_total: full.amount_total ?? null,
-        currency: full.currency ?? null,
-        payment_status: full.payment_status ?? null,
-        customer_email: customerEmail,
-        customer_phone: customerPhone,
-        job_id: jobId,
-        selected_index: Number.isFinite(selectedIndex) ? selectedIndex : 0,
-        receipt_url: receiptUrl,
-        download_page_url: downloadPageUrl,
-      };
 
-      const { error: orderErr } = await supabaseAdmin
-        .from("orders")
-        .upsert(upsertPayload, { onConflict: "stripe_session_id" });
+      let sourceImageUrl: string | null = null;
+      let roomType: string | null = null;
+      let style: string | null = null;
+      let renderId: string | null = null;
 
-      if (orderErr) {
-        console.error("[stripe-webhook] order upsert error:", orderErr);
-        // don't fail the webhook if storage hiccups; Stripe will retry anyway
+      if (jobId) {
+        try {
+          const jobSnap = await db.collection("jobs").doc(jobId).get();
+          if (jobSnap.exists) {
+            const jobData = jobSnap.data();
+            sourceImageUrl = jobData?.source?.publicUrl || null;
+            roomType = jobData?.room_type || null;
+            style = jobData?.style || null;
+            renderId = jobData?.renderId || jobId;
+          }
+        } catch (jobReadErr) {
+          console.error("[stripe-webhook] job read error:", jobReadErr);
+        }
       }
 
-      // Send email (if configured + email exists)
+      const now = new Date().toISOString();
+
+      const orderDoc = {
+        orderId: full.id,
+        orderNumber: null,
+        userId: null,
+        accountId: null,
+        customerEmail,
+        customerPhone,
+        orderType: "ai_staging",
+        status: "paid_pending_final",
+        paymentStatus: "paid",
+        jobId,
+        renderId: renderId || jobId,
+        selectedIndex: Number.isFinite(selectedIndex) ? selectedIndex : 0,
+        sourceImageUrl,
+        previewImageUrl: null,
+        selectedUrl: null,
+        finalImageUrl: null,
+        downloadUrl: null,
+        roomType,
+        style,
+        stripeCheckoutSessionId: full.id,
+        stripePaymentIntentId:
+          typeof full.payment_intent === "string"
+            ? full.payment_intent
+            : (full.payment_intent as any)?.id || null,
+        amountTotal: full.amount_total ?? null,
+        currency: full.currency ?? null,
+        receiptUrl,
+        createdAt: now,
+        updatedAt: now,
+        paidAt: now,
+        completedAt: null,
+      };
+
+      try {
+        await db.collection("orders").doc(full.id).set(orderDoc, { merge: true });
+      } catch (orderErr) {
+        console.error("[stripe-webhook] order write error:", orderErr);
+      }
+
+      if (jobId) {
+        try {
+          await db.collection("jobs").doc(jobId).update({
+            paymentStatus: "paid",
+            status: "paid_pending_final",
+            selectedIndex: Number.isFinite(selectedIndex) ? selectedIndex : 0,
+            stripeSessionId: full.id,
+            paidAt: now,
+            updatedAt: now,
+          });
+        } catch (jobUpdateErr) {
+          console.error("[stripe-webhook] job update error:", jobUpdateErr);
+        }
+      }
+
       if (customerEmail) {
         await sendOrderEmail({
           to: customerEmail,
@@ -107,7 +154,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
 
-      // Send SMS (if configured + phone exists)
       if (customerPhone) {
         await sendOrderSms({
           to: customerPhone,
@@ -120,7 +166,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ received: true });
     }
 
-    // Ignore other events
     return res.status(200).json({ received: true, ignored: event.type });
   } catch (err: any) {
     console.error("[stripe-webhook] handler error:", err?.message || err);

@@ -4,27 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Iconic Virtual.AI — Virtual Staging Platform</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a0a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='700' font-size='16' fill='white'%3EIV%3C/text%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Hide all screens until auth resolves to prevent flash */
+    .screen { display: none !important; }
+    .screen.active { display: block !important; }
   :root {
-    --primary: #83756b;
-    --primary-dark: #6b5f57;
-    --primary-light: #f5f3f0;
-    --accent: #83756b;
+            --midnight: #0a0a0a;
+            --midnight-light: #18181b;
+            --emerald: #10b981;
+            --emerald-light: #34d399;
+            --emerald-dark: #059669;
+            --emerald-glow: rgba(16,185,129,0.15);
+            --taupe: #8B7355;
+            --taupe-light: #a8956f;
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --primary-light: rgba(16,185,129,0.12);
+    --accent: #10b981;
     --success: #10b981;
     --danger: #ef4444;
     --warning: #f59e0b;
     --bg: #ffffff;
     --surface: #ffffff;
-    --border: #e5e5e5;
-    --text: #1a1a1a;
-    --text-muted: #666666;
-    --text-light: #999999;
-    --sidebar-bg: #f9f9f9;
-    --sidebar-active: #efefef;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-light: #94a3b8;
+    --sidebar-bg: #fafafa;
+    --sidebar-active: rgba(16,185,129,0.08);
   }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #f5f5f5;
     color: var(--text);
     line-height: 1.5;
@@ -73,7 +86,7 @@
   .btn-primary { background: #1a1a1a; color: white; }
   .btn-primary:hover { background: #333333; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
   .btn-secondary { background: white; color: var(--text); border: 1px solid #d0d0d0; }
-  .btn-secondary:hover { background: #f9f9f9; border-color: #83756b; }
+  .btn-secondary:hover { background: #f9f9f9; border-color: #10b981; }
   .btn-large { padding: 14px 28px; font-size: 15px; }
   .btn-ghost { background: transparent; color: var(--text); }
   .btn-danger { background: #e74c3c; color: white; }
@@ -278,10 +291,10 @@
     margin-bottom: 2px; transition: all 0.15s;
   }
   .sidebar-link:hover { background: #f5f5f5; color: #1a1a1a; }
-  .sidebar-link.active { background: #f5f5f5; color: #83756b; border-left: 2px solid #83756b; padding-left: 10px; }
+  .sidebar-link.active { background: #f5f5f5; color: #10b981; border-left: 2px solid #83756b; padding-left: 10px; }
   .sidebar-link .icon { width: 18px; text-align: center; }
   .sidebar-link .badge {
-    margin-left: auto; background: #83756b; color: white;
+    margin-left: auto; background: #10b981; color: white;
     font-size: 10px; padding: 3px 8px; border-radius: 3px; font-weight: 600;
   }
   .credit-widget {
@@ -304,7 +317,7 @@
   }
   .breadcrumb { color: #999999; font-size: 13px; }
   .breadcrumb a { color: #999999; cursor: pointer; text-decoration: none; }
-  .breadcrumb a:hover { color: #83756b; }
+  .breadcrumb a:hover { color: #10b981; }
   .breadcrumb .current { color: #1a1a1a; font-weight: 600; }
   .top-bar-right { display: flex; align-items: center; gap: 16px; }
   .search-box {
@@ -406,7 +419,7 @@
     margin-bottom: 20px;
   }
   .panel-title { font-size: 16px; font-weight: 700; color: #1a1a1a; }
-  .link-text { color: #83756b; font-weight: 500; cursor: pointer; font-size: 13px; }
+  .link-text { color: #10b981; font-weight: 500; cursor: pointer; font-size: 13px; }
   .link-text:hover { color: #6b5f57; }
 
   .quick-action-card {
@@ -420,7 +433,7 @@
     border-radius: 0; font-weight: 500; border: none;
     cursor: pointer; font-size: 14px;
   }
-  .quick-action-card .btn-stage:hover { color: #83756b; }
+  .quick-action-card .btn-stage:hover { color: #10b981; }
 
   .data-table { width: 100%; border-collapse: collapse; }
   .data-table th {
@@ -802,14 +815,14 @@
 
 <div id="userMenu" class="user-menu">
   <div class="user-menu-header">
-    <div class="name">Jane Doe</div>
-    <div class="email">you@brokerage.com</div>
+    <div class="name" id="menu-user-name">New User</div>
+    <div class="email" id="menu-user-email"></div>
   </div>
   <div class="user-menu-item" onclick="showSub('settings'); closeDropdowns();">👤 Profile</div>
   <div class="user-menu-item" onclick="showSub('billing'); closeDropdowns();">💳 Billing</div>
   <div class="user-menu-item" onclick="showSub('settings'); closeDropdowns();">⚙️ Settings</div>
   <div class="user-menu-item" onclick="showSub('support'); closeDropdowns();">💬 Help & Support</div>
-  <div class="user-menu-item" style="border-top: 1px solid var(--border); color: var(--danger);" onclick="window.location.href='/home.html';">↩️ Log Out</div>
+  <div class="user-menu-item" style="border-top: 1px solid var(--border); color: var(--danger);" onclick="dashLogout();">↩️ Log Out</div>
 </div>
 
 <!-- ============ MODALS ============ -->
@@ -1155,7 +1168,7 @@
 <!-- ============================================ -->
 <!-- LOGIN                                        -->
 <!-- ============================================ -->
-<div id="login" class="screen">
+<div id="login" class="screen active">
   <div class="auth-wrap">
     <div class="auth-card">
       <div class="logo" style="justify-content: center; margin-bottom: 24px;" onclick="goto('landing')">
@@ -1164,25 +1177,26 @@
       <h2>Welcome back</h2>
       <p class="subtitle">Sign in to your account to continue staging.</p>
       <div class="social-btns">
-        <button class="social-btn" onclick="goto('dashboard'); toast('Signed in with Google')">🔵 Google</button>
-        <button class="social-btn" onclick="goto('dashboard'); toast('Signed in with Apple')">⚫ Apple</button>
+        <button class="social-btn" onclick="toast('Google sign-in coming soon')" disabled style="opacity:0.5;">🔵 Google</button>
+        <button class="social-btn" onclick="toast('Apple sign-in coming soon')" disabled style="opacity:0.5;">⚫ Apple</button>
       </div>
       <div class="auth-divider">or with email</div>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" placeholder="you@brokerage.com" value="agent@stageai.com">
+        <input type="email" id="login-email" placeholder="you@brokerage.com">
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" placeholder="••••••••" value="password">
+        <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')dashLogin()">
       </div>
+      <div id="login-error" style="display:none;color:#e74c3c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;"></div>
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <label style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
           <input type="checkbox" checked> Remember me
         </label>
         <a style="color: var(--primary); font-size: 13px; cursor: pointer;" onclick="openModal('forgotPassword')">Forgot password?</a>
       </div>
-      <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px;" onclick="goto('dashboard')">Sign In</button>
+      <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px;" id="login-btn" onclick="dashLogin()">Sign In</button>
       <div class="auth-footer">
         Don't have an account? <a onclick="goto('signup')">Sign up free</a>
       </div>
@@ -1202,16 +1216,19 @@
       <h2>Create your account</h2>
       <p class="subtitle">Get 3 free stagings — no credit card required.</p>
       <div class="social-btns">
-        <button class="social-btn" onclick="goto('dashboard'); toast('Account created with Google')">🔵 Google</button>
-        <button class="social-btn" onclick="goto('dashboard'); toast('Account created with Apple')">⚫ Apple</button>
+        <button class="social-btn" onclick="toast('Google sign-up coming soon')" disabled style="opacity:0.5;">🔵 Google</button>
+        <button class="social-btn" onclick="toast('Apple sign-up coming soon')" disabled style="opacity:0.5;">⚫ Apple</button>
       </div>
       <div class="auth-divider">or with email</div>
       <div class="form-row">
-        <div class="form-group"><label>First name</label><input type="text" placeholder="Jane"></div>
-        <div class="form-group"><label>Last name</label><input type="text" placeholder="Doe"></div>
+        <div class="form-group"><label>First name</label><input type="text" id="signup-firstName" placeholder="Jane"></div>
+        <div class="form-group"><label>Last name</label><input type="text" id="signup-lastName" placeholder="Doe"></div>
       </div>
-      <div class="form-group"><label>Work email</label><input type="email" placeholder="you@brokerage.com"></div>
-      <div class="form-group"><label>Password</label><input type="password" placeholder="At least 8 characters"></div>
+      <div class="form-group"><label>Work email</label><input type="email" id="signup-email" placeholder="you@brokerage.com"></div>
+      <div class="form-group"><label>Phone number</label>
+            <input type="tel" id="signup-phone" placeholder="(555) 123-4567">
+            <label>Password</label><input type="password" id="signup-password" placeholder="At least 8 characters" onkeydown="if(event.key==='Enter')dashSignup()"></div>
+      <div id="signup-error" style="display:none;color:#e74c3c;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;"></div>
       <div class="form-group">
         <label>I'm a...</label>
         <select>
@@ -1223,7 +1240,7 @@
           <option>Other</option>
         </select>
       </div>
-      <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px;" onclick="goto('dashboard'); toast('Welcome! 3 free credits added')">Create Account →</button>
+      <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px;" id="signup-btn" onclick="dashSignup()">Create Account →</button>
       <div class="auth-footer">
         Already have an account? <a onclick="goto('login')">Sign in</a>
       </div>
@@ -1234,7 +1251,7 @@
 <!-- ============================================ -->
 <!-- DASHBOARD                                    -->
 <!-- ============================================ -->
-<div id="dashboard" class="screen active">
+<div id="dashboard" class="screen">
   <div class="dashboard">
     <aside class="sidebar">
       <div class="sidebar-logo" onclick="showSub('home')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
@@ -1244,15 +1261,15 @@
         <a class="sidebar-link" id="link-stage" onclick="showSub('stage')"><span class="icon">✨</span> Stage Now</a>
         <a class="sidebar-link" id="link-pro-staging" onclick="showSub('pro-staging')"><span class="icon">👔</span> Pro Staging</a>
         <a class="sidebar-link" id="link-orders" onclick="showSub('orders')"><span class="icon">📋</span> Orders <span class="badge">3</span></a>
-        <a class="sidebar-link" id="link-history" onclick="showSub('history')"><span class="icon">🕓</span> History</a>
         <a class="sidebar-link" id="link-projects" onclick="showSub('projects')"><span class="icon">📁</span> Projects</a>
+        <a class="sidebar-link" id="link-team" onclick="showSub('team')"><span class="icon">👥</span> Team</a>
       </div>
       <div class="sidebar-section">
         <div class="sidebar-section-title">Account</div>
         <a class="sidebar-link" id="link-credits" onclick="showSub('credits')"><span class="icon">💎</span> Buy Credits</a>
         <a class="sidebar-link" id="link-billing" onclick="showSub('billing')"><span class="icon">💳</span> Billing</a>
         <a class="sidebar-link" id="link-settings" onclick="showSub('settings')"><span class="icon">⚙️</span> Settings</a>
-        <a class="sidebar-link" id="link-team" onclick="showSub('team')"><span class="icon">👥</span> Team</a>
+        <a class="sidebar-link" id="link-history" onclick="showSub('history')"><span class="icon">🕓</span> History</a>
       </div>
       <div class="sidebar-section">
         <div class="sidebar-section-title">Resources</div>
@@ -1278,20 +1295,20 @@
           <div class="search-box">🔍 <input placeholder="Search orders, projects..."></div>
           <button class="icon-btn" onclick="toggleDropdown('notifPanel'); event.stopPropagation();">🔔<span class="notif-dot"></span></button>
           <button class="icon-btn" onclick="showSub('support')">❓</button>
-          <div class="avatar" onclick="toggleDropdown('userMenu'); event.stopPropagation();">JD</div>
+          <div class="avatar" onclick="toggleDropdown('userMenu'); event.stopPropagation();" data-dynamic>?</div>
         </div>
       </div>
 
       <!-- ============ DASHBOARD HOME ============ -->
       <div id="sub-home" class="subnav active">
-        <div class="page-title">Welcome back, Jane 👋</div>
+        <div class="page-title" id="dash-welcome">Welcome back 👋</div>
         <div class="page-subtitle">Here's what's happening with your stagings today.</div>
 
         <div class="stats-row">
-          <div class="stat-card" onclick="showSub('credits')" style="cursor:pointer"><div class="stat-label">Credits Remaining</div><div class="stat-value">42</div><div class="stat-change up">↑ Refills May 31</div></div>
-          <div class="stat-card" onclick="showSub('history')" style="cursor:pointer"><div class="stat-label">Stagings This Month</div><div class="stat-value">28</div><div class="stat-change up">↑ 12% vs last month</div></div>
-          <div class="stat-card" onclick="showSub('projects')" style="cursor:pointer"><div class="stat-label">Active Projects</div><div class="stat-value">5</div><div class="stat-change">3 listings in progress</div></div>
-          <div class="stat-card" onclick="showSub('history')" style="cursor:pointer"><div class="stat-label">Total Stagings</div><div class="stat-value">312</div><div class="stat-change">Since Mar 2024</div></div>
+          <div class="stat-card" onclick="showSub('credits')" style="cursor:pointer"><div class="stat-label">Credits Remaining</div><div class="stat-value" id="stat-credits">0</div><div class="stat-change" id="stat-credits-sub">Buy credits to start</div></div>
+          <div class="stat-card" onclick="showSub('history')" style="cursor:pointer"><div class="stat-label">Stagings This Month</div><div class="stat-value" id="stat-stagings-month">0</div><div class="stat-change" id="stat-stagings-sub">No stagings yet</div></div>
+          <div class="stat-card" onclick="showSub('projects')" style="cursor:pointer"><div class="stat-label">Active Projects</div><div class="stat-value" id="stat-active">0</div><div class="stat-change" id="stat-active-sub">None right now</div></div>
+          <div class="stat-card" onclick="showSub('history')" style="cursor:pointer"><div class="stat-label">Total Stagings</div><div class="stat-value" id="stat-total">0</div><div class="stat-change" id="stat-total-sub">Stage your first image</div></div>
         </div>
 
         <!-- Quick Actions -->
@@ -1312,8 +1329,12 @@
             </div>
             <table class="data-table">
               <thead><tr><th>Image</th><th>Room</th><th>Style</th><th>Status</th><th></th></tr></thead>
-              <tbody>
-                <tr class="clickable" onclick="openOrderDetail('ST-4827')"><td><span class="thumb"></span>1247 Oak St</td><td>Living Room</td><td>Modern</td><td><span class="pill pill-success">Complete</span></td><td><a class="link-text" onclick="event.stopPropagation(); openOrderDetail('ST-4827')">View</a></td></tr>
+              <tbody id="recent-orders-body">
+                <tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text-muted);">Loading...</td></tr>
+              </tbody>
+            </table>
+<!-- DYNAMIC: old static rows removed -->
+<table style="display:none"><tbody><tr class="clickable" onclick="openOrderDetail('ST-4827')"><td><span class="thumb"></span>1247 Oak St</td><td>Living Room</td><td>Modern</td><td><span class="pill pill-success">Complete</span></td><td><a class="link-text" onclick="event.stopPropagation(); openOrderDetail('ST-4827')">View</a></td></tr>
                 <tr class="clickable" onclick="openOrderDetail('ST-4826')"><td><span class="thumb"></span>1247 Oak St</td><td>Bedroom</td><td>Scandinavian</td><td><span class="pill pill-processing">Processing</span></td><td><a class="link-text" onclick="event.stopPropagation(); openOrderDetail('ST-4826')">Track</a></td></tr>
                 <tr class="clickable" onclick="openOrderDetail('ST-4810')"><td><span class="thumb"></span>882 Pine Ave</td><td>Kitchen</td><td>Farmhouse</td><td><span class="pill pill-success">Complete</span></td><td><a class="link-text" onclick="event.stopPropagation(); openOrderDetail('ST-4810')">View</a></td></tr>
                 <tr class="clickable" onclick="openOrderDetail('ST-4802')"><td><span class="thumb"></span>33 Maple Blvd</td><td>Dining</td><td>Luxury</td><td><span class="pill pill-queued">Queued</span></td><td><a class="link-text" onclick="event.stopPropagation(); openOrderDetail('ST-4802')">View</a></td></tr>
@@ -1361,7 +1382,7 @@
         <!-- EMBEDDED STAGING WORKSPACE (NO HEADER, NO SCROLL ISSUES) -->
         <div style="margin-top:24px;border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm)">
           <iframe
-            src="/staging-embed"
+            src="/studio"
             style="width:100%;height:800px;border:none;display:block;overflow:hidden"
             title="AI Staging Workspace"
             scrolling="no"
@@ -1949,7 +1970,7 @@
           <div class="panel">
             <h3 style="margin-bottom: 24px;">Profile Information</h3>
             <div style="display: flex; gap: 24px; margin-bottom: 24px; align-items: center; flex-wrap: wrap;">
-              <div class="avatar" style="width: 80px; height: 80px; font-size: 28px;">JD</div>
+              <div class="avatar" id="settings-avatar" style="width: 80px; height: 80px; font-size: 28px;">?</div>
               <div>
                 <button class="btn btn-secondary" onclick="toast('Photo uploaded')">Upload Photo</button>
                 <button class="btn btn-ghost" style="color:var(--danger)" onclick="toast('Photo removed')">Remove</button>
@@ -1957,20 +1978,20 @@
               </div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label>First name</label><input type="text" value="Jane"></div>
-              <div class="form-group"><label>Last name</label><input type="text" value="Doe"></div>
+              <div class="form-group"><label>First name</label><input type="text" id="settings-firstName" value=""></div>
+              <div class="form-group"><label>Last name</label><input type="text" id="settings-lastName" value=""></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label>Email</label><input type="email" value="you@brokerage.com"></div>
-              <div class="form-group"><label>Phone</label><input type="tel" value="(555) 123-4567"></div>
+              <div class="form-group"><label>Email</label><input type="email" id="settings-email" value="" readonly style="opacity:0.7;cursor:not-allowed;"></div>
+              <div class="form-group"><label>Phone</label><input type="tel" id="settings-phone" value=""></div>
             </div>
             <div class="form-row">
-              <div class="form-group"><label>Brokerage</label><input type="text" value="Compass Real Estate"></div>
+              <div class="form-group"><label>Brokerage</label><input type="text" id="settings-brokerage" value=""></div>
               <div class="form-group"><label>License #</label><input type="text" value="RE-498372"></div>
             </div>
             <div class="form-group"><label>Bio</label><textarea rows="3" placeholder="Tell us about yourself..."></textarea></div>
             <div style="display: flex; gap: 12px;">
-              <button class="btn btn-primary" onclick="toast('Profile saved')">Save Changes</button>
+              <button class="btn btn-primary" onclick="dashSaveProfile()">Save Changes</button>
               <button class="btn btn-secondary" onclick="toast('Changes discarded')">Cancel</button>
             </div>
           </div>
@@ -2268,7 +2289,7 @@ const MODALS = {
     <h3>Reset your password</h3>
     <p class="modal-subtitle">Enter your email and we'll send you a reset link.</p>
     <div class="form-group"><label>Email</label><input type="email" placeholder="you@brokerage.com"></div>
-    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal(); toast('Reset link sent to your email')">Send Reset Link</button></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-primary" onclick="closeModal(); toast('Password reset coming soon. Contact support@iconicvirtual.ai for help.')">Send Reset Link</button></div>
   `,
   newProject: `
     <h3>Create New Project</h3>
@@ -3257,6 +3278,148 @@ function submitProStagingForm(e) {
   });
 }
 
+</script>
+
+<script>
+(function() {
+  'use strict';
+  function getToken() { return localStorage.getItem('authToken'); }
+  function setAuth(data) {
+    if (data.token) localStorage.setItem('authToken', data.token);
+    if (data.userId) localStorage.setItem('userId', data.userId);
+    if (data.email) localStorage.setItem('userEmail', data.email);
+  }
+  function clearAuth() {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userEmail');
+  }
+  function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
+  }
+
+  function initAuth() {
+    var token = getToken();
+    if (!token) { goto('login'); return; }
+    fetch('/api/auth/me', { headers: authHeaders() })
+      .then(function(r) { return r.json(); })
+      .then(function(json) {
+        if (!json.ok) { clearAuth(); goto('login'); return; }
+        populateDashboard(json.data);
+        goto('dashboard');
+      })
+      .catch(function() { clearAuth(); goto('login'); });
+  }
+
+  function populateDashboard(data) {
+    var el;
+    var displayName = (data.firstName || '').trim() || (data.email || '').split('@')[0];
+    el = document.getElementById('dash-welcome');
+    if (el) el.textContent = 'Welcome back, ' + displayName + ' \u{1F44B}';
+
+    var initials = getInitials(data.firstName, data.lastName, data.email);
+    document.querySelectorAll('.avatar[data-dynamic]').forEach(function(a) { a.textContent = initials; });
+
+    el = document.getElementById('menu-user-name');
+    if (el) el.textContent = ((data.firstName || '') + ' ' + (data.lastName || '')).trim() || 'New User';
+    el = document.getElementById('menu-user-email');
+    if (el) el.textContent = data.email || '';
+
+    setTextById('stat-credits', data.creditsRemaining || 0);
+    setTextById('stat-stagings-month', data.totalStagings || 0);
+    setTextById('stat-active', data.activeProjects || 0);
+    setTextById('stat-total', data.completedStagings || 0);
+    setTextById('stat-credits-sub', data.creditsRemaining > 0 ? 'Available now' : 'Buy credits to start');
+    setTextById('stat-active-sub', data.activeProjects > 0 ? data.activeProjects + ' in progress' : 'None right now');
+    setTextById('stat-total-sub', data.completedStagings > 0 ? 'All time' : 'Stage your first image');
+
+    var rb = document.getElementById('recent-orders-body');
+    if (rb) {
+      if (!data.recentOrders || data.recentOrders.length === 0) {
+        rb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px 20px;color:var(--text-muted);"><div style="font-size:32px;margin-bottom:12px;">\u{1F4F7}</div><div style="font-weight:600;margin-bottom:4px;">No orders yet</div><div style="font-size:13px;">Stage your first image to see orders here.</div></td></tr>';
+      } else {
+        rb.innerHTML = data.recentOrders.map(function(o) {
+          var pc = getPillClass(o.status);
+          return '<tr><td><span class="thumb"></span>' + esc(o.address || 'Untitled') + '</td><td>' + esc(o.room || '-') + '</td><td>' + esc(o.style || '-') + '</td><td><span class="pill ' + pc + '">' + cap(o.status) + '</span></td><td><a class="link-text">View</a></td></tr>';
+        }).join('');
+      }
+    }
+
+    var sf = document.getElementById('settings-firstName');
+    if (sf) sf.value = data.firstName || '';
+    var sl = document.getElementById('settings-lastName');
+    if (sl) sl.value = data.lastName || '';
+    var se = document.getElementById('settings-email');
+    if (se) se.value = data.email || '';
+    var sp = document.getElementById('settings-phone');
+    if (sp) sp.value = data.phone || '';
+    var sb = document.getElementById('settings-brokerage');
+    if (sb) sb.value = data.company || '';
+    var sa = document.getElementById('settings-avatar');
+    if (sa) sa.textContent = initials;
+  }
+
+  window.dashLogin = function() {
+    var email = (document.getElementById('login-email') || {}).value || '';
+    var pass = (document.getElementById('login-password') || {}).value || '';
+    var errEl = document.getElementById('login-error');
+    var btn = document.getElementById('login-btn');
+    if (!email.trim() || !pass.trim()) { if (errEl) { errEl.textContent = 'Please fill in all fields'; errEl.style.display = 'block'; } return; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Signing in...'; }
+    if (errEl) errEl.style.display = 'none';
+    fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim(), password: pass, firstName: fn, lastName: ln, phone: ph }) })
+      .then(function(r) { return r.json(); })
+      .then(function(json) {
+        if (!json.ok) { if (errEl) { errEl.textContent = json.error || 'Login failed'; errEl.style.display = 'block'; } if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; } return; }
+        setAuth(json.data);
+        initAuth();
+      })
+      .catch(function() { if (errEl) { errEl.textContent = 'Connection error'; errEl.style.display = 'block'; } if (btn) { btn.disabled = false; btn.textContent = 'Sign In'; } });
+  };
+
+  window.dashSignup = function() {
+    var fn = (document.getElementById('signup-firstName') || {}).value || '';
+    var ln = (document.getElementById('signup-lastName') || {}).value || '';
+    var email = (document.getElementById('signup-email') || {}).value || '';
+    var pass = (document.getElementById('signup-password') || {}).value || '';
+    var errEl = document.getElementById('signup-error');
+    var btn = document.getElementById('signup-btn');
+    if (!email.trim() || !pass) { if (errEl) { errEl.textContent = 'Email and password are required'; errEl.style.display = 'block'; } return; }
+    if (pass.length < 6) { if (errEl) { errEl.textContent = 'Password must be at least 6 characters'; errEl.style.display = 'block'; } return; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Creating account...'; }
+    if (errEl) errEl.style.display = 'none';
+    fetch('/api/auth/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim(), password: pass }) })
+      .then(function(r) { return r.json(); })
+      .then(function(json) {
+        if (!json.ok) { if (errEl) { errEl.textContent = json.error || 'Signup failed'; errEl.style.display = 'block'; } if (btn) { btn.disabled = false; btn.textContent = 'Create Account \u2192'; } return; }
+        setAuth(json.data);
+        if (fn.trim() || ln.trim()) { fetch('/api/user/update-profile', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ firstName: fn.trim(), lastName: ln.trim() }) }).catch(function(){}); }
+        initAuth();
+      })
+      .catch(function() { if (errEl) { errEl.textContent = 'Connection error'; errEl.style.display = 'block'; } if (btn) { btn.disabled = false; btn.textContent = 'Create Account \u2192'; } });
+  };
+
+  window.dashSaveProfile = function() {
+    var fn = (document.getElementById('settings-firstName') || {}).value || '';
+    var ln = (document.getElementById('settings-lastName') || {}).value || '';
+    var ph = (document.getElementById('settings-phone') || {}).value || '';
+    var co = (document.getElementById('settings-brokerage') || {}).value || '';
+    fetch('/api/user/update-profile', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ firstName: fn.trim(), lastName: ln.trim(), phone: ph.trim(), company: co.trim() }) })
+      .then(function(r) { return r.json(); })
+      .then(function(json) { if (json.ok) { toast('Profile saved'); initAuth(); } else { toast('Error saving profile', 'error'); } })
+      .catch(function() { toast('Connection error', 'error'); });
+  };
+
+  window.dashLogout = function() { clearAuth(); goto('login'); };
+
+  function getInitials(f, l, e) { if (f && l) return (f[0] + l[0]).toUpperCase(); if (f) return f.slice(0,2).toUpperCase(); if (e) return e[0].toUpperCase(); return '?'; }
+  function setTextById(id, t) { var e = document.getElementById(id); if (e) e.textContent = t; }
+  function getPillClass(s) { return ({ complete:'pill-success', processing:'pill-processing', pending:'pill-queued', queued:'pill-queued', failed:'pill-failed' })[s] || 'pill-queued'; }
+  function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
+  function esc(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+  initAuth();
+})();
 </script>
 </body>
 </html>

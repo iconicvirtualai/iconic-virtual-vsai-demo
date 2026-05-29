@@ -1,89 +1,60 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { db } from "../../../lib/firebaseAdmin";
+import { hashPassword, createToken } from "../../../lib/auth";
 
-type Response = 
-  | { ok: true; data: { userId: string; token: string; email: string } }
-  | { ok: false; error: string };
-
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<Response>
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ ok: false, error: "Method not allowed" });
   }
 
-  const { email, password } = req.body;
-
+  const { email, password, firstName, lastName, phone } = req.body || {};
   if (!email || !password) {
-    return res.status(400).json({ ok: false, error: "Email and password required" });
+    return res.status(400).json({ ok: false, error: "Email and password are required" });
   }
 
+  const normalizedEmail = email.trim().toLowerCase();
   if (password.length < 6) {
     return res.status(400).json({ ok: false, error: "Password must be at least 6 characters" });
   }
 
   try {
-    // Check if Firebase is configured
-    const firebaseServiceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
-    const firebaseStorageBucket = process.env.FIREBASE_STORAGE_BUCKET;
-
-    if (!firebaseServiceAccount || !firebaseStorageBucket) {
-      // Firebase not configured - use demo mode
-      console.log("Firebase not configured, using demo mode for signup");
-      const demoUserId = `user_${email.replace(/[^a-z0-9]/gi, "_")}_${Date.now()}`;
-      return res.status(201).json({
-        ok: true,
-        data: {
-          userId: demoUserId,
-          email: email.toLowerCase(),
-          token: Buffer.from(`${demoUserId}:${Date.now()}`).toString("base64"),
-        },
-      });
-    }
-
-    // Firebase is configured, try to use it
-    const { db } = await import("../../../lib/firebaseAdmin");
-
-    // Check if user already exists
-    const usersCollection = db.collection("users");
-    const existingSnapshot = await usersCollection
-      .where("email", "==", email.toLowerCase())
+    const existing = await db
+      .collection("users")
+      .where("email", "==", normalizedEmail)
       .limit(1)
       .get();
 
-    if (!existingSnapshot.empty) {
-      return res.status(409).json({ ok: false, error: "Email already registered" });
+    if (!existing.empty) {
+      return res.status(409).json({ ok: false, error: "An account with this email already exists" });
     }
 
-    // Create new user
-    const newUserRef = await usersCollection.add({
-      email: email.toLowerCase(),
-      password, // In production, hash this with bcrypt
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const { hash, salt } = hashPassword(password);
+    const userRef = db.collection("users").doc();
+    const now = new Date().toISOString();
+
+    await userRef.set({
+      email: normalizedEmail,
+      passwordHash: hash,
+      passwordSalt: salt,
+      firstName: (firstName || "").trim(),
+      lastName: (lastName || "").trim(),
+      phone: (phone || "").trim(),
+      company: "",
+      creditsRemaining: 0,
+      totalStagings: 0,
+      activePlan: "free",
+      createdAt: now,
+      updatedAt: now,
     });
+
+    const token = await createToken(userRef.id, normalizedEmail);
 
     return res.status(201).json({
       ok: true,
-      data: {
-        userId: newUserRef.id,
-        email: email.toLowerCase(),
-        token: Buffer.from(`${newUserRef.id}:${Date.now()}`).toString("base64"),
-      },
+      data: { userId: userRef.id, email: normalizedEmail, token },
     });
-  } catch (err: any) {
-    console.error("Signup error:", err?.message || err);
-    
-    // Fallback to demo mode on any error
-    console.log("Signup failed, falling back to demo mode");
-    const demoUserId = `user_${(req.body?.email || "user").replace(/[^a-z0-9]/gi, "_")}_${Date.now()}`;
-    return res.status(201).json({
-      ok: true,
-      data: {
-        userId: demoUserId,
-        email: (req.body?.email || "demo").toLowerCase(),
-        token: Buffer.from(`${demoUserId}:${Date.now()}`).toString("base64"),
-      },
-    });
+  } catch (err) {
+    console.error("Signup error:", err);
+    return res.status(500).json({ ok: false, error: "Server error. Please try again." });
   }
 }
