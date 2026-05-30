@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Iconic Virtual.AI — Virtual Staging Platform</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a0a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='system-ui,sans-serif' font-weight='700' font-size='16' fill='white'%3EIV%3C/text%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
     /* Hide all screens until auth resolves to prevent flash */
@@ -37,7 +37,7 @@
     --sidebar-active: rgba(16,185,129,0.08);
   }
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #f5f5f5;
     color: var(--text);
     line-height: 1.5;
@@ -489,6 +489,25 @@
   .upload-zone:hover { border-color: var(--primary); background: var(--primary-light); }
   .upload-icon { font-size: 48px; margin-bottom: 16px; }
 
+  .stage-frame-wrap {
+    margin-top: 24px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    background: white;
+  }
+  .stage-frame {
+    width: 100%;
+    min-height: 1180px;
+    border: none;
+    display: block;
+    background: white;
+  }
+  @media (max-width: 900px) {
+    .stage-frame { min-height: 1320px; }
+  }
+
   .style-grid {
     display: grid; grid-template-columns: repeat(4, 1fr);
     gap: 16px; margin-bottom: 24px;
@@ -835,7 +854,7 @@
 <!-- ============================================ -->
 <div id="landing" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
+    <div class="logo" onclick="goHome()"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -956,7 +975,7 @@
 <!-- ============================================ -->
 <div id="examples" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
+    <div class="logo" onclick="goHome()"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -1000,7 +1019,7 @@
 <!-- ============================================ -->
 <div id="pricing" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
+    <div class="logo" onclick="goHome()"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -1075,7 +1094,7 @@
 <!-- ============================================ -->
 <div id="howitworks" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
+    <div class="logo" onclick="goHome()"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -1118,7 +1137,7 @@
 <!-- ============================================ -->
 <div id="faq" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
+    <div class="logo" onclick="goHome()"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -1171,7 +1190,7 @@
 <div id="login" class="screen active">
   <div class="auth-wrap">
     <div class="auth-card">
-      <div class="logo" style="justify-content: center; margin-bottom: 24px;" onclick="goto('landing')">
+      <div class="logo" style="justify-content: center; margin-bottom: 24px;" onclick="goHome()">
         <div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div> ICONIC VIRTUAL.AI
       </div>
       <h2>Welcome back</h2>
@@ -1210,7 +1229,7 @@
 <div id="signup" class="screen">
   <div class="auth-wrap">
     <div class="auth-card">
-      <div class="logo" style="justify-content: center; margin-bottom: 24px;" onclick="goto('landing')">
+      <div class="logo" style="justify-content: center; margin-bottom: 24px;" onclick="goHome()">
         <div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div> ICONIC VIRTUAL.AI
       </div>
       <h2>Create your account</h2>
@@ -1379,13 +1398,12 @@
         <div class="page-title">Staging Workspace</div>
         <div class="page-subtitle">Upload a photo, pick a style, and get your AI-staged image with full API integration.</div>
 
-        <!-- EMBEDDED STAGING WORKSPACE (NO HEADER, NO SCROLL ISSUES) -->
-        <div style="margin-top:24px;border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm)">
+        <!-- Embedded staging workspace. Keep the frame tall enough for upload preview + room/style controls. -->
+        <div class="stage-frame-wrap">
           <iframe
             src="/studio"
-            style="width:100%;height:800px;border:none;display:block;overflow:hidden"
+            class="stage-frame"
             title="AI Staging Workspace"
-            scrolling="no"
           ></iframe>
         </div>
       </div>
@@ -2225,9 +2243,29 @@
 
 <script>
 // ============ NAV ============
+function goHome() {
+  window.location.href = '/home.html';
+}
+
 function goto(id) {
+  const legacyRoutes = {
+    landing: '/home.html',
+    examples: '/gallery',
+    pricing: '/home.html#pricing',
+    howitworks: '/home.html#how-it-works',
+    faq: '/home.html#faq'
+  };
+
+  if (legacyRoutes[id]) {
+    window.location.href = legacyRoutes[id];
+    return;
+  }
+
+  const screen = document.getElementById(id);
+  if (!screen) return;
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  screen.classList.add('active');
   closeDropdowns();
   window.scrollTo(0, 0);
 }
@@ -2393,7 +2431,7 @@ const MODALS = {
     <p class="modal-subtitle">This permanently deletes everything: stagings, orders, credits, and your account.</p>
     <div class="danger-callout"><strong>This cannot be undone.</strong> You will lose 42 credits worth $50.40. Type DELETE to confirm.</div>
     <div class="form-group"><input type="text" placeholder="Type DELETE"></div>
-    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-danger" onclick="closeModal(); goto('landing'); toast('Account deleted')">Delete Permanently</button></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-danger" onclick="closeModal(); goHome(); toast('Account deleted')">Delete Permanently</button></div>
   `,
   newOrder: `
     <h3>Create New Order</h3>
