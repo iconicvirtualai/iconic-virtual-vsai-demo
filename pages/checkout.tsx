@@ -36,7 +36,7 @@ export default function CheckoutLauncher() {
   }, [router.isReady, router.query]);
 
   return (
-    <div style={{ maxWidth: 720, margin: "40px auto", padding: 16, fontFamily: "Arial" }}>
+    <div style={{ maxWidth: 720, margin: "40px auto", padding: 16, fontFamily: "Manrope, sans-serif" }}>
       <h1>Checkout</h1>
       <p>{msg}</p>
     </div>

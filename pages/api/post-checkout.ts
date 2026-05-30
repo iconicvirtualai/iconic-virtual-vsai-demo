@@ -111,7 +111,7 @@ export default async function handler(
       // Continue with jobId as fallback renderId
     }
 
-    // Use the v2 variations list endpoint â same one vsai-variation.ts already
+    // Use the v2 variations list endpoint - same one vsai-variation.ts already
     // proves works with v1 renderIds. This fixes the v1/v2 mismatch: the old
     // code hit GET /v2/renders/{id}?include_variations=true which is the render
     // lookup endpoint. The variations list endpoint is more reliable.
@@ -196,7 +196,7 @@ export default async function handler(
       await db.collection("orders").doc(session_id).set(orderUpdate, { merge: true });
     } catch (orderErr) {
       console.error("[post-checkout] order write error:", orderErr);
-      // Don't fail the response â user still needs their download
+      // Don't fail the response - user still needs their download
     }
 
     // Update job to paid_done with final URLs

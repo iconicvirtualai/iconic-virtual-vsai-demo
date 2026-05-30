@@ -6,7 +6,7 @@
 <title>IconicVirtual.AI | AI Virtual Staging That Sells Homes Faster</title>
 <meta name="description" content="Transform empty rooms into stunning, market-ready listings with AI virtual staging. From $1/photo, results in 60 seconds. Trusted by 12,000+ agents.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a0a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-weight='bold' fill='%2310b981' font-family='system-ui'%3EIV%3C/text%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -24,20 +24,20 @@
   --shadow-md:0 10px 15px -3px rgba(0,0,0,0.08),0 4px 6px -4px rgba(0,0,0,0.04);
   --shadow-lg:0 20px 25px -5px rgba(0,0,0,0.1),0 8px 10px -6px rgba(0,0,0,0.06);
   --shadow-xl:0 25px 50px -12px rgba(0,0,0,0.15);
-  --font-heading:'Sora',sans-serif;--font-body:'Inter',sans-serif;
+  --font-heading:'Manrope',sans-serif;--font-body:'Manrope',sans-serif;
 }
 body{font-family:var(--font-body);color:var(--text);background:var(--white);-webkit-font-smoothing:antialiased}
 a{text-decoration:none;color:inherit}
 img{max-width:100%;display:block}
 
-/* ââ ANNOUNCEMENT BAR ââ */
+/* -- ANNOUNCEMENT BAR -- */
 .announcement{background:linear-gradient(90deg,var(--midnight),var(--midnight-light));color:#fff;padding:12px 24px;text-align:center;font-size:14px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;position:relative;overflow:hidden}
 .announcement::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(16,185,129,0.08),transparent);pointer-events:none}
 .announcement a{color:var(--emerald-light);font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .announcement .countdown{display:inline-flex;gap:6px}
 .announcement .countdown span{background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.3);padding:3px 8px;border-radius:6px;font-weight:700;font-size:13px;font-family:var(--font-heading);color:var(--emerald-light);min-width:36px;text-align:center}
 
-/* ââ HEADER ââ */
+/* -- HEADER -- */
 .header{background:rgba(255,255,255,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border-light);padding:0 48px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;height:72px;transition:box-shadow .3s}
 .header.scrolled{box-shadow:var(--shadow-md)}
 .logo{display:flex;align-items:center;gap:12px}
@@ -53,7 +53,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .btn-start{padding:10px 24px;font-size:14px;font-weight:700;color:#fff;background:var(--emerald);border-radius:8px;transition:all .2s;border:none;cursor:pointer;font-family:var(--font-body)}
 .btn-start:hover{background:var(--emerald-dark);transform:translateY(-1px);box-shadow:0 4px 12px rgba(16,185,129,0.3)}
 
-/* ââ HERO ââ */
+/* -- HERO -- */
 .hero{background:linear-gradient(160deg,#0a0a0a 0%,#0f1a14 40%,#0d1b17 60%,#111111 100%);color:#fff;padding:100px 48px 120px;position:relative;overflow:hidden}
 .hero::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(16,185,129,0.08) 0%,transparent 70%);pointer-events:none}
 .hero::after{content:'';position:absolute;bottom:-100px;left:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(139,115,85,0.06) 0%,transparent 70%);pointer-events:none}
@@ -61,8 +61,8 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);padding:8px 18px;border-radius:40px;font-size:13px;font-weight:600;color:var(--emerald-light);margin-bottom:28px;font-family:var(--font-heading);letter-spacing:0.5px}
 .hero-badge .pulse{width:8px;height:8px;background:var(--emerald);border-radius:50%;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
-.hero h1{font-family:var(--font-heading);font-size:56px;font-weight:900;line-height:1.08;margin-bottom:24px;letter-spacing:-1.5px}
-.hero h1 .accent{background:linear-gradient(135deg,var(--emerald-light),var(--emerald));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-style:italic}
+.hero h1{font-family:var(--font-heading);font-size:56px;font-weight:900;line-height:1.08;margin-bottom:24px;letter-spacing:-1.5px;overflow:visible}
+.hero h1 .accent{display:inline-block;padding-right:0.08em;background:linear-gradient(135deg,var(--emerald-light),var(--emerald));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hero p{font-size:19px;color:#94a3b8;line-height:1.7;margin-bottom:36px;max-width:520px}
 .hero-actions{display:flex;gap:14px;margin-bottom:40px}
 .btn-hero-primary{display:inline-flex;align-items:center;gap:8px;padding:16px 32px;background:var(--emerald);color:#fff;border-radius:10px;font-size:16px;font-weight:700;transition:all .3s;border:none;cursor:pointer;font-family:var(--font-body)}
@@ -92,16 +92,15 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .float-badge.bottom-left{bottom:60px;left:-40px;animation:float-y 3s ease-in-out infinite 1.5s}
 @keyframes float-y{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 
-/* ââ STATS BAR ââ */
+/* -- STATS BAR -- */
 .stats-bar{background:var(--white);border-top:1px solid var(--border-light);border-bottom:1px solid var(--border-light);padding:48px 48px}
 .stats-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:32px}
 .stat{text-align:center;position:relative}
 .stat:not(:last-child)::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);height:40px;width:1px;background:var(--border)}
-.stat .number{font-family:var(--font-heading);font-size:44px;font-weight:900;color:var(--midnight);letter-spacing:-1px}
-.stat .number .em{color:var(--emerald)}
+.stat .number{font-family:var(--font-heading);font-size:44px;font-weight:900;color:var(--emerald);letter-spacing:-1px}
 .stat .label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--grey-400);margin-top:4px}
 
-/* ââ SECTION COMMONS ââ */
+/* -- SECTION COMMONS -- */
 .section{padding:100px 48px}
 .section-dark{background:var(--grey-50)}
 .section-inner{max-width:1200px;margin:0 auto}
@@ -111,7 +110,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .section-header{text-align:center;margin-bottom:60px}
 .section-header .section-subtitle{margin:0 auto}
 
-/* ââ TWO WAYS ââ */
+/* -- TWO WAYS -- */
 .ways-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:60px}
 .way-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-xl);padding:40px;position:relative;overflow:hidden;transition:all .3s}
 .way-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
@@ -135,7 +134,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .way-card.pro .way-cta{background:var(--midnight);color:#fff}
 .way-card.pro .way-cta:hover{background:var(--midnight-light);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
 
-/* ââ BEFORE/AFTER GALLERY ââ */
+/* -- BEFORE/AFTER GALLERY -- */
 .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px}
 .gallery-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:all .3s}
 .gallery-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
@@ -150,7 +149,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .gallery-info p{font-size:13px;color:var(--text-muted)}
 .gallery-cta{text-align:center;margin-top:40px}
 
-/* ââ HOW IT WORKS ââ */
+/* -- HOW IT WORKS -- */
 .steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:60px}
 .step-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-xl);padding:36px 32px;position:relative;text-align:center;transition:all .3s}
 .step-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
@@ -160,7 +159,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .steps-cta{text-align:center;margin-top:48px}
 .steps-cta .note{font-size:14px;color:var(--text-muted);margin-top:12px}
 
-/* ââ PRICING ââ */
+/* -- PRICING -- */
 .pricing-tabs{display:flex;justify-content:center;gap:0;margin-bottom:48px;background:var(--grey-100);border-radius:12px;padding:4px;width:fit-content;margin-left:auto;margin-right:auto}
 .pricing-tab{padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;color:var(--grey-500);cursor:pointer;transition:all .2s;border:none;background:transparent;font-family:var(--font-body)}
 .pricing-tab.active{background:var(--white);color:var(--midnight);box-shadow:var(--shadow-sm)}
@@ -177,14 +176,14 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .pricing-card .per-unit{font-size:14px;color:var(--text-muted);margin-bottom:24px}
 .pricing-features{list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px}
 .pricing-features li{font-size:14px;color:var(--grey-600);display:flex;align-items:center;gap:8px}
-.pricing-features li::before{content:'â';color:var(--emerald);font-weight:700;font-size:13px}
+.pricing-features li::before{content:'✓';color:var(--emerald);font-weight:700;font-size:13px}
 .pricing-card .pricing-btn{display:block;text-align:center;padding:14px;border-radius:10px;font-size:15px;font-weight:700;transition:all .3s;width:100%}
 .pricing-card .pricing-btn.primary{background:var(--emerald);color:#fff}
 .pricing-card .pricing-btn.primary:hover{background:var(--emerald-dark);box-shadow:0 4px 12px rgba(16,185,129,0.3)}
 .pricing-card .pricing-btn.secondary{background:var(--grey-100);color:var(--midnight)}
 .pricing-card .pricing-btn.secondary:hover{background:var(--grey-200)}
 
-/* ââ URGENCY CTA ââ */
+/* -- URGENCY CTA -- */
 .urgency{background:linear-gradient(160deg,var(--midnight) 0%,#0d1b17 100%);color:#fff;padding:80px 48px;text-align:center;position:relative;overflow:hidden}
 .urgency::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:800px;height:400px;background:radial-gradient(ellipse,rgba(16,185,129,0.1),transparent 70%);pointer-events:none}
 .urgency h2{font-family:var(--font-heading);font-size:36px;font-weight:800;margin-bottom:16px;position:relative;z-index:1}
@@ -195,7 +194,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .urgency-countdown .unit .lbl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--grey-400)}
 .urgency .note{font-size:14px;color:var(--emerald-light);margin-bottom:20px;position:relative;z-index:1}
 
-/* ââ FAQ ââ */
+/* -- FAQ -- */
 .faq-list{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 .faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all .2s}
 .faq-item:hover{border-color:var(--grey-300)}
@@ -205,7 +204,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .faq-a{max-height:0;overflow:hidden;transition:max-height .3s ease}
 .faq-a-inner{padding:0 24px 20px;font-size:15px;color:var(--text-muted);line-height:1.7}
 
-/* ââ CONTACT ââ */
+/* -- CONTACT -- */
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
 .contact-info{display:flex;flex-direction:column;gap:20px}
 .contact-info p{font-size:16px;color:var(--text-muted);line-height:1.7;margin-bottom:12px}
@@ -223,13 +222,13 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .contact-form .form-submit{display:block;width:100%;padding:14px;background:var(--emerald);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
 .contact-form .form-submit:hover{background:var(--emerald-dark)}
 
-/* ââ FINAL CTA ââ */
+/* -- FINAL CTA -- */
 .final-cta{background:var(--white);padding:80px 48px;text-align:center;border-top:1px solid var(--border-light)}
 .final-cta h2{font-family:var(--font-heading);font-size:36px;font-weight:800;color:var(--midnight);margin-bottom:16px}
 .final-cta p{font-size:17px;color:var(--text-muted);margin-bottom:32px;max-width:500px;margin-left:auto;margin-right:auto}
 .final-cta .privacy-note{font-size:13px;color:var(--grey-400);margin-top:16px}
 
-/* ââ FOOTER ââ */
+/* -- FOOTER -- */
 .footer{background:var(--midnight);color:#fff;padding:64px 48px 32px}
 .footer-inner{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px}
 .footer-brand .logo-icon{background:rgba(16,185,129,0.15);color:var(--emerald)}
@@ -244,7 +243,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .footer-socials a{width:36px;height:36px;border-radius:8px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--grey-400);transition:all .2s}
 .footer-socials a:hover{background:var(--emerald);color:#fff}
 
-/* ââ UTILITIES ââ */
+/* -- UTILITIES -- */
 .btn-emerald{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:var(--emerald);color:#fff;border-radius:10px;font-size:15px;font-weight:700;transition:all .3s;border:none;cursor:pointer;font-family:var(--font-body)}
 .btn-emerald:hover{background:var(--emerald-dark);transform:translateY(-1px);box-shadow:0 4px 12px rgba(16,185,129,0.3)}
 .btn-outline{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;background:transparent;border:1px solid var(--border);color:var(--midnight);border-radius:10px;font-size:15px;font-weight:600;transition:all .2s}
@@ -252,11 +251,11 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 .text-emerald{color:var(--emerald)}
 .text-taupe{color:var(--taupe)}
 
-/* ââ TOAST ââ */
+/* -- TOAST -- */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--midnight);color:#fff;padding:12px 24px;border-radius:10px;font-size:14px;z-index:300;opacity:0;transition:all .3s;box-shadow:var(--shadow-lg)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ââ RESPONSIVE ââ */
+/* -- RESPONSIVE -- */
 @media(max-width:1024px){
   .hero-inner{grid-template-columns:1fr;text-align:center;gap:48px}
   .hero p{margin:0 auto 36px}
@@ -293,7 +292,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 
 <!-- Announcement Bar -->
 <div class="announcement">
-  <span>Limited Time: AI Staging from $1/photo â Save up to 60% with membership plans</span>
+  <span>Limited Time: AI Staging from $1/photo - Save up to 60% with membership plans</span>
   <a href="/offers.html">Claim Offer</a>
   <div class="countdown">
     <span id="countH">07</span>
@@ -317,7 +316,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
     <a href="#contact">Contact</a>
   </nav>
   <div class="nav-cta">
-    <a href="/login" class="btn-login">Log In</a>
+    <a href="/staging-dashboard.html" class="btn-login">Log In</a>
     <a href="/studio" class="btn-start">Start Free</a>
   </div>
 </header>
@@ -364,10 +363,10 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 <!-- Stats Bar -->
 <div class="stats-bar">
   <div class="stats-inner">
-    <div class="stat"><div class="number">$<span class="em">1</span></div><div class="label">Per AI Staged Photo</div></div>
-    <div class="stat"><div class="number"><span class="em">60</span>s</div><div class="label">Average Turnaround</div></div>
-    <div class="stat"><div class="number"><span class="em">73</span>%</div><div class="label">Faster Listing Sales</div></div>
-    <div class="stat"><div class="number"><span class="em">12K</span>+</div><div class="label">Agents Nationwide</div></div>
+    <div class="stat"><div class="number">$1</div><div class="label">Per AI Staged Photo</div></div>
+    <div class="stat"><div class="number">60s</div><div class="label">Average Turnaround</div></div>
+    <div class="stat"><div class="number">73%</div><div class="label">Faster Listing Sales</div></div>
+    <div class="stat"><div class="number">12K+</div><div class="label">Agents Nationwide</div></div>
   </div>
 </div>
 
@@ -376,7 +375,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
   <div class="section-inner">
     <div class="section-header">
       <div class="section-badge">Two Ways to Stage</div>
-      <h2 class="section-title">DIY AI or Pro Design Team â your listing, your call.</h2>
+      <h2 class="section-title">DIY AI or Pro Design Team - your listing, your call.</h2>
       <p class="section-subtitle">Whether you want instant results or custom perfection, we've got you covered. No furniture. No hassle. Just stunning rooms that sell.</p>
     </div>
     <div class="ways-grid">
@@ -467,7 +466,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
       <div class="step-card">
         <div class="step-number">2</div>
         <h3>Choose Your Style</h3>
-        <p>Pick from 100+ design styles â Modern, Coastal, Farmhouse, Luxury, and more. AI does the rest.</p>
+        <p>Pick from 100+ design styles - Modern, Coastal, Farmhouse, Luxury, and more. AI does the rest.</p>
       </div>
       <div class="step-card">
         <div class="step-number">3</div>
@@ -476,7 +475,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
       </div>
     </div>
     <div class="steps-cta">
-      <a href="/studio" class="btn-emerald">Try It Now â No Sign Up Required &rarr;</a>
+      <a href="/studio" class="btn-emerald">Try It Now - No Sign Up Required &rarr;</a>
       <div class="note">No credit card. No commitments. See your room staged instantly.</div>
     </div>
   </div>
