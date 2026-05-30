@@ -854,7 +854,7 @@
 <!-- ============================================ -->
 <div id="landing" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
+    <div class="logo" onclick="goHome()"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -975,7 +975,7 @@
 <!-- ============================================ -->
 <div id="examples" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
+    <div class="logo" onclick="goHome()"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -1019,7 +1019,7 @@
 <!-- ============================================ -->
 <div id="pricing" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
+    <div class="logo" onclick="goHome()"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -1094,7 +1094,7 @@
 <!-- ============================================ -->
 <div id="howitworks" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
+    <div class="logo" onclick="goHome()"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -1137,7 +1137,7 @@
 <!-- ============================================ -->
 <div id="faq" class="screen">
   <nav class="top-nav">
-    <div class="logo" onclick="goto('landing')"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
+    <div class="logo" onclick="goHome()"><div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div>ICONIC VIRTUAL.AI</div>
     <div class="nav-links">
       <a onclick="goto('examples')">Examples</a>
       <a onclick="goto('pricing')">Pricing</a>
@@ -1190,7 +1190,7 @@
 <div id="login" class="screen active">
   <div class="auth-wrap">
     <div class="auth-card">
-      <div class="logo" style="justify-content: center; margin-bottom: 24px;" onclick="goto('landing')">
+      <div class="logo" style="justify-content: center; margin-bottom: 24px;" onclick="goHome()">
         <div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div> ICONIC VIRTUAL.AI
       </div>
       <h2>Welcome back</h2>
@@ -1229,7 +1229,7 @@
 <div id="signup" class="screen">
   <div class="auth-wrap">
     <div class="auth-card">
-      <div class="logo" style="justify-content: center; margin-bottom: 24px;" onclick="goto('landing')">
+      <div class="logo" style="justify-content: center; margin-bottom: 24px;" onclick="goHome()">
         <div class="logo-icon" style="font-size:12px;font-weight:900;letter-spacing:0.5px">IV</div> ICONIC VIRTUAL.AI
       </div>
       <h2>Create your account</h2>
@@ -2243,9 +2243,29 @@
 
 <script>
 // ============ NAV ============
+function goHome() {
+  window.location.href = '/home.html';
+}
+
 function goto(id) {
+  const legacyRoutes = {
+    landing: '/home.html',
+    examples: '/gallery',
+    pricing: '/home.html#pricing',
+    howitworks: '/home.html#how-it-works',
+    faq: '/home.html#faq'
+  };
+
+  if (legacyRoutes[id]) {
+    window.location.href = legacyRoutes[id];
+    return;
+  }
+
+  const screen = document.getElementById(id);
+  if (!screen) return;
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  screen.classList.add('active');
   closeDropdowns();
   window.scrollTo(0, 0);
 }
@@ -2411,7 +2431,7 @@ const MODALS = {
     <p class="modal-subtitle">This permanently deletes everything: stagings, orders, credits, and your account.</p>
     <div class="danger-callout"><strong>This cannot be undone.</strong> You will lose 42 credits worth $50.40. Type DELETE to confirm.</div>
     <div class="form-group"><input type="text" placeholder="Type DELETE"></div>
-    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-danger" onclick="closeModal(); goto('landing'); toast('Account deleted')">Delete Permanently</button></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal()">Cancel</button><button class="btn btn-danger" onclick="closeModal(); goHome(); toast('Account deleted')">Delete Permanently</button></div>
   `,
   newOrder: `
     <h3>Create New Order</h3>
