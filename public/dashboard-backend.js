@@ -662,27 +662,131 @@
   // ============================================================
   // Override logout
   window.dashLogout = function() {
-    var auth = getAuth();
-    if (!auth) { clearAuth(); goto('login'); return; }
-    auth.signOut().then(function() {
-      clearAuth();
-      // Clear local state
-      window._allOrders = [];
-      window._allProjects = [];
-      window._authToken = null;
-      goto('login');
-      toast('Signed out successfully');
-    }).catch(function(e) {
-      clearAuth();
-      goto('login');
-    });
+    // Clear all auth tokens from localStorage
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userEmail');
+    // Clear in-memory state
+    window._allOrders = [];
+    window._allProjects = [];
+    window._authToken = null;
+    // Redirect to login page
+    window.location.href = '/login';
   };
   // Also override via data attribute references
   document.querySelectorAll('[onclick*="dashLogout"], a[href*="log-out"]').forEach(function(el) {
     el.onclick = function(e) { e.preventDefault(); window.dashLogout(); };
   });
 
-  // Forgot Password
+  
+
+  // ============================================================
+  // SECTION 6b: PROFILE — Load/save via API
+  // ============================================================
+  // Load user profile from API on dashboard init
+  window.loadUserProfile = function() {
+    var token = localStorage.getItem('authToken');
+    if (!token) return;
+    fetch('/api/user/update-profile', {
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.ok || !data.user) return;
+      var u = data.user;
+      // Update welcome name
+      var welcomeEl = document.querySelector('h1[style*="font-size"]');
+      if (welcomeEl && u.firstName) {
+        welcomeEl.innerHTML = 'Welcome back, ' + u.firstName + ' \uD83D\uDC4B';
+      }
+      // Update stat cards
+      var credEl = document.getElementById('stat-credits');
+      if (credEl) credEl.textContent = u.creditsRemaining || 0;
+      var totalEl = document.getElementById('stat-total');
+      if (totalEl) totalEl.textContent = u.totalStagings || 0;
+      // Update settings form fields
+      var fnInput = document.getElementById('settings-firstName');
+      if (fnInput) fnInput.value = u.firstName || '';
+      var lnInput = document.getElementById('settings-lastName');
+      if (lnInput) lnInput.value = u.lastName || '';
+      var emInput = document.getElementById('settings-email');
+      if (emInput) emInput.value = u.email || '';
+      var phInput = document.getElementById('settings-phone');
+      if (phInput) phInput.value = u.phone || '';
+      var licInput = document.getElementById('settings-license');
+      if (licInput) licInput.value = u.licenseNumber || '';
+      // Store profile in memory
+      window._userProfile = u;
+    })
+    .catch(function(e) { console.warn('Profile load error:', e); });
+  };
+
+  // Save profile settings
+  window.saveProfileSettings = function() {
+    var token = localStorage.getItem('authToken');
+    if (!token) return toast('Not authenticated', 'error');
+    var body = {};
+    var fn = document.getElementById('settings-firstName');
+    var ln = document.getElementById('settings-lastName');
+    var ph = document.getElementById('settings-phone');
+    var lic = document.getElementById('settings-license');
+    if (fn) body.firstName = fn.value;
+    if (ln) body.lastName = ln.value;
+    if (ph) body.phone = ph.value;
+    if (lic) body.licenseNumber = lic.value;
+    fetch('/api/user/update-profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(body)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        toast('Profile saved!');
+        window._userProfile = data.user;
+        // Update welcome name
+        if (data.user.firstName) {
+          var welcomeEl = document.querySelector('h1[style*="font-size"]');
+          if (welcomeEl) welcomeEl.innerHTML = 'Welcome back, ' + data.user.firstName + ' \uD83D\uDC4B';
+        }
+      } else {
+        toast(data.error || 'Save failed', 'error');
+      }
+    })
+    .catch(function(e) { toast('Network error', 'error'); });
+  };
+
+  // Change password
+  window.changePassword = function() {
+    var token = localStorage.getItem('authToken');
+    if (!token) return toast('Not authenticated', 'error');
+    var curPw = document.getElementById('settings-currentPassword');
+    var newPw = document.getElementById('settings-newPassword');
+    if (!curPw || !newPw || !curPw.value || !newPw.value) return toast('Fill in both password fields', 'error');
+    if (newPw.value.length < 8) return toast('New password must be 8+ characters', 'error');
+    fetch('/api/user/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ currentPassword: curPw.value, newPassword: newPw.value })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        toast('Password updated!');
+        curPw.value = '';
+        newPw.value = '';
+      } else {
+        toast(data.error || 'Password change failed', 'error');
+      }
+    })
+    .catch(function(e) { toast('Network error', 'error'); });
+  };
+
+  // Auto-load profile when dashboard loads
+  setTimeout(function() { if (localStorage.getItem('authToken')) window.loadUserProfile(); }, 500);
+
+// Forgot Password
   window.sendPasswordReset = function() {
     var emailInput = document.getElementById('login-email') || document.querySelector('input[type="email"]');
     var email = emailInput ? emailInput.value.trim() : '';
