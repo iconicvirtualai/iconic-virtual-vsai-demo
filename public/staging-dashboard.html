@@ -1294,7 +1294,7 @@
         <div class="sidebar-section-title">Resources</div>
         <a class="sidebar-link" id="link-support" onclick="showSub('support')"><span class="icon">💬</span> Support</a>
         <a class="sidebar-link" id="link-refer" onclick="showSub('refer')"><span class="icon">🎁</span> Refer & Earn</a>
-        <a class="sidebar-link" onclick="window.location.href='/home.html';"><span class="icon">↩️</span> Log Out</a>
+        <a class="sidebar-link" onclick="dashLogout();"><span class="icon">↩️</span> Log Out</a>
       </div>
       <div class="credit-widget">
         <div class="label">Credits remaining</div>
@@ -1325,7 +1325,7 @@
 
         <div class="stats-row">
           <div class="stat-card" onclick="showSub('credits')" style="cursor:pointer"><div class="stat-label">Credits Remaining</div><div class="stat-value" id="stat-credits">0</div><div class="stat-change" id="stat-credits-sub">Buy credits to start</div></div>
-          <div class="stat-card" onclick="showSub('history')" style="cursor:pointer"><div class="stat-label">Stagings This Month</div><div class="stat-value" id="stat-stagings-month">0</div><div class="stat-change" id="stat-stagings-sub">No stagings yet</div></div>
+          <div class="stat-card" onclick="showSub('orders')" style="cursor:pointer"><div class="stat-label">Stagings This Month</div><div class="stat-value" id="stat-stagings-month">0</div><div class="stat-change" id="stat-stagings-sub">No stagings yet</div></div>
           <div class="stat-card" onclick="showSub('projects')" style="cursor:pointer"><div class="stat-label">Active Projects</div><div class="stat-value" id="stat-active">0</div><div class="stat-change" id="stat-active-sub">None right now</div></div>
           <div class="stat-card" onclick="showSub('history')" style="cursor:pointer"><div class="stat-label">Total Stagings</div><div class="stat-value" id="stat-total">0</div><div class="stat-change" id="stat-total-sub">Stage your first image</div></div>
         </div>
