@@ -1,4 +1,4 @@
-—// pages/api/dashboard/fulfill-purchase.ts
+// pages/api/dashboard/fulfill-purchase.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 import { db } from "../../../lib/firebaseAdmin";
