@@ -52,7 +52,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       userUpdate.planStartedAt = now;
       userUpdate.planRenewalDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     }
-    userUpdate.creditsRemaining = admin.firestore.FieldValue.increment(credits);
+    // Split credits by category
+    if (category === 'ai') {
+      userUpdate.aiCreditsRemaining = admin.firestore.FieldValue.increment(credits);
+    } else {
+      userUpdate.proImagesRemaining = admin.firestore.FieldValue.increment(credits);
+    }
     await userRef.update(userUpdate);
 
     // Record purchase
