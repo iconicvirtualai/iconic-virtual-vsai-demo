@@ -778,7 +778,9 @@
       }
       // Update stat cards
       var credEl = document.getElementById('stat-credits');
-      if (credEl) credEl.textContent = u.creditsRemaining || 0;
+      if (credEl) credEl.textContent = (u.aiCreditsRemaining || 0) + (u.proImagesRemaining || 0);
+      var credSub = document.getElementById('stat-credits-sub');
+      if (credSub) credSub.textContent = (u.aiCreditsRemaining || 0) + ' AI | ' + (u.proImagesRemaining || 0) + ' Pro';
       var totalEl = document.getElementById('stat-total');
       if (totalEl) totalEl.textContent = u.totalStagings || 0;
       // Update settings form fields
