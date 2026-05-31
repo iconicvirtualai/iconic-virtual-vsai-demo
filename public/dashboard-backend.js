@@ -681,7 +681,83 @@
   
 
   // ============================================================
-  // SECTION 6b: PROFILE — Load/save via API
+    // ============================================================
+  // SECTION 3b: STRIPE CHECKOUT — Real purchases via dashboard API
+  // ============================================================
+  var PRICE_IDS = {
+    // AI One-Time
+    "small-ai": "price_1SfpAJCRfvDEtw05sLJJV2l6",
+    "medium-ai": "price_1SfpB1CRfvDEtw05Ot05yIiM",
+    "big-ai": "price_1SfpBoCRfvDEtw05CIjrT22M",
+    // Traditional One-Time
+    "single-room": "price_1SfpCgCRfvDEtw05OPv3bp4n",
+    "small-property": "price_1SfpDMCRfvDEtw054NgbiHCe",
+    "large-property": "price_1SfpDpCRfvDEtw05B5SLOA9I",
+    // AI Membership
+    "ai-starter": "price_1SfomqCRfvDEtw05fsBsZSDo",
+    "ai-premium": "price_1SfoqnCRfvDEtw05LVaF8uM5",
+    "ai-pro": "price_1SforxCRfvDEtw052rdFBqmK",
+    // Traditional Membership
+    "t-starter": "price_1Sfow3CRfvDEtw05TKPIkgbZ",
+    "t-premium": "price_1Sfp7qCRfvDEtw05c4FxCYlG",
+    "t-pro": "price_1Sfp90CRfvDEtw0566rRv8QO"
+  };
+
+  window.purchaseCredits = function(planKey) {
+    var priceId = PRICE_IDS[planKey];
+    if (!priceId) return toast("Unknown plan: " + planKey, "error");
+    var token = localStorage.getItem("authToken");
+    if (!token) return toast("Please log in first", "error");
+    toast("Redirecting to checkout...");
+    fetch("/api/dashboard/purchase-credits", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify({ priceId: priceId })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        toast(data.error || "Checkout failed", "error");
+      }
+    })
+    .catch(function(e) { toast("Network error", "error"); });
+  };
+
+  // Handle post-purchase fulfillment when returning from Stripe
+  (function checkPurchaseReturn() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get("purchase") === "success" && params.get("session_id")) {
+      var sessionId = params.get("session_id");
+      var token = localStorage.getItem("authToken");
+      if (!token) return;
+      fetch("/api/dashboard/fulfill-purchase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+        body: JSON.stringify({ sessionId: sessionId })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok) {
+          toast(data.message || "Credits added!", "success");
+          // Reload profile to update credit count
+          if (window.loadUserProfile) window.loadUserProfile();
+        } else {
+          toast(data.error || "Fulfillment issue", "error");
+        }
+      })
+      .catch(function(e) { console.warn("Fulfill error:", e); });
+      // Clean URL
+      window.history.replaceState({}, "", "/staging-dashboard.html");
+    }
+    if (params.get("purchase") === "canceled") {
+      toast("Purchase canceled");
+      window.history.replaceState({}, "", "/staging-dashboard.html");
+    }
+  })();
+
+// SECTION 6b: PROFILE — Load/save via API
   // ============================================================
   // Load user profile from API on dashboard init
   window.loadUserProfile = function() {
