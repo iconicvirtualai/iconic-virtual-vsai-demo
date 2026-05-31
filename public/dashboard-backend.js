@@ -757,6 +757,149 @@
     }
   })();
 
+  // ============================================================
+  // SECTION 2b: ORDERS & PROJECTS — API-based CRUD
+  // ============================================================
+  function apiHeaders() {
+    return { "Content-Type": "application/json", "Authorization": "Bearer " + (localStorage.getItem("authToken") || "") };
+  }
+
+  // Load orders from API
+  window.loadOrders = function() {
+    fetch("/api/dashboard/orders", { headers: apiHeaders() })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.ok) return;
+      window._allOrders = data.orders || [];
+      // Update order count badge
+      var badge = document.querySelector("#link-orders .badge");
+      if (badge) badge.textContent = data.orders.length;
+      // Update stat cards
+      var activeEl = document.getElementById("stat-active");
+      if (activeEl) activeEl.textContent = data.orders.filter(function(o) { return o.status === "processing"; }).length;
+      var totalEl = document.getElementById("stat-total");
+      if (totalEl) totalEl.textContent = data.orders.length;
+      var monthEl = document.getElementById("stat-stagings-month");
+      if (monthEl) {
+        var now = new Date();
+        var thisMonth = data.orders.filter(function(o) {
+          var d = new Date(o.createdAt);
+          return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        });
+        monthEl.textContent = thisMonth.length;
+      }
+      // Render orders table if on orders tab
+      if (typeof renderOrdersTable === "function") renderOrdersTable(data.orders);
+      if (typeof updateOrderTabCounts === "function") updateOrderTabCounts(data.orders);
+      if (typeof renderDashboardRecentOrders === "function") renderDashboardRecentOrders(data.orders);
+    })
+    .catch(function(e) { console.warn("loadOrders error:", e); });
+  };
+
+  // Create order via API
+  window.submitNewOrder = function() {
+    var address = document.getElementById("newOrderAddress");
+    var room = document.getElementById("newOrderRoom");
+    var style = document.getElementById("newOrderStyle");
+    if (!address || !room || !address.value || !room.value) return toast("Address and room required", "error");
+    fetch("/api/dashboard/orders", {
+      method: "POST",
+      headers: apiHeaders(),
+      body: JSON.stringify({ address: address.value, room: room.value, style: style ? style.value : "modern" })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) { toast("Order created!"); closeModal("newOrder"); window.loadOrders(); }
+      else toast(data.error || "Failed to create order", "error");
+    })
+    .catch(function(e) { toast("Network error", "error"); });
+  };
+
+  // Delete order via API
+  window.deleteOrder = function(orderId) {
+    if (!confirm("Delete this order permanently?")) return;
+    fetch("/api/dashboard/orders", {
+      method: "DELETE",
+      headers: apiHeaders(),
+      body: JSON.stringify({ orderId: orderId })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) { toast("Order deleted"); window.loadOrders(); }
+      else toast(data.error || "Delete failed", "error");
+    })
+    .catch(function(e) { toast("Network error", "error"); });
+  };
+
+  // Cancel order via API
+  window.cancelOrder = function(orderId) {
+    fetch("/api/dashboard/orders", {
+      method: "PATCH",
+      headers: apiHeaders(),
+      body: JSON.stringify({ orderId: orderId, status: "canceled" })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) { toast("Order canceled"); window.loadOrders(); }
+      else toast(data.error || "Cancel failed", "error");
+    });
+  };
+
+  // Load projects from API
+  window.loadProjects = function() {
+    fetch("/api/dashboard/projects", { headers: apiHeaders() })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.ok) return;
+      window._allProjects = data.projects || [];
+      var activeEl = document.getElementById("stat-active");
+      if (activeEl) activeEl.textContent = data.projects.filter(function(p) { return p.status === "active"; }).length;
+      if (typeof renderProjectsList === "function") renderProjectsList(data.projects);
+    })
+    .catch(function(e) { console.warn("loadProjects error:", e); });
+  };
+
+  // Create project via API
+  window.createProject = function() {
+    var name = document.getElementById("projectName");
+    var desc = document.getElementById("projectDescription") || document.getElementById("projectDesc");
+    if (!name || !name.value) return toast("Project name required", "error");
+    fetch("/api/dashboard/projects", {
+      method: "POST",
+      headers: apiHeaders(),
+      body: JSON.stringify({ name: name.value, description: desc ? desc.value : "" })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) { toast("Project created!"); closeModal("newProject"); window.loadProjects(); }
+      else toast(data.error || "Failed", "error");
+    })
+    .catch(function(e) { toast("Network error", "error"); });
+  };
+
+  // Delete project via API
+  window.deleteProject = function(projectId) {
+    if (!confirm("Delete this project?")) return;
+    fetch("/api/dashboard/projects", {
+      method: "DELETE",
+      headers: apiHeaders(),
+      body: JSON.stringify({ projectId: projectId })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) { toast("Project deleted"); window.loadProjects(); }
+      else toast(data.error || "Delete failed", "error");
+    });
+  };
+
+  // Auto-load orders and projects on dashboard init
+  setTimeout(function() {
+    if (localStorage.getItem("authToken")) {
+      window.loadOrders();
+      window.loadProjects();
+    }
+  }, 800);
+
 // SECTION 6b: PROFILE — Load/save via API
   // ============================================================
   // Load user profile from API on dashboard init
