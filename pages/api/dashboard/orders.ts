@@ -23,10 +23,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === "POST") {
-    const { address, room, style, type, notes, projectId } = req.body || {};
-    if (!address || !room) return res.status(400).json({ ok: false, error: "Address and room required" });
+    const { address, room, style, type, notes, projectId, projectName, firstName, lastName, email, phone } = req.body || {};
+    if (!address) return res.status(400).json({ ok: false, error: "Address is required" });
     const now = new Date().toISOString();
-    const orderData = { userId, address: address.trim(), room: room.trim(), style: style || "modern", type: type || "ai", notes: notes || "", projectId: projectId || null, status: "draft", paymentStatus: "unpaid", createdAt: now, updatedAt: now };
+    const orderData = { userId, address: address.trim(), room: (room || "").trim() || "General", style: style || "modern", type: type || "ai", notes: notes || "", projectId: projectId || null, projectName: projectName || "", customerName: ((firstName || "") + " " + (lastName || "")).trim(), customerEmail: email || "", customerPhone: phone || "", status: "draft", paymentStatus: "unpaid", createdAt: now, updatedAt: now };
     try {
       const ref = await db.collection("orders").add(orderData);
       return res.status(201).json({ ok: true, order: { id: ref.id, ...orderData } });
