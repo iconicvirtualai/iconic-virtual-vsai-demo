@@ -123,23 +123,80 @@
   };
 
   // ---- ORDERS ----
-  window.loadOrders = function() {
+  window.loadOrders = function(filter) {
     fetch("/api/dashboard/orders", { headers: apiHeaders() })
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (!data.ok) return;
       window._allOrders = data.orders || [];
+      var orders = data.orders || [];
       var badge = document.querySelector("#link-orders .badge");
-      if (badge) badge.textContent = data.orders.length;
+      if (badge) badge.textContent = orders.length;
       var totalEl = document.getElementById("stat-total");
-      if (totalEl) totalEl.textContent = data.orders.length;
+      if (totalEl) totalEl.textContent = orders.length;
       var monthEl = document.getElementById("stat-stagings-month");
       if (monthEl) {
         var now = new Date();
-        var thisMonth = data.orders.filter(function(o) { var d = new Date(o.createdAt); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+        var thisMonth = orders.filter(function(o) { var d = new Date(o.createdAt); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
         monthEl.textContent = thisMonth.length;
       }
+      // Render orders table
+      window.renderOrdersFromAPI(orders, filter);
     });
+  };
+
+  window.renderOrdersFromAPI = function(orders, filter) {
+    // Filter orders
+    var filtered = orders;
+    if (filter && filter !== "all") filtered = orders.filter(function(o) { return o.status === filter; });
+    // Update tab counts
+    var tabs = document.querySelectorAll("#sub-orders .tab-btn");
+    if (tabs.length >= 5) {
+      tabs[0].textContent = "All Orders (" + orders.length + ")";
+      tabs[1].textContent = "Processing (" + orders.filter(function(o){return o.status==="processing"}).length + ")";
+      tabs[2].textContent = "Complete (" + orders.filter(function(o){return o.status==="completed"||o.status==="paid"}).length + ")";
+      tabs[3].textContent = "Failed (" + orders.filter(function(o){return o.status==="failed"}).length + ")";
+      tabs[4].textContent = "Draft (" + orders.filter(function(o){return o.status==="draft"}).length + ")";
+    }
+    // Find the orders table panel
+    var tablePanel = document.querySelector("#sub-orders .panel[style*=\"padding: 0\"]") || document.querySelector("#sub-orders .panel table");
+    if (!tablePanel) { var panels = document.querySelectorAll("#sub-orders .panel"); tablePanel = panels[panels.length - 1]; }
+    if (!tablePanel) return;
+    // Build table HTML
+    var html = '<div style="padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px"><input type="checkbox" id="selectAllOrders" onchange="toggleSelectAllOrders(this.checked)"> <span style="font-size:13px;color:var(--text-muted)">Select All</span> <button class="btn btn-sm btn-ghost" onclick="bulkDeleteOrders()" style="margin-left:auto;color:var(--danger);font-size:13px">Delete Selected</button></div>';
+    if (filtered.length === 0) {
+      html += '<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><p style="font-size:48px;margin-bottom:16px">📋</p><p>No orders yet</p></div>';
+    } else {
+      html += '<table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border);text-align:left"><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)"></th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">ADDRESS</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">ROOM</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">STYLE</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">STATUS</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">DATE</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">ACTIONS</th></tr></thead><tbody>';
+      filtered.forEach(function(o) {
+        var statusColor = o.status === "completed" || o.status === "paid" ? "var(--success)" : o.status === "failed" ? "var(--danger)" : o.status === "processing" ? "#f59e0b" : "var(--text-muted)";
+        html += '<tr style="border-bottom:1px solid var(--border)" data-order-id="' + o.id + '"><td style="padding:12px 16px"><input type="checkbox" class="order-checkbox" value="' + o.id + '"></td><td style="padding:12px 16px">' + (o.address || "-") + '</td><td style="padding:12px 16px">' + (o.room || "-") + '</td><td style="padding:12px 16px">' + (o.style || "-") + '</td><td style="padding:12px 16px"><span style="background:' + statusColor + ';color:white;padding:4px 10px;border-radius:20px;font-size:12px">' + (o.status || "draft") + '</span></td><td style="padding:12px 16px;font-size:13px;color:var(--text-muted)">' + new Date(o.createdAt).toLocaleDateString() + '</td><td style="padding:12px 16px"><button class="btn btn-sm btn-ghost" onclick="cancelOrder(\x27' + o.id + '\x27)" title="Cancel">✕</button> <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteOrder(\x27' + o.id + '\x27)" title="Delete">🗑</button></td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+    tablePanel.innerHTML = html;
+  };
+
+  // Bulk actions
+  window.toggleSelectAllOrders = function(checked) {
+    document.querySelectorAll(".order-checkbox").forEach(function(cb) { cb.checked = checked; });
+  };
+
+  window.bulkDeleteOrders = function() {
+    var selected = Array.from(document.querySelectorAll(".order-checkbox:checked")).map(function(cb) { return cb.value; });
+    if (selected.length === 0) return toast("No orders selected", "error");
+    if (!confirm("Delete " + selected.length + " order(s) permanently?")) return;
+    var done = 0;
+    selected.forEach(function(id) {
+      fetch("/api/dashboard/orders", { method: "DELETE", headers: apiHeaders(), body: JSON.stringify({ orderId: id }) })
+      .then(function(r) { return r.json(); })
+      .then(function() { done++; if (done === selected.length) { toast(done + " orders deleted"); window.loadOrders(); } });
+    });
+  };
+
+  // Wire order filter tabs
+  window.filterOrders = function(status) {
+    window.renderOrdersFromAPI(window._allOrders || [], status);
   };
 
   window.submitNewOrder = function() {
@@ -177,6 +234,37 @@
       window._allProjects = data.projects || [];
       var activeEl = document.getElementById("stat-active");
       if (activeEl) activeEl.textContent = data.projects.filter(function(p) { return p.status === "active"; }).length;
+      // Render projects list
+      var container = document.querySelector("#sub-projects .panel") || document.querySelector("#sub-projects");
+      if (!container) return;
+      var projects = data.projects || [];
+      var html = '<div style="padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px"><input type="checkbox" id="selectAllProjects" onchange="toggleSelectAllProjects(this.checked)"> <span style="font-size:13px;color:var(--text-muted)">Select All</span> <button class="btn btn-sm btn-ghost" onclick="bulkDeleteProjects()" style="margin-left:auto;color:var(--danger);font-size:13px">Delete Selected</button></div>';
+      if (projects.length === 0) {
+        html += '<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><p style="font-size:48px;margin-bottom:16px">📁</p><p>No projects yet. Click \x22Start new project\x22 to create one.</p></div>';
+      } else {
+        projects.forEach(function(p) {
+          html += '<div style="display:flex;align-items:center;padding:16px 20px;border-bottom:1px solid var(--border);gap:12px"><input type="checkbox" class="project-checkbox" value="' + p.id + '"><div style="flex:1"><strong>' + (p.name || "Untitled") + '</strong><p style="font-size:13px;color:var(--text-muted);margin:4px 0">' + (p.description || p.address || "No description") + '</p><span style="font-size:12px;color:var(--text-muted)">' + new Date(p.createdAt).toLocaleDateString() + ' · ' + (p.totalStagings || 0) + ' stagings</span></div><button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteProject(\x27' + p.id + '\x27)">🗑 Delete</button></div>';
+        });
+      }
+      // Find first panel in projects sub
+      var panels = document.querySelectorAll("#sub-projects .panel");
+      if (panels.length > 0) panels[panels.length - 1].innerHTML = html;
+    });
+  };
+
+  window.toggleSelectAllProjects = function(checked) {
+    document.querySelectorAll(".project-checkbox").forEach(function(cb) { cb.checked = checked; });
+  };
+
+  window.bulkDeleteProjects = function() {
+    var selected = Array.from(document.querySelectorAll(".project-checkbox:checked")).map(function(cb) { return cb.value; });
+    if (selected.length === 0) return toast("No projects selected", "error");
+    if (!confirm("Delete " + selected.length + " project(s)?")) return;
+    var done = 0;
+    selected.forEach(function(id) {
+      fetch("/api/dashboard/projects", { method: "DELETE", headers: apiHeaders(), body: JSON.stringify({ projectId: id }) })
+      .then(function(r) { return r.json(); })
+      .then(function() { done++; if (done === selected.length) { toast(done + " projects deleted"); window.loadProjects(); } });
     });
   };
 
