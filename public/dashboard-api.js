@@ -201,15 +201,21 @@
 
   window.submitNewOrder = function() {
     var address = document.getElementById("newOrderAddress");
-    var room = document.getElementById("newOrderRoom");
-    var style = document.getElementById("newOrderStyle");
-    if (!address || !room || !address.value || !room.value) return toast("Address and room required", "error");
-    fetch("/api/dashboard/orders", { method: "POST", headers: apiHeaders(), body: JSON.stringify({ address: address.value, room: room.value, style: style ? style.value : "modern" }) })
+    var projectName = document.getElementById("newOrderProjectName");
+    var notes = document.getElementById("newOrderNotes");
+    if (!address || !address.value) return toast("Address is required", "error");
+    fetch("/api/dashboard/orders", { method: "POST", headers: apiHeaders(), body: JSON.stringify({
+      address: address.value,
+      room: projectName ? projectName.value || "General" : "General",
+      style: "modern",
+      notes: notes ? notes.value : ""
+    }) })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.ok) { toast("Order created!"); if (typeof closeModal === "function") closeModal("newOrder"); window.loadOrders(); }
-      else toast(data.error || "Failed", "error");
-    });
+      if (data.ok) { toast("Order created!"); if (typeof closeModal === "function") closeModal(); window.loadOrders(); }
+      else toast(data.error || "Failed to create order", "error");
+    })
+    .catch(function(e) { toast("Network error: " + e.message, "error"); });
   };
 
   window.deleteOrder = function(orderId) {
@@ -222,7 +228,14 @@
   window.cancelOrder = function(orderId) {
     fetch("/api/dashboard/orders", { method: "PATCH", headers: apiHeaders(), body: JSON.stringify({ orderId: orderId, status: "canceled" }) })
     .then(function(r) { return r.json(); })
-    .then(function(data) { if (data.ok) { toast("Order canceled"); window.loadOrders(); } });
+    .then(function(data) { if (data.ok) { toast("Order canceled"); 
+
+  window.updateOrderStatus = function(orderId, newStatus) {
+    fetch("/api/dashboard/orders", { method: "PATCH", headers: apiHeaders(), body: JSON.stringify({ orderId: orderId, status: newStatus }) })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { if (data.ok) { toast("Status updated to " + newStatus); window.loadOrders(); } else toast(data.error, "error"); });
+  };
+window.loadOrders(); } });
   };
 
   // ---- PROJECTS ----
@@ -269,15 +282,21 @@
   };
 
   window.createProject = function() {
-    var name = document.getElementById("projectName");
-    var desc = document.getElementById("projectDescription") || document.getElementById("projectDesc");
-    if (!name || !name.value) return toast("Project name required", "error");
-    fetch("/api/dashboard/projects", { method: "POST", headers: apiHeaders(), body: JSON.stringify({ name: name.value, description: desc ? desc.value : "" }) })
+    // Get inputs from the modal content (they have no IDs)
+    var modal = document.getElementById("modalContent");
+    if (!modal) return toast("Modal not found", "error");
+    var inputs = modal.querySelectorAll("input, textarea");
+    var name = inputs[0] ? inputs[0].value : "";
+    var address = inputs[1] ? inputs[1].value : "";
+    var desc = inputs[2] ? inputs[2].value : "";
+    if (!name) return toast("Project name required", "error");
+    fetch("/api/dashboard/projects", { method: "POST", headers: apiHeaders(), body: JSON.stringify({ name: name, description: desc, address: address }) })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.ok) { toast("Project created!"); if (typeof closeModal === "function") closeModal("newProject"); window.loadProjects(); }
-      else toast(data.error, "error");
-    });
+      if (data.ok) { toast("Project created!"); if (typeof closeModal === "function") closeModal(); window.loadProjects(); }
+      else toast(data.error || "Failed", "error");
+    })
+    .catch(function(e) { toast("Network error: " + e.message, "error"); });
   };
 
   window.deleteProject = function(projectId) {
@@ -420,6 +439,26 @@
   window.bookPhoneCall = function() {
     window.open("https://calendar.app.google/SRuqvxgGHy36jbHn8", "_blank");
   };
+
+
+  // Override modal buttons that use fake inline onclick
+  setTimeout(function() {
+    // Find and fix the Create Project button
+    var observer = new MutationObserver(function() {
+      var btns = document.querySelectorAll("#modalContent button, #modal button");
+      btns.forEach(function(b) {
+        if (b.textContent.trim() === "Create Project" && b.getAttribute("data-fixed") !== "true") {
+          b.setAttribute("data-fixed", "true");
+          b.onclick = function(e) { e.preventDefault(); e.stopPropagation(); window.createProject(); };
+        }
+        if (b.textContent.trim() === "Create Order" && b.getAttribute("data-fixed") !== "true") {
+          b.setAttribute("data-fixed", "true");
+          b.onclick = function(e) { e.preventDefault(); e.stopPropagation(); window.submitNewOrder(); };
+        }
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }, 1000);
 
 // ---- AUTO-INIT ----
   setTimeout(function() {
