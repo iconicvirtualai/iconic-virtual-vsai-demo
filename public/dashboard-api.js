@@ -209,12 +209,138 @@
     window.location.href = "/login";
   };
 
-  // ---- AUTO-INIT ----
+    // ---- TEAM ----
+  window.loadTeam = function() {
+    fetch("/api/dashboard/team", { headers: apiHeaders() })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { if (data.ok) window._teamMembers = data.members || []; });
+  };
+
+  window.inviteTeamMember = function() {
+    var email = document.getElementById("inviteEmail");
+    var role = document.getElementById("inviteRole");
+    if (!email || !email.value) return toast("Email required", "error");
+    fetch("/api/dashboard/team", { method: "POST", headers: apiHeaders(), body: JSON.stringify({ email: email.value, role: role ? role.value : "viewer" }) })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { if (data.ok) { toast("Invitation sent!"); email.value = ""; window.loadTeam(); } else toast(data.error, "error"); });
+  };
+
+  window.removeTeamMember = function(memberId) {
+    if (!confirm("Remove this team member?")) return;
+    fetch("/api/dashboard/team", { method: "DELETE", headers: apiHeaders(), body: JSON.stringify({ memberId: memberId }) })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { if (data.ok) { toast("Member removed"); window.loadTeam(); } });
+  };
+
+  // ---- REFERRALS ----
+  window.sendReferral = function() {
+    var email = document.getElementById("referralEmail");
+    if (!email || !email.value) return toast("Email required", "error");
+    fetch("/api/dashboard/support", { method: "POST", headers: apiHeaders(), body: JSON.stringify({ action: "referral", email: email.value }) })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { if (data.ok) { toast(data.message || "Referral sent!"); email.value = ""; } else toast(data.error, "error"); });
+  };
+
+  window.loadReferrals = function() {
+    fetch("/api/dashboard/support?action=referrals", { headers: apiHeaders() })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { if (data.ok) window._referrals = data.referrals || []; });
+  };
+
+  // ---- SUPPORT ----
+  window.submitSupportTicket = function() {
+    var subject = document.getElementById("ticketSubject");
+    var message = document.getElementById("ticketMessage");
+    if (!subject || !message || !subject.value || !message.value) return toast("Subject and message required", "error");
+    fetch("/api/dashboard/support", { method: "POST", headers: apiHeaders(), body: JSON.stringify({ action: "ticket", subject: subject.value, message: message.value }) })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { if (data.ok) { toast(data.message || "Ticket submitted!"); subject.value = ""; message.value = ""; } else toast(data.error, "error"); });
+  };
+
+  window.sendChatMessage = function() {
+    var input = document.getElementById("chatInput");
+    if (!input || !input.value) return;
+    var msg = input.value;
+    input.value = "";
+    // Add to UI immediately
+    var chatBox = document.getElementById("chatMessages");
+    if (chatBox) chatBox.innerHTML += '<div style="text-align:right;margin:8px 0"><span style="background:var(--primary);color:white;padding:8px 14px;border-radius:12px;display:inline-block;max-width:80%">' + msg + '</span></div>';
+    fetch("/api/dashboard/support", { method: "POST", headers: apiHeaders(), body: JSON.stringify({ action: "chat", message: msg }) })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { if (!data.ok) toast("Message failed", "error"); });
+  };
+
+  window.loadChatMessages = function() {
+    fetch("/api/dashboard/support?action=chat", { headers: apiHeaders() })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.ok) return;
+      var chatBox = document.getElementById("chatMessages");
+      if (!chatBox) return;
+      chatBox.innerHTML = "";
+      (data.messages || []).forEach(function(m) {
+        var isUser = m.sender === "user";
+        chatBox.innerHTML += '<div style="text-align:' + (isUser ? "right" : "left") + ';margin:8px 0"><span style="background:' + (isUser ? "var(--primary)" : "#f0f0f0") + ';color:' + (isUser ? "white" : "#333") + ';padding:8px 14px;border-radius:12px;display:inline-block;max-width:80%">' + m.message + '</span></div>';
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    });
+  };
+
+  // ---- ACTIVITY HISTORY ----
+  window.loadActivity = function(type) {
+    var url = "/api/dashboard/activity?type=" + (type || "all");
+    fetch(url, { headers: apiHeaders() })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.ok) return;
+      window._activities = data.activities || [];
+      var container = document.getElementById("activityList");
+      if (!container) return;
+      if (data.activities.length === 0) { container.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:40px">No activity yet</p>'; return; }
+      container.innerHTML = data.activities.map(function(a) {
+        return '<div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border)"><span>' + (a.description || a.label || a.type) + '</span><span style="color:var(--text-muted);font-size:13px">' + new Date(a.timestamp || a.createdAt).toLocaleDateString() + '</span></div>';
+      }).join("");
+    });
+  };
+
+  window.exportActivityCSV = function() {
+    if (!window._activities || !window._activities.length) return toast("No activity to export");
+    var csv = "Type,Description,Date\n";
+    window._activities.forEach(function(a) {
+      csv += (a.type || "") + "," + (a.description || a.label || "").replace(/,/g, " ") + "," + (a.timestamp || a.createdAt || "") + "\n";
+    });
+    var blob = new Blob([csv], { type: "text/csv" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "activity-log.csv";
+    a.click();
+    toast("CSV exported!");
+  };
+
+  // ---- BILLING UPGRADE ----
+  window.upgradePlan = function() {
+    // Redirect to Buy Credits tab with membership pricing selected
+    if (typeof showSub === "function") showSub("credits");
+    // Auto-click the Membership Pricing tab after a short delay
+    setTimeout(function() {
+      var memTab = document.querySelector('[onclick*="Membership"]') || Array.from(document.querySelectorAll("button, div")).find(function(el) { return el.textContent.trim() === "Membership Pricing"; });
+      if (memTab) memTab.click();
+    }, 300);
+  };
+
+  // ---- GOOGLE CALENDAR BOOKING ----
+  window.bookPhoneCall = function() {
+    window.open("https://calendar.app.google/SRuqvxgGHy36jbHn8", "_blank");
+  };
+
+// ---- AUTO-INIT ----
   setTimeout(function() {
     if (localStorage.getItem("authToken")) {
       window.loadUserProfile();
       window.loadOrders();
       window.loadProjects();
+      window.loadTeam();
+      window.loadReferrals();
     }
   }, 600);
 
