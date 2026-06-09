@@ -441,24 +441,163 @@ window.loadOrders(); } });
   };
 
 
-  // Override modal buttons that use fake inline onclick
+  // ============================================================
+  // WIRE ALL STATIC DASHBOARD ELEMENTS TO LIVE API FUNCTIONS
+  // ============================================================
   setTimeout(function() {
-    // Find and fix the Create Project button
+    // MutationObserver to catch modal buttons and dynamically added elements
     var observer = new MutationObserver(function() {
-      var btns = document.querySelectorAll("#modalContent button, #modal button");
-      btns.forEach(function(b) {
-        if (b.textContent.trim() === "Create Project" && b.getAttribute("data-fixed") !== "true") {
-          b.setAttribute("data-fixed", "true");
-          b.onclick = function(e) { e.preventDefault(); e.stopPropagation(); window.createProject(); };
-        }
-        if (b.textContent.trim() === "Create Order" && b.getAttribute("data-fixed") !== "true") {
-          b.setAttribute("data-fixed", "true");
-          b.onclick = function(e) { e.preventDefault(); e.stopPropagation(); window.submitNewOrder(); };
-        }
+      // Fix modal buttons
+      document.querySelectorAll("#modalContent button, #modal button").forEach(function(b) {
+        if (b.getAttribute("data-fixed") === "true") return;
+        var txt = b.textContent.trim();
+        if (txt === "Create Project") { b.setAttribute("data-fixed","true"); b.onclick = function(e) { e.preventDefault(); e.stopPropagation(); window.createProject(); }; }
+        if (txt === "Create Order") { b.setAttribute("data-fixed","true"); b.onclick = function(e) { e.preventDefault(); e.stopPropagation(); window.submitNewOrder(); }; }
       });
     });
     observer.observe(document.body, { childList: true, subtree: true });
-  }, 1000);
+
+    // ---- SETTINGS TAB ----
+    // Wire Save Profile button
+    document.querySelectorAll("#sub-settings button").forEach(function(b) {
+      var txt = b.textContent.trim().toLowerCase();
+      if ((txt.indexOf("save") > -1 && txt.indexOf("profile") > -1) || txt === "save changes") {
+        b.onclick = function(e) { e.preventDefault(); window.saveProfileSettings(); };
+      }
+      if (txt.indexOf("change password") > -1 || txt.indexOf("update password") > -1) {
+        b.onclick = function(e) { e.preventDefault(); window.changePassword(); };
+      }
+    });
+
+    // ---- BILLING TAB ----
+    // Replace static billing content with live data
+    var billingPlan = document.querySelector("#sub-billing .stat-value, #sub-billing h2, #sub-billing h3");
+    if (window._userProfile) {
+      var u = window._userProfile;
+      // Find billing elements and update
+      document.querySelectorAll("#sub-billing").forEach(function(section) {
+        var planEls = section.querySelectorAll("h2, h3, .stat-value");
+        planEls.forEach(function(el) {
+          if (el.textContent.indexOf("Professional") > -1 || el.textContent.indexOf("$49") > -1) {
+            el.textContent = u.activePlan || "Free Plan";
+          }
+        });
+        var renewEls = section.querySelectorAll("p, span");
+        renewEls.forEach(function(el) {
+          if (el.textContent.indexOf("renewal") > -1 || el.textContent.indexOf("Renewal") > -1) {
+            el.textContent = u.planRenewalDate ? "Renews " + new Date(u.planRenewalDate).toLocaleDateString() : "No active subscription";
+          }
+        });
+      });
+    }
+    // Wire Upgrade Plan button
+    document.querySelectorAll("#sub-billing button").forEach(function(b) {
+      if (b.textContent.trim().indexOf("Upgrade") > -1 || b.textContent.trim().indexOf("Change Plan") > -1) {
+        b.onclick = function(e) { e.preventDefault(); window.upgradePlan(); };
+      }
+    });
+
+    // ---- HISTORY TAB ----
+    // Wire history sub-tab buttons
+    document.querySelectorAll("#sub-history .tab-btn, #sub-history button").forEach(function(b) {
+      var txt = b.textContent.trim().toLowerCase();
+      if (txt.indexOf("all activ") > -1) b.onclick = function() { window.loadActivity("all"); };
+      else if (txt.indexOf("staging") > -1) b.onclick = function() { window.loadActivity("staging"); };
+      else if (txt.indexOf("credit") > -1 || txt.indexOf("purchase") > -1) b.onclick = function() { window.loadActivity("credit_purchase"); };
+      else if (txt.indexOf("account") > -1) b.onclick = function() { window.loadActivity("account_change"); };
+      else if (txt.indexOf("login") > -1) b.onclick = function() { window.loadActivity("login"); };
+      else if (txt.indexOf("export") > -1) b.onclick = function() { window.exportActivityCSV(); };
+    });
+    // Create activity list container if not exists
+    var historySection = document.getElementById("sub-history");
+    if (historySection && !document.getElementById("activityList")) {
+      var panels = historySection.querySelectorAll(".panel");
+      if (panels.length > 0) {
+        var lastPanel = panels[panels.length - 1];
+        lastPanel.id = "activityList";
+      }
+    }
+    // Auto-load history
+    window.loadActivity("all");
+
+    // ---- TEAM TAB ----
+    // Wire invite button
+    document.querySelectorAll("#sub-team button").forEach(function(b) {
+      var txt = b.textContent.trim().toLowerCase();
+      if (txt.indexOf("invite") > -1 || txt.indexOf("send invite") > -1) {
+        b.onclick = function(e) { e.preventDefault(); window.inviteTeamMember(); };
+      }
+    });
+    // Wire invite email/role inputs by finding them in the team section
+    var teamInputs = document.querySelectorAll("#sub-team input[type=email], #sub-team input[type=text]");
+    teamInputs.forEach(function(inp) {
+      if (inp.placeholder && (inp.placeholder.toLowerCase().indexOf("email") > -1 || inp.type === "email")) inp.id = "inviteEmail";
+    });
+    var teamSelects = document.querySelectorAll("#sub-team select");
+    teamSelects.forEach(function(sel) { if (!sel.id) sel.id = "inviteRole"; });
+    // Wire remove buttons
+    document.querySelectorAll("#sub-team .btn-danger, #sub-team [onclick*=remove], #sub-team button").forEach(function(b) {
+      if (b.textContent.trim().toLowerCase().indexOf("remove") > -1) {
+        b.onclick = function(e) { e.preventDefault(); toast("Use the dynamically rendered team list to manage members"); };
+      }
+    });
+    // Render team from API
+    window.loadTeam();
+
+    // ---- SUPPORT TAB ----
+    // Wire Send Email / Submit Ticket
+    document.querySelectorAll("#sub-support button").forEach(function(b) {
+      var txt = b.textContent.trim().toLowerCase();
+      if (txt.indexOf("send email") > -1 || txt.indexOf("submit") > -1 || txt.indexOf("send ticket") > -1) {
+        b.onclick = function(e) { e.preventDefault(); window.submitSupportTicket(); };
+      }
+      if (txt.indexOf("send") > -1 && txt.indexOf("message") > -1) {
+        b.onclick = function(e) { e.preventDefault(); window.sendChatMessage(); };
+      }
+      if (txt.indexOf("book") > -1 || txt.indexOf("schedule") > -1 || txt.indexOf("phone") > -1 || txt.indexOf("call") > -1) {
+        b.onclick = function(e) { e.preventDefault(); window.bookPhoneCall(); };
+      }
+    });
+    // Wire chat input
+    var chatInputs = document.querySelectorAll("#sub-support input[type=text], #sub-support textarea");
+    chatInputs.forEach(function(inp, i) {
+      if (i === 0 && !inp.id) inp.id = "chatInput";
+    });
+    // Wire support ticket fields
+    var supportInputs = document.querySelectorAll("#sub-support input, #sub-support textarea");
+    supportInputs.forEach(function(inp) {
+      if (inp.placeholder) {
+        if (inp.placeholder.toLowerCase().indexOf("subject") > -1) inp.id = "ticketSubject";
+        if (inp.placeholder.toLowerCase().indexOf("message") > -1 || inp.placeholder.toLowerCase().indexOf("describe") > -1) inp.id = "ticketMessage";
+      }
+    });
+
+    // ---- REFER & EARN TAB ----
+    document.querySelectorAll("#sub-refer button").forEach(function(b) {
+      var txt = b.textContent.trim().toLowerCase();
+      if (txt.indexOf("send") > -1 || txt.indexOf("invite") > -1 || txt.indexOf("refer") > -1) {
+        b.onclick = function(e) { e.preventDefault(); window.sendReferral(); };
+      }
+      if (txt.indexOf("copy") > -1) {
+        b.onclick = function(e) {
+          e.preventDefault();
+          var link = "https://www.iconicvirtual.ai/login?ref=" + (localStorage.getItem("userId") || "");
+          navigator.clipboard.writeText(link).then(function() { toast("Referral link copied!"); });
+        };
+      }
+    });
+    // Wire referral email input
+    var referInputs = document.querySelectorAll("#sub-refer input[type=email], #sub-refer input[type=text]");
+    referInputs.forEach(function(inp) { if (!inp.id) inp.id = "referralEmail"; });
+
+    // ---- NOTIFICATION BELL ----
+    // Clear static notifications
+    var notifDropdown = document.querySelector(".notif-dropdown, #notifDropdown");
+    if (notifDropdown) {
+      notifDropdown.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted)">No new notifications</div>';
+    }
+
+  }, 1500);
 
 // ---- AUTO-INIT ----
   setTimeout(function() {
