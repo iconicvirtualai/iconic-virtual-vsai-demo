@@ -170,7 +170,7 @@
       html += '<table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border);text-align:left"><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)"></th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">ADDRESS</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">ROOM</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">STYLE</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">STATUS</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">DATE</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">ACTIONS</th></tr></thead><tbody>';
       filtered.forEach(function(o) {
         var statusColor = o.status === "completed" || o.status === "paid" ? "var(--success)" : o.status === "failed" ? "var(--danger)" : o.status === "processing" ? "#f59e0b" : "var(--text-muted)";
-        html += '<tr style="border-bottom:1px solid var(--border)" data-order-id="' + o.id + '"><td style="padding:12px 16px"><input type="checkbox" class="order-checkbox" value="' + o.id + '"></td><td style="padding:12px 16px">' + (o.address || "-") + '</td><td style="padding:12px 16px">' + (o.room || "-") + '</td><td style="padding:12px 16px">' + (o.style || "-") + '</td><td style="padding:12px 16px"><span style="background:' + statusColor + ';color:white;padding:4px 10px;border-radius:20px;font-size:12px">' + (o.status || "draft") + '</span></td><td style="padding:12px 16px;font-size:13px;color:var(--text-muted)">' + new Date(o.createdAt).toLocaleDateString() + '</td><td style="padding:12px 16px"><button class="btn btn-sm btn-ghost" onclick="cancelOrder(\x27' + o.id + '\x27)" title="Cancel">✕</button> <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteOrder(\x27' + o.id + '\x27)" title="Delete">🗑</button></td></tr>';
+        html += '<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="viewOrder(\x27' + o.id + '\x27)" data-order-id="' + o.id + '"><td style="padding:12px 16px"><input type="checkbox" class="order-checkbox" value="' + o.id + '"></td><td style="padding:12px 16px">' + (o.address || "-") + '</td><td style="padding:12px 16px">' + (o.room || "-") + '</td><td style="padding:12px 16px">' + (o.style || "-") + '</td><td style="padding:12px 16px"><span style="background:' + statusColor + ';color:white;padding:4px 10px;border-radius:20px;font-size:12px">' + (o.status || "draft") + '</span></td><td style="padding:12px 16px;font-size:13px;color:var(--text-muted)">' + new Date(o.createdAt).toLocaleDateString() + '</td><td style="padding:12px 16px"><button class="btn btn-sm btn-ghost" onclick="cancelOrder(\x27' + o.id + '\x27)" title="Cancel">✕</button> <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteOrder(\x27' + o.id + '\x27)" title="Delete">🗑</button></td></tr>';
       });
       html += '</tbody></table>';
     }
@@ -247,9 +247,21 @@ window.loadOrders(); } });
       window._allProjects = data.projects || [];
       var activeEl = document.getElementById("stat-active");
       if (activeEl) activeEl.textContent = data.projects.filter(function(p) { return p.status === "active"; }).length;
-      // Render projects list
-      var container = document.querySelector("#sub-projects .panel") || document.querySelector("#sub-projects");
-      if (!container) return;
+      // Hide ALL static project panels and render into a dedicated container
+      var projSection = document.getElementById("sub-projects");
+      if (!projSection) return;
+      // Hide all static panels (they contain hardcoded demo data)
+      projSection.querySelectorAll(".panel").forEach(function(p) { p.style.display = "none"; });
+      // Create or find our dynamic container
+      var container = document.getElementById("projectsDynamic");
+      if (!container) {
+        container = document.createElement("div");
+        container.id = "projectsDynamic";
+        container.className = "panel";
+        container.style.padding = "0";
+        projSection.appendChild(container);
+      }
+      container.style.display = "block";
       var projects = data.projects || [];
       var html = '<div style="padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px"><input type="checkbox" id="selectAllProjects" onchange="toggleSelectAllProjects(this.checked)"> <span style="font-size:13px;color:var(--text-muted)">Select All</span> <button class="btn btn-sm btn-ghost" onclick="bulkDeleteProjects()" style="margin-left:auto;color:var(--danger);font-size:13px">Delete Selected</button></div>';
       if (projects.length === 0) {
@@ -260,8 +272,7 @@ window.loadOrders(); } });
         });
       }
       // Find first panel in projects sub
-      var panels = document.querySelectorAll("#sub-projects .panel");
-      if (panels.length > 0) panels[panels.length - 1].innerHTML = html;
+      container.innerHTML = html;
     });
   };
 
@@ -441,7 +452,39 @@ window.loadOrders(); } });
   };
 
 
-  // ============================================================
+  
+
+  // ---- ORDER DETAIL VIEW ----
+  window.viewOrder = function(orderId) {
+    var order = (window._allOrders || []).find(function(o) { return o.id === orderId; });
+    if (!order) return toast("Order not found", "error");
+    // Show the order detail sub-panel
+    var detailSection = document.getElementById("sub-orderDetail");
+    if (detailSection) {
+      detailSection.innerHTML = '<div style="margin-bottom:20px"><button class="btn btn-secondary" onclick="showSub(\x27orders\x27)" style="margin-bottom:20px">\u2190 Back to Orders</button></div>' +
+        '<div class="panel" style="padding:32px"><h2 style="margin-bottom:24px">Order Details</h2>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px">' +
+        '<div><label style="font-size:12px;color:var(--text-muted);text-transform:uppercase">Address</label><p style="font-weight:600">' + (order.address || "-") + '</p></div>' +
+        '<div><label style="font-size:12px;color:var(--text-muted);text-transform:uppercase">Room/Project</label><p style="font-weight:600">' + (order.room || order.projectName || "-") + '</p></div>' +
+        '<div><label style="font-size:12px;color:var(--text-muted);text-transform:uppercase">Style</label><p style="font-weight:600">' + (order.style || "-") + '</p></div>' +
+        '<div><label style="font-size:12px;color:var(--text-muted);text-transform:uppercase">Status</label><p><select onchange="updateOrderStatus(\x27' + order.id + '\x27, this.value)" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border)"><option value="draft"' + (order.status==="draft"?" selected":"") + '>Draft</option><option value="processing"' + (order.status==="processing"?" selected":"") + '>Processing</option><option value="completed"' + (order.status==="completed"||order.status==="paid"?" selected":"") + '>Completed</option><option value="failed"' + (order.status==="failed"?" selected":"") + '>Failed</option><option value="canceled"' + (order.status==="canceled"?" selected":"") + '>Canceled</option></select></p></div>' +
+        '<div><label style="font-size:12px;color:var(--text-muted);text-transform:uppercase">Created</label><p>' + new Date(order.createdAt).toLocaleString() + '</p></div>' +
+        '<div><label style="font-size:12px;color:var(--text-muted);text-transform:uppercase">Payment</label><p style="font-weight:600">' + (order.paymentStatus || "unpaid") + '</p></div>' +
+        '</div>' +
+        (order.notes ? '<div style="margin-bottom:24px"><label style="font-size:12px;color:var(--text-muted);text-transform:uppercase">Notes</label><p>' + order.notes + '</p></div>' : "") +
+        (order.customerName ? '<div style="margin-bottom:24px"><label style="font-size:12px;color:var(--text-muted);text-transform:uppercase">Customer</label><p>' + order.customerName + (order.customerEmail ? " (" + order.customerEmail + ")" : "") + '</p></div>' : "") +
+        '<div style="border-top:1px solid var(--border);padding-top:24px;margin-top:24px"><h3 style="margin-bottom:16px">Invoice</h3>' +
+        '<table style="width:100%;border-collapse:collapse"><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:8px 0;font-size:13px;color:var(--text-muted)">Item</th><th style="text-align:right;padding:8px 0;font-size:13px;color:var(--text-muted)">Amount</th></tr>' +
+        '<tr><td style="padding:12px 0">' + (order.planName || order.type || "Staging Service") + ' - ' + (order.address || "") + '</td><td style="text-align:right;padding:12px 0;font-weight:600">' + (order.amountTotal ? "$" + (order.amountTotal / 100).toFixed(2) : order.credits ? order.credits + " credits" : "Pending") + '</td></tr>' +
+        '<tr style="border-top:2px solid var(--border)"><td style="padding:12px 0;font-weight:700">Total</td><td style="text-align:right;padding:12px 0;font-weight:700;font-size:18px">' + (order.amountTotal ? "$" + (order.amountTotal / 100).toFixed(2) : "Pending") + '</td></tr></table></div>' +
+        (order.receiptUrl ? '<a href="' + order.receiptUrl + '" target="_blank" class="btn btn-primary" style="margin-top:16px">View Receipt</a>' : "") +
+        (order.paymentStatus === "unpaid" ? '<button class="btn btn-primary" style="margin-top:16px" onclick="toast(\x27Payment integration pending\x27)">Pay Now</button>' : "") +
+        '<button class="btn btn-ghost" style="margin-top:16px;margin-left:8px;color:var(--danger)" onclick="deleteOrder(\x27' + order.id + '\x27); showSub(\x27orders\x27);">Delete Order</button>' +
+        '</div>';
+      if (typeof showSub === "function") showSub("orderDetail");
+    }
+  };
+// ============================================================
   // WIRE ALL STATIC DASHBOARD ELEMENTS TO LIVE API FUNCTIONS
   // ============================================================
   setTimeout(function() {
@@ -603,6 +646,9 @@ window.loadOrders(); } });
   setTimeout(function() {
     if (localStorage.getItem("authToken")) {
       window.loadUserProfile();
+      // Hide static panels before loading
+      document.querySelectorAll("#sub-orders .panel").forEach(function(p) { if (!p.id) p.style.display = "none"; });
+      document.querySelectorAll("#sub-projects .panel").forEach(function(p) { if (!p.id) p.style.display = "none"; });
       window.loadOrders();
       window.loadProjects();
       window.loadTeam();
