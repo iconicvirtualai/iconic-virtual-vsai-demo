@@ -79,10 +79,16 @@
       if (welcomeEl && u.firstName && welcomeEl.textContent.indexOf("Welcome") > -1) {
         welcomeEl.innerHTML = "Welcome back, " + u.firstName + " \uD83D\uDC4B";
       }
+      var totalCredits = (u.aiCreditsRemaining || 0) + (u.proImagesRemaining || 0);
       var credEl = document.getElementById("stat-credits");
-      if (credEl) credEl.textContent = (u.aiCreditsRemaining || 0) + (u.proImagesRemaining || 0);
+      if (credEl) credEl.textContent = totalCredits;
       var credSub = document.getElementById("stat-credits-sub");
       if (credSub) credSub.textContent = (u.aiCreditsRemaining || 0) + " AI | " + (u.proImagesRemaining || 0) + " Pro";
+      // Also update sidebar creditCount and buy-credits proTokenBalance (hardcoded to 42 in HTML)
+      var creditCountEl = document.getElementById("creditCount");
+      if (creditCountEl) creditCountEl.textContent = totalCredits;
+      var proTokenEl = document.getElementById("proTokenBalance");
+      if (proTokenEl) proTokenEl.textContent = totalCredits;
       var totalEl = document.getElementById("stat-total");
       if (totalEl) totalEl.textContent = u.totalStagings || 0;
       window._userProfile = u;
