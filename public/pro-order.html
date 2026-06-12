@@ -433,6 +433,10 @@ photos:photoData
 });
 var data=await res.json();
 if(data.ok){
+// Store auth token so dashboard loads user data
+if(data.token){localStorage.setItem('authToken',data.token)}
+if(data.userId){localStorage.setItem('userId',data.userId)}
+if(data.email){localStorage.setItem('userEmail',data.email)}
 document.getElementById('orderForm').style.display='none';
 document.getElementById('successCard').className='success-card show';
 document.getElementById('orderId').textContent=data.orderId;
