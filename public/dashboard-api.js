@@ -384,16 +384,6 @@ window.loadOrders(); } });
     .then(function(data) { if (data.ok) { toast(data.message || "Ticket submitted!"); subject.value = ""; message.value = ""; } else toast(data.error, "error"); });
   };
 
-  window.submitEmailSupport = function() {
-    var token = localStorage.getItem("authToken");
-    if (!token) return toast("Not authenticated", "error");
-    var subject = document.getElementById("emailSubject") || document.getElementById("ticketSubject");
-    var message = document.getElementById("emailMessage") || document.getElementById("ticketMessage");
-    if (!subject || !message || !subject.value || !message.value) return toast("Subject and message required", "error");
-    fetch("/api/dashboard/support", { method: "POST", headers: apiHeaders(), body: JSON.stringify({ action: "email", subject: subject.value, message: message.value }) })
-    .then(function(r) { return r.json(); })
-    .then(function(data) { if (data.ok) { toast(data.message || "Email sent!"); subject.value = ""; message.value = ""; } else toast(data.error, "error"); });
-  };
 
   window.sendChatMessage = function() {
     var input = document.getElementById("chatInput");
@@ -608,14 +598,30 @@ window.loadOrders(); } });
     window.loadTeam();
 
     // ---- SUPPORT TAB ----
-    // Wire Send Email / Submit Ticket
+    // Hide Send Email tab - route all submissions through ticket form
+    (function() {
+      var supportSection = document.getElementById("sub-support");
+      if (supportSection) {
+        supportSection.querySelectorAll(".tab-btn").forEach(function(tab) {
+          var txt = tab.textContent.trim().toLowerCase();
+          if (txt.indexOf("email") > -1 && txt.indexOf("ticket") === -1) {
+            tab.style.display = "none";
+          }
+        });
+        // Auto-click ticket tab to make it default
+        setTimeout(function() {
+          var tabs = supportSection.querySelectorAll(".tab-btn");
+          tabs.forEach(function(tab) {
+            if (tab.textContent.trim().toLowerCase().indexOf("ticket") > -1) tab.click();
+          });
+        }, 100);
+      }
+    })();
+    // Wire Submit Ticket / Chat / Book buttons
     document.querySelectorAll("#sub-support button").forEach(function(b) {
       var txt = b.textContent.trim().toLowerCase();
-      if (txt.indexOf("submit") > -1 || txt.indexOf("send ticket") > -1 || txt.indexOf("submit ticket") > -1) {
+      if (txt.indexOf("submit") > -1 || txt.indexOf("send ticket") > -1) {
         b.onclick = function(e) { e.preventDefault(); window.submitSupportTicket(); };
-      }
-      if (txt.indexOf("send email") > -1) {
-        b.onclick = function(e) { e.preventDefault(); window.submitEmailSupport(); };
       }
       if (txt.indexOf("send") > -1 && txt.indexOf("message") > -1) {
         b.onclick = function(e) { e.preventDefault(); window.sendChatMessage(); };
@@ -624,17 +630,16 @@ window.loadOrders(); } });
         b.onclick = function(e) { e.preventDefault(); window.bookPhoneCall(); };
       }
     });
-    // Wire support ticket fields by position in the form
-    // Form structure: select[0]=Category, select[1]=Priority, input[0]=Subject, textarea[0]=Message
+    // Wire support ticket fields by position
     var supportSection = document.getElementById("sub-support");
     if (supportSection) {
       var selects = supportSection.querySelectorAll("select");
       if (selects[0]) selects[0].id = "ticketCategory";
       if (selects[1]) selects[1].id = "ticketPriority";
       var textInputs = supportSection.querySelectorAll("input[type=text]");
-      if (textInputs[0]) { textInputs[0].id = "ticketSubject"; }
+      if (textInputs[0]) textInputs[0].id = "ticketSubject";
       var textareas = supportSection.querySelectorAll("textarea");
-      if (textareas[0]) { textareas[0].id = "ticketMessage"; }
+      if (textareas[0]) textareas[0].id = "ticketMessage";
     }
 
     // ---- REFER & EARN TAB ----
