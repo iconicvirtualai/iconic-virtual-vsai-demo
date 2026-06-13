@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await db.collection("supportTickets").add({ userId, email: userEmail, name: userName, subject, message, status: "open", createdAt: now });
       await transporter.sendMail({
         from: process.env.FROM_EMAIL || process.env.GMAIL_SMTP_USER,
-        to: "help@iconicvirtual.ai",
+        to: "virtualstaging@iconicvirtual.ai",
         replyTo: userEmail,
         subject: "Support Ticket: " + subject,
         html: "<p><strong>From:</strong> " + userName + " (" + userEmail + ")</p><p>" + message + "</p>",
@@ -59,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const userEmail = userSnap.exists ? userSnap.data()?.email : "";
       await transporter.sendMail({
         from: process.env.FROM_EMAIL || process.env.GMAIL_SMTP_USER,
-        to: "help@iconicvirtual.ai",
+        to: "virtualstaging@iconicvirtual.ai",
         subject: "New chat message from " + userEmail,
         html: "<p><strong>" + userEmail + ":</strong> " + message + "</p><p><a href=\"https://www.iconicvirtual.ai/admin/chat\">Open Admin Chat</a></p>",
       }).catch(function() {});
