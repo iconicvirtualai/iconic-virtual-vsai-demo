@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Notify admin
     await transporter.sendMail({
       from: process.env.FROM_EMAIL || process.env.GMAIL_SMTP_USER,
-      to: "virtualstaging@iconicvirtual.ai",
+      to: "team@iconicimagestx.com",
       replyTo: email.trim(),
       subject: "New Contact Form Message from " + fullName,
       html: "<h3>New Contact Form Submission</h3><p><strong>From:</strong> " + fullName + " (" + email.trim() + ")</p><p><strong>Message:</strong></p><p>" + message.trim() + "</p>",
