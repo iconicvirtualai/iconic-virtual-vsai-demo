@@ -8,7 +8,7 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: { user: process.env.GMAIL_SMTP_USER, pass: process.env.GMAIL_SMTP_APP_PASSWORD },
 });
-const ADMIN_EMAIL = "team@iconicimagestx.com";
+const ADMIN_EMAIL = "virtualstaging@iconicvirtual.ai";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const authHeader = req.headers.authorization;
