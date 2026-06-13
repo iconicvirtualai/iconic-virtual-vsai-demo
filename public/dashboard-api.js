@@ -624,19 +624,18 @@ window.loadOrders(); } });
         b.onclick = function(e) { e.preventDefault(); window.bookPhoneCall(); };
       }
     });
-    // Wire chat input
-    var chatInputs = document.querySelectorAll("#sub-support input[type=text], #sub-support textarea");
-    chatInputs.forEach(function(inp, i) {
-      if (i === 0 && !inp.id) inp.id = "chatInput";
-    });
-    // Wire support ticket fields
-    var supportInputs = document.querySelectorAll("#sub-support input, #sub-support textarea");
-    supportInputs.forEach(function(inp) {
-      if (inp.placeholder) {
-        if (inp.placeholder.toLowerCase().indexOf("subject") > -1) inp.id = "ticketSubject";
-        if (inp.placeholder.toLowerCase().indexOf("message") > -1 || inp.placeholder.toLowerCase().indexOf("describe") > -1) inp.id = "ticketMessage";
-      }
-    });
+    // Wire support ticket fields by position in the form
+    // Form structure: select[0]=Category, select[1]=Priority, input[0]=Subject, textarea[0]=Message
+    var supportSection = document.getElementById("sub-support");
+    if (supportSection) {
+      var selects = supportSection.querySelectorAll("select");
+      if (selects[0]) selects[0].id = "ticketCategory";
+      if (selects[1]) selects[1].id = "ticketPriority";
+      var textInputs = supportSection.querySelectorAll("input[type=text]");
+      if (textInputs[0]) { textInputs[0].id = "ticketSubject"; }
+      var textareas = supportSection.querySelectorAll("textarea");
+      if (textareas[0]) { textareas[0].id = "ticketMessage"; }
+    }
 
     // ---- REFER & EARN TAB ----
     document.querySelectorAll("#sub-refer button").forEach(function(b) {
