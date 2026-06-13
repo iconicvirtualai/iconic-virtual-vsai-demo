@@ -373,12 +373,26 @@ window.loadOrders(); } });
 
   // ---- SUPPORT ----
   window.submitSupportTicket = function() {
+    var token = localStorage.getItem("authToken");
+    if (!token) return toast("Not authenticated", "error");
     var subject = document.getElementById("ticketSubject");
     var message = document.getElementById("ticketMessage");
+    var category = document.getElementById("ticketCategory");
     if (!subject || !message || !subject.value || !message.value) return toast("Subject and message required", "error");
-    fetch("/api/dashboard/support", { method: "POST", headers: apiHeaders(), body: JSON.stringify({ action: "ticket", subject: subject.value, message: message.value }) })
+    fetch("/api/dashboard/support", { method: "POST", headers: apiHeaders(), body: JSON.stringify({ action: "ticket", subject: subject.value, message: message.value, category: category ? category.value : "General" }) })
     .then(function(r) { return r.json(); })
     .then(function(data) { if (data.ok) { toast(data.message || "Ticket submitted!"); subject.value = ""; message.value = ""; } else toast(data.error, "error"); });
+  };
+
+  window.submitEmailSupport = function() {
+    var token = localStorage.getItem("authToken");
+    if (!token) return toast("Not authenticated", "error");
+    var subject = document.getElementById("emailSubject") || document.getElementById("ticketSubject");
+    var message = document.getElementById("emailMessage") || document.getElementById("ticketMessage");
+    if (!subject || !message || !subject.value || !message.value) return toast("Subject and message required", "error");
+    fetch("/api/dashboard/support", { method: "POST", headers: apiHeaders(), body: JSON.stringify({ action: "email", subject: subject.value, message: message.value }) })
+    .then(function(r) { return r.json(); })
+    .then(function(data) { if (data.ok) { toast(data.message || "Email sent!"); subject.value = ""; message.value = ""; } else toast(data.error, "error"); });
   };
 
   window.sendChatMessage = function() {
@@ -597,8 +611,11 @@ window.loadOrders(); } });
     // Wire Send Email / Submit Ticket
     document.querySelectorAll("#sub-support button").forEach(function(b) {
       var txt = b.textContent.trim().toLowerCase();
-      if (txt.indexOf("send email") > -1 || txt.indexOf("submit") > -1 || txt.indexOf("send ticket") > -1) {
+      if (txt.indexOf("submit") > -1 || txt.indexOf("send ticket") > -1 || txt.indexOf("submit ticket") > -1) {
         b.onclick = function(e) { e.preventDefault(); window.submitSupportTicket(); };
+      }
+      if (txt.indexOf("send email") > -1) {
+        b.onclick = function(e) { e.preventDefault(); window.submitEmailSupport(); };
       }
       if (txt.indexOf("send") > -1 && txt.indexOf("message") > -1) {
         b.onclick = function(e) { e.preventDefault(); window.sendChatMessage(); };
