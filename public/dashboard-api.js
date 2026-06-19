@@ -197,6 +197,7 @@
       html += '</tbody></table>';
     }
     tablePanel.innerHTML = html;
+    tablePanel.style.display = "block";
   };
 
   // Bulk actions
