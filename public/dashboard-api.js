@@ -492,7 +492,21 @@ window.loadOrders(); } });
         '<button class="btn btn-ghost" style="margin-top:16px;margin-left:8px;color:var(--danger)" onclick="deleteOrder(\x27' + order.id + '\x27); showSub(\x27orders\x27);">Delete Order</button>' +
         '</div>';
       if (typeof showSub === "function") showSub("orderDetail");
+      window._renderOrderPhotos(order);
     }
+  };
+
+  // Render photos in order detail if available
+  window._renderOrderPhotos = function(order) {
+    if (!order.photos || !order.photos.length) return;
+    var panel = document.querySelector("#sub-orderDetail .panel");
+    if (!panel) return;
+    var html = '<div style="border-top:1px solid var(--border);padding-top:24px;margin-top:24px"><h3 style="margin-bottom:16px">Submitted Photos (' + order.photos.length + ')</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px">';
+    order.photos.forEach(function(p, i) {
+      html += '<div style="border:1px solid var(--border);border-radius:8px;overflow:hidden"><img src="' + (p.url || '') + '" style="width:100%;height:150px;object-fit:cover" alt="' + (p.roomLabel || 'Photo') + '"><div style="padding:10px"><strong style="font-size:13px">' + (p.roomLabel || 'Room ' + (i+1)) + '</strong>' + (p.style ? '<br><span style="font-size:12px;color:var(--text-muted)">' + p.style + '</span>' : '') + '<br><a href="' + (p.url || '#') + '" target="_blank" style="font-size:12px;color:var(--primary)">Download</a></div></div>';
+    });
+    html += '</div></div>';
+    panel.insertAdjacentHTML("beforeend", html);
   };
 // ============================================================
   // WIRE ALL STATIC DASHBOARD ELEMENTS TO LIVE API FUNCTIONS
