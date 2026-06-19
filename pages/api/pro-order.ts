@@ -84,6 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       customerEmail: normalizedEmail,
       proOrderId: orderRef.id,
       photoCount: Number(roomCount),
+      photos: Array.isArray(photos) ? photos : [],
       createdAt: now,
     });
 
