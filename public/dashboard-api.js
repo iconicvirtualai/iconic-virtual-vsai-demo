@@ -95,16 +95,35 @@
       if (welcomeEl && u.firstName && welcomeEl.textContent.indexOf("Welcome") > -1) {
         welcomeEl.innerHTML = "Welcome back, " + u.firstName + " \uD83D\uDC4B";
       }
-      var totalCredits = (u.aiCreditsRemaining || 0) + (u.proImagesRemaining || 0);
+      var totalCredits = (u.creditsRemaining || u.aiCreditsRemaining || 0) + (u.proImagesRemaining || 0);
       var credEl = document.getElementById("stat-credits");
       if (credEl) credEl.textContent = totalCredits;
       var credSub = document.getElementById("stat-credits-sub");
-      if (credSub) credSub.textContent = (u.aiCreditsRemaining || 0) + " AI | " + (u.proImagesRemaining || 0) + " Pro";
+      if (credSub) credSub.textContent = (u.creditsRemaining || u.aiCreditsRemaining || 0) + " AI | " + (u.proImagesRemaining || 0) + " Pro";
       // Also update sidebar creditCount and buy-credits proTokenBalance (hardcoded to 42 in HTML)
       var creditCountEl = document.getElementById("creditCount");
       if (creditCountEl) creditCountEl.textContent = totalCredits;
       var proTokenEl = document.getElementById("proTokenBalance");
       if (proTokenEl) proTokenEl.textContent = totalCredits;
+      // Update credit widget (bottom-left sidebar)
+      var cwNumber = document.querySelector(".credit-widget .credit-number, .credit-widget h3, .credit-widget span");
+      var cwEl = document.querySelector(".credit-widget");
+      if (cwEl) { cwEl.style.display = ""; var cwNums = cwEl.querySelectorAll("*"); cwNums.forEach(function(el) { if (el.textContent.trim() === "42" || !isNaN(parseInt(el.textContent.trim()))) el.textContent = totalCredits; }); }
+      // Update buy-credits section (hardcoded 42)
+      var creditsSection = document.getElementById("sub-credits");
+      if (creditsSection) {
+        creditsSection.querySelectorAll("*").forEach(function(el) {
+          if (el.children.length === 0 && /\b42\b/.test(el.textContent)) el.textContent = el.textContent.replace(/\b42\b/g, totalCredits);
+        });
+      }
+      // Update billing section usage bar
+      var billingSection = document.getElementById("sub-billing");
+      if (billingSection) {
+        billingSection.querySelectorAll("*").forEach(function(el) {
+          if (el.children.length === 0 && el.textContent.indexOf("8 of 50") > -1) el.textContent = el.textContent.replace("8 of 50", totalCredits + " of " + totalCredits);
+          if (el.children.length === 0 && el.textContent.indexOf("42") > -1 && el.textContent.indexOf("credits") > -1) el.textContent = el.textContent.replace("42", totalCredits);
+        });
+      }
       var totalEl = document.getElementById("stat-total");
       if (totalEl) totalEl.textContent = u.totalStagings || 0;
       window._userProfile = u;
@@ -709,8 +728,7 @@ window.loadOrders(); } });
     if (localStorage.getItem("authToken")) {
       window.loadUserProfile();
           // Hide static credit widget
-          var cw = document.querySelector(".credit-widget");
-          if (cw) cw.style.display = "none";
+          // Credit widget will be updated by loadUserProfile with real data
           // Hide static pagination
           var allDivs = document.querySelectorAll("#sub-orders > div");
           allDivs.forEach(function(d) { if (d.textContent.indexOf("Showing") > -1 && d.textContent.indexOf("of 47") > -1) d.style.display = "none"; });
@@ -725,5 +743,7 @@ window.loadOrders(); } });
   }, 600);
 
 })();
+
+// trigger
 
 // trigger
