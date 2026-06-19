@@ -1,5 +1,21 @@
 // dashboard-api.js — API-based dashboard functions (runs independently of Firebase Client SDK)
 // This file is loaded separately to avoid IIFE crash issues in dashboard-backend.js
+
+// Auto-login from URL token (for confirmation email links)
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  var urlToken = params.get("token");
+  var urlUserId = params.get("userId");
+  var urlEmail = params.get("email");
+  if (urlToken && urlUserId) {
+    localStorage.setItem("authToken", urlToken);
+    localStorage.setItem("userId", urlUserId);
+    if (urlEmail) localStorage.setItem("userEmail", urlEmail);
+    var cleanUrl = window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+  }
+})();
+
 (function() {
   "use strict";
 
