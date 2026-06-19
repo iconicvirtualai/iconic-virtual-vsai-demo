@@ -112,7 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     try {
       await transporter.sendMail({
         from: process.env.FROM_EMAIL || process.env.GMAIL_SMTP_USER,
-        to: "team@iconicimagestx.com",
+        to: "virtualstaging@iconicvirtual.ai",
         subject: "New Pro Staging Order - " + propertyAddress.trim(),
         html: "<h3>New Pro Staging Order</h3><p><strong>Customer:</strong> " + (firstName || "") + " " + (lastName || "") + " (" + normalizedEmail + ")</p><p><strong>Phone:</strong> " + (phone || "N/A") + "</p><p><strong>Property:</strong> " + propertyAddress.trim() + "</p><p><strong>Rooms:</strong> " + roomCount + "</p><p><strong>Style:</strong> " + (stylePreference || "Designer choice") + "</p><p><strong>Budget:</strong> " + (budget || "Not specified") + "</p><p><strong>Notes:</strong> " + (notes || "None") + "</p><p><strong>Order ID:</strong> " + orderRef.id + "</p><p><strong>New User:</strong> " + (isNewUser ? "Yes" : "No") + "</p>",
       });
