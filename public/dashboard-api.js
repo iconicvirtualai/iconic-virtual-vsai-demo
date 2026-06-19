@@ -168,10 +168,8 @@
   };
 
   window.renderOrdersFromAPI = function(orders, filter) {
-    // Filter orders
     var filtered = orders;
     if (filter && filter !== "all") filtered = orders.filter(function(o) { return o.status === filter; });
-    // Update tab counts
     var tabs = document.querySelectorAll("#sub-orders .tab-btn");
     if (tabs.length >= 5) {
       tabs[0].textContent = "All Orders (" + orders.length + ")";
@@ -180,24 +178,30 @@
       tabs[3].textContent = "Failed (" + orders.filter(function(o){return o.status==="failed"}).length + ")";
       tabs[4].textContent = "Draft (" + orders.filter(function(o){return o.status==="draft"}).length + ")";
     }
-    // Find the orders table panel
-    var tablePanel = document.querySelector("#sub-orders .panel[style*=\"padding: 0\"]") || document.querySelector("#sub-orders .panel table");
-    if (!tablePanel) { var panels = document.querySelectorAll("#sub-orders .panel"); tablePanel = panels[panels.length - 1]; }
-    if (!tablePanel) return;
-    // Build table HTML
-    var html = '<div style="padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px"><input type="checkbox" id="selectAllOrders" onchange="toggleSelectAllOrders(this.checked)"> <span style="font-size:13px;color:var(--text-muted)">Select All</span> <button class="btn btn-sm btn-ghost" onclick="bulkDeleteOrders()" style="margin-left:auto;color:var(--danger);font-size:13px">Delete Selected</button></div>';
+    var ordersSection = document.getElementById("sub-orders");
+    if (!ordersSection) return;
+    ordersSection.querySelectorAll(".panel").forEach(function(p) { if (!p.id) p.style.display = "none"; });
+    var container = document.getElementById("ordersDynamic");
+    if (!container) {
+      container = document.createElement("div");
+      container.id = "ordersDynamic";
+      container.className = "panel";
+      container.style.padding = "0";
+      ordersSection.appendChild(container);
+    }
+    container.style.display = "block";
+    var html = "";
     if (filtered.length === 0) {
-      html += '<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><p style="font-size:48px;margin-bottom:16px">📋</p><p>No orders yet</p></div>';
+      html = '<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><p style="font-size:48px;margin-bottom:16px">No orders found</p></div>';
     } else {
-      html += '<table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border);text-align:left"><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)"></th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">ADDRESS</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">ROOM</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">STYLE</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">STATUS</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">DATE</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">ACTIONS</th></tr></thead><tbody>';
+      html = '<table style="width:100%;border-collapse:collapse"><thead><tr style="border-bottom:2px solid var(--border);text-align:left"><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">ADDRESS</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">ROOM</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">STYLE</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">STATUS</th><th style="padding:12px 16px;font-size:12px;color:var(--text-muted)">DATE</th></tr></thead><tbody>';
       filtered.forEach(function(o) {
-        var statusColor = o.status === "completed" || o.status === "paid" ? "var(--success)" : o.status === "failed" ? "var(--danger)" : o.status === "processing" ? "#f59e0b" : "var(--text-muted)";
-        html += '<tr style="border-bottom:1px solid var(--border);cursor:pointer" onclick="viewOrder(\x27' + o.id + '\x27)" data-order-id="' + o.id + '"><td style="padding:12px 16px"><input type="checkbox" class="order-checkbox" value="' + o.id + '"></td><td style="padding:12px 16px">' + (o.address || "-") + '</td><td style="padding:12px 16px">' + (o.room || "-") + '</td><td style="padding:12px 16px">' + (o.style || "-") + '</td><td style="padding:12px 16px"><span style="background:' + statusColor + ';color:white;padding:4px 10px;border-radius:20px;font-size:12px">' + (o.status || "draft") + '</span></td><td style="padding:12px 16px;font-size:13px;color:var(--text-muted)">' + new Date(o.createdAt).toLocaleDateString() + '</td><td style="padding:12px 16px"><button class="btn btn-sm btn-ghost" onclick="cancelOrder(\x27' + o.id + '\x27)" title="Cancel">✕</button> <button class="btn btn-sm btn-ghost" style="color:var(--danger)" onclick="deleteOrder(\x27' + o.id + '\x27)" title="Delete">🗑</button></td></tr>';
+        var sc = o.status === "completed" || o.status === "paid" ? "var(--success)" : o.status === "failed" ? "var(--danger)" : o.status === "processing" ? "#f59e0b" : "var(--text-muted)";
+        html += '<tr style="border-bottom:1px solid var(--border)"><td style="padding:12px 16px">' + (o.address || '-') + '</td><td style="padding:12px 16px">' + (o.room || '-') + '</td><td style="padding:12px 16px">' + (o.style || '-') + '</td><td style="padding:12px 16px"><span style="background:' + sc + ';color:white;padding:4px 10px;border-radius:20px;font-size:12px">' + (o.status || 'draft') + '</span></td><td style="padding:12px 16px;font-size:13px;color:var(--text-muted)">' + new Date(o.createdAt).toLocaleDateString() + '</td></tr>';
       });
       html += '</tbody></table>';
     }
-    tablePanel.innerHTML = html;
-    tablePanel.style.display = "block";
+    container.innerHTML = html;
   };
 
   // Bulk actions
@@ -704,6 +708,12 @@ window.loadOrders(); } });
   setTimeout(function() {
     if (localStorage.getItem("authToken")) {
       window.loadUserProfile();
+          // Hide static credit widget
+          var cw = document.querySelector(".credit-widget");
+          if (cw) cw.style.display = "none";
+          // Hide static pagination
+          var allDivs = document.querySelectorAll("#sub-orders > div");
+          allDivs.forEach(function(d) { if (d.textContent.indexOf("Showing") > -1 && d.textContent.indexOf("of 47") > -1) d.style.display = "none"; });
       // Hide static panels before loading
       document.querySelectorAll("#sub-orders .panel").forEach(function(p) { if (!p.id) p.style.display = "none"; });
       document.querySelectorAll("#sub-projects .panel").forEach(function(p) { if (!p.id) p.style.display = "none"; });
@@ -715,3 +725,5 @@ window.loadOrders(); } });
   }, 600);
 
 })();
+
+// trigger
