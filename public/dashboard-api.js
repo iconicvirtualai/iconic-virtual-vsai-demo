@@ -723,6 +723,144 @@ window.loadOrders(); } });
 
   }, 1500);
 
+  // ---- PRO STAGING FORM ----
+  var proStagingPhotos = [];
+
+  window.handleProPhotoSelect = function(event) {
+    var files = event.target.files;
+    if (!files || !files.length) return;
+    for (var i = 0; i < files.length; i++) { addProPhoto(files[i]); }
+    event.target.value = '';
+  };
+
+  window.handleProPhotoDrop = function(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    var dt = event.dataTransfer;
+    if (!dt || !dt.files) return;
+    for (var i = 0; i < dt.files.length; i++) {
+      if (dt.files[i].type.match(/^image\//)) addProPhoto(dt.files[i]);
+    }
+  };
+
+  // Prevent default dragover so drop works
+  document.addEventListener('DOMContentLoaded', function() {
+    var zone = document.querySelector('#sub-pro-staging .upload-zone, #sub-pro-staging [ondrop]');
+    if (zone) {
+      zone.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); });
+    }
+  });
+
+  function addProPhoto(file) {
+    if (file.size > 5 * 1024 * 1024) { toast('File too large: ' + file.name + ' (max 5MB)', 'error'); return; }
+    var photo = { file: file, id: Date.now() + '_' + Math.random().toString(36).substr(2,6), previewUrl: null, uploadUrl: null, storagePath: null, uploadStatus: 'reading', roomLabel: 'living_room' };
+    proStagingPhotos.push(photo);
+    renderProPhotos();
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      photo.previewUrl = e.target.result;
+      photo.uploadStatus = 'uploading';
+      renderProPhotos();
+      uploadProPhoto(photo);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function uploadProPhoto(photo) {
+    fetch('/api/pro-order/upload-photo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageBase64: photo.previewUrl, fileName: photo.file.name, contentType: photo.file.type })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok) { photo.uploadUrl = data.url; photo.storagePath = data.storagePath; photo.uploadStatus = 'done'; }
+      else { photo.uploadStatus = 'error'; }
+      renderProPhotos();
+    })
+    .catch(function() { photo.uploadStatus = 'error'; renderProPhotos(); });
+  }
+
+  function renderProPhotos() {
+    var container = document.getElementById('proPhotoList');
+    if (!container) return;
+    if (proStagingPhotos.length === 0) { container.innerHTML = ''; updateProCost(); return; }
+    var html = '';
+    proStagingPhotos.forEach(function(p, idx) {
+      var badge = p.uploadStatus === 'done' ? '<span style="color:#16a34a">\u2713 Uploaded</span>' :
+        (p.uploadStatus === 'uploading' || p.uploadStatus === 'reading') ? '<span style="color:#f59e0b">\u23F3 Uploading...</span>' :
+        '<span style="color:#dc2626">\u2717 Failed <a href="#" onclick="retryProUpload('+idx+');return false" style="color:#8B7355">Retry</a></span>';
+      html += '<div style="display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px">';
+      if (p.previewUrl) html += '<img src="'+p.previewUrl+'" style="width:60px;height:60px;object-fit:cover;border-radius:6px">';
+      else html += '<div style="width:60px;height:60px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center">\uD83D\uDCF7</div>';
+      html += '<div style="flex:1"><div style="font-weight:600;font-size:14px">'+p.file.name+'</div><div style="font-size:12px;margin-top:4px">'+badge+'</div></div>';
+      html += '<select onchange="proStagingPhotos['+idx+'].roomLabel=this.value" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px">';
+      html += '<option value="living_room">Living Room</option><option value="bedroom">Bedroom</option><option value="kitchen">Kitchen</option><option value="bathroom">Bathroom</option><option value="dining_room">Dining Room</option><option value="office">Office</option><option value="other">Other</option></select>';
+      html += '<button onclick="removeProPhoto('+idx+')" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted)" title="Remove">\u2715</button></div>';
+    });
+    container.innerHTML = html;
+    updateProCost();
+  }
+
+  function updateProCost() {
+    var balEl = document.getElementById('proTokenBalance');
+    if (balEl && window._userProfile) {
+      var cr = (window._userProfile.creditsRemaining || window._userProfile.aiCreditsRemaining || 0) + (window._userProfile.proImagesRemaining || 0);
+      balEl.textContent = cr;
+    }
+  }
+
+  window.removeProPhoto = function(idx) { proStagingPhotos.splice(idx, 1); renderProPhotos(); };
+  window.retryProUpload = function(idx) {
+    var p = proStagingPhotos[idx];
+    if (p && p.previewUrl) { p.uploadStatus = 'uploading'; renderProPhotos(); uploadProPhoto(p); }
+  };
+
+  window.submitProStagingForm = function(event) {
+    event.preventDefault();
+    var address = document.getElementById('proAddress');
+    var style = document.getElementById('proStyle');
+    var notes = document.getElementById('proNotes');
+    var email = localStorage.getItem('userEmail') || (window._userProfile && window._userProfile.email) || '';
+    if (!address || !address.value.trim()) { toast('Property address is required', 'error'); return; }
+    if (!email) { toast('Please log in first', 'error'); return; }
+    if (proStagingPhotos.length === 0) { toast('Please upload at least one photo', 'error'); return; }
+    var pending = proStagingPhotos.filter(function(p) { return p.uploadStatus !== 'done'; });
+    if (pending.length > 0) { toast(pending.length + ' photo(s) still uploading or failed', 'error'); return; }
+    var photos = proStagingPhotos.map(function(p) {
+      return { url: p.uploadUrl, storagePath: p.storagePath, roomLabel: p.roomLabel, style: style ? style.value : '' };
+    });
+    var btn = document.getElementById('proSubmitBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+    var profile = window._userProfile || {};
+    fetch('/api/pro-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('authToken') || '') },
+      body: JSON.stringify({
+        email: email, firstName: profile.firstName || '', lastName: profile.lastName || '',
+        phone: profile.phone || '', propertyAddress: address.value.trim(),
+        roomCount: proStagingPhotos.length, stylePreference: style ? style.value : '',
+        styleMode: 'per_photo', notes: notes ? notes.value : '', photos: photos
+      })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Submit for Professional Staging'; }
+      if (data.ok) {
+        toast('Pro staging order submitted successfully!');
+        proStagingPhotos = [];
+        renderProPhotos();
+        document.getElementById('proStagingForm').reset();
+        if (window.loadOrders) window.loadOrders();
+        setTimeout(function() { if (typeof showSub === 'function') showSub('orders'); }, 1500);
+      } else { toast(data.error || 'Submission failed', 'error'); }
+    })
+    .catch(function(e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Submit for Professional Staging'; }
+      toast('Network error: ' + e.message, 'error');
+    });
+  };
+
 // ---- AUTO-INIT ----
   setTimeout(function() {
     if (localStorage.getItem("authToken")) {
