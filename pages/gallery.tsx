@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 
 const aiExamples = [
   { pair: "standard_living", style: "Modern Minimalist", room: "Living Room", location: "Brooklyn, NY" },
@@ -10,18 +10,21 @@ const aiExamples = [
   { pair: "coastal_living", style: "Coastal Modern", room: "Living Room", location: "Portland, OR" },
 ];
 
-function RetryImg({ src, alt, style }: { src: string; alt: string; style?: React.CSSProperties }) {
+function RetryImg({ src, alt, lazy }: { src: string; alt: string; lazy?: boolean }) {
   const [retries, setRetries] = useState(0);
   const [currentSrc, setCurrentSrc] = useState(src);
+  const [loaded, setLoaded] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => { setCurrentSrc(src); setRetries(0); }, [src]);
+  useEffect(() => { setCurrentSrc(src); setRetries(0); setLoaded(false); }, [src]);
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
 
   const handleError = useCallback(() => {
-    if (retries < 4) {
-      const delay = Math.min(1000 * Math.pow(2, retries), 8000);
-      setTimeout(() => {
+    if (retries < 6) {
+      const delay = 1500 + Math.random() * 1000 * (retries + 1);
+      timerRef.current = setTimeout(() => {
         setRetries((r) => r + 1);
-        setCurrentSrc(src + "&retry=" + (retries + 1));
+        setCurrentSrc(src + (src.includes("?") ? "&" : "?") + "r=" + Date.now());
       }, delay);
     }
   }, [retries, src]);
@@ -30,25 +33,43 @@ function RetryImg({ src, alt, style }: { src: string; alt: string; style?: React
     <img
       src={currentSrc}
       alt={alt}
+      loading={lazy ? "lazy" : undefined}
       onError={handleError}
-      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", ...style }}
+      onLoad={() => setLoaded(true)}
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover",
+        display: "block",
+        opacity: loaded ? 1 : 0,
+        transition: "opacity 0.3s ease",
+      }}
     />
   );
 }
 
-function Card({ item, badge, urls }: { item: typeof aiExamples[0]; badge: string; urls: Record<string, string> }) {
+function Card({ item, badge, urls, index }: { item: typeof aiExamples[0]; badge: string; urls: Record<string, string>; index: number }) {
   const beforeUrl = urls[item.pair + "_before"];
   const afterUrl = urls[item.pair + "_after"];
+  const [ready, setReady] = useState(false);
+
+  // Stagger card rendering: first pair immediately, then 800ms delay per pair
+  useEffect(() => {
+    if (!beforeUrl) return;
+    const delay = index * 800;
+    const t = setTimeout(() => setReady(true), delay);
+    return () => clearTimeout(t);
+  }, [beforeUrl, index]);
 
   return (
     <div style={{ background: "#fff", borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
       <div style={{ display: "flex", gap: 0 }}>
         <div style={{ flex: 1, position: "relative", height: 220, overflow: "hidden", background: "#e2e8f0" }}>
-          {beforeUrl && <RetryImg src={beforeUrl} alt={`${item.style} - Before`} />}
+          {ready && beforeUrl && <RetryImg src={beforeUrl} alt={`${item.style} - Before`} lazy={index > 1} />}
           <span style={{ position: "absolute", top: 10, left: 10, background: "rgba(0,0,0,0.6)", color: "#fff", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>BEFORE</span>
         </div>
         <div style={{ flex: 1, position: "relative", height: 220, overflow: "hidden", background: "#e2e8f0" }}>
-          {afterUrl && <RetryImg src={afterUrl} alt={`${item.style} - After`} />}
+          {ready && afterUrl && <RetryImg src={afterUrl} alt={`${item.style} - After`} lazy={index > 1} />}
           <span style={{ position: "absolute", top: 10, left: 10, background: "rgba(16,185,129,0.85)", color: "#fff", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>AFTER</span>
         </div>
       </div>
@@ -112,7 +133,7 @@ export default function GalleryPage() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(440px, 1fr))", gap: 24 }}>
               {aiExamples.map((item, i) => (
-                <Card key={i} item={item} badge="AI" urls={urls} />
+                <Card key={item.pair} item={item} badge="AI" urls={urls} index={i} />
               ))}
             </div>
           </section>
