@@ -423,29 +423,29 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
       <p class="section-subtitle">Real results from real agents. Every image staged by IconicVirtual.AI.</p>
     </div>
     <div class="gallery-grid">
-      <div class="gallery-card">
+      <div class="gallery-card" data-pair="scandinavian_living">
         <div class="gallery-visual"><div class="before">Before</div><div class="arrow">&rarr;</div><div class="after">After</div></div>
-        <div class="gallery-info"><span class="style-tag">Modern</span><h4>Modern Minimalist</h4><p>Living Room &bull; Brooklyn, NY</p></div>
+        <div class="gallery-info"><span class="style-tag">Scandi</span><h4>Scandinavian</h4><p>Living Room &bull; Portland, OR</p></div>
       </div>
-      <div class="gallery-card">
+      <div class="gallery-card" data-pair="industrial_kitchen">
         <div class="gallery-visual"><div class="before">Before</div><div class="arrow">&rarr;</div><div class="after">After</div></div>
-        <div class="gallery-info"><span class="style-tag">Scandi</span><h4>Scandinavian</h4><p>Master Bedroom &bull; Austin, TX</p></div>
+        <div class="gallery-info"><span class="style-tag">Industrial</span><h4>Industrial Chic</h4><p>Kitchen &bull; Chicago, IL</p></div>
       </div>
-      <div class="gallery-card">
+      <div class="gallery-card" data-pair="coastal_master">
         <div class="gallery-visual"><div class="before">Before</div><div class="arrow">&rarr;</div><div class="after">After</div></div>
-        <div class="gallery-info"><span class="style-tag">Coastal</span><h4>Coastal</h4><p>Kitchen &bull; Miami, FL</p></div>
+        <div class="gallery-info"><span class="style-tag">Coastal</span><h4>Coastal</h4><p>Master Bedroom &bull; Miami, FL</p></div>
       </div>
-      <div class="gallery-card">
+      <div class="gallery-card" data-pair="luxury_living">
         <div class="gallery-visual"><div class="before">Before</div><div class="arrow">&rarr;</div><div class="after">After</div></div>
-        <div class="gallery-info"><span class="style-tag">Boho</span><h4>Bohemian</h4><p>Dining Room &bull; Nashville, TN</p></div>
+        <div class="gallery-info"><span class="style-tag">Luxury</span><h4>Luxury Contemporary</h4><p>Living Room &bull; Los Angeles, CA</p></div>
       </div>
-      <div class="gallery-card">
-        <div class="gallery-visual"><div class="before">Before</div><div class="arrow">&rarr;</div><div class="after">After</div></div>
-        <div class="gallery-info"><span class="style-tag">Luxury</span><h4>Luxury Contemporary</h4><p>Master Suite &bull; Los Angeles, CA</p></div>
-      </div>
-      <div class="gallery-card">
+      <div class="gallery-card" data-pair="farmhouse_living">
         <div class="gallery-visual"><div class="before">Before</div><div class="arrow">&rarr;</div><div class="after">After</div></div>
         <div class="gallery-info"><span class="style-tag">Farm</span><h4>Farmhouse</h4><p>Family Room &bull; Dallas, TX</p></div>
+      </div>
+      <div class="gallery-card" data-pair="standard_kitchen">
+        <div class="gallery-visual"><div class="before">Before</div><div class="arrow">&rarr;</div><div class="after">After</div></div>
+        <div class="gallery-info"><span class="style-tag">Modern</span><h4>Modern Minimalist</h4><p>Kitchen &bull; Brooklyn, NY</p></div>
       </div>
     </div>
     <div class="gallery-cta"><a href="/studio" class="btn-emerald">Stage Your First Room Free &rarr;</a></div>
@@ -719,5 +719,36 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   a.addEventListener('click',e=>{e.preventDefault();const el=document.querySelector(a.getAttribute('href'));if(el)el.scrollIntoView({behavior:'smooth',block:'start'})});
 });
 </script>
+
+<script>
+// Dynamic gallery image loader - fetches real staging photos from Firebase
+(function(){
+  fetch('/api/migrate-images')
+    .then(function(r){return r.json()})
+    .then(function(data){
+      if(!data.ok)return;
+      var urls=data.urls;
+      document.querySelectorAll('.gallery-card[data-pair]').forEach(function(card){
+        var pair=card.dataset.pair;
+        var beforeUrl=urls[pair+'_before'];
+        var afterUrl=urls[pair+'_after'];
+        if(!beforeUrl||!afterUrl)return;
+        var bEl=card.querySelector('.before');
+        var aEl=card.querySelector('.after');
+        if(bEl){
+          bEl.style.background="url('"+beforeUrl+"') center/cover no-repeat";
+          bEl.style.position="relative";
+          bEl.innerHTML='<span style="background:rgba(0,0,0,.6);color:#fff;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:1px">BEFORE</span>';
+        }
+        if(aEl){
+          aEl.style.background="url('"+afterUrl+"') center/cover no-repeat";
+          aEl.style.position="relative";
+          aEl.innerHTML='<span style="background:rgba(16,185,129,.8);color:#fff;padding:3px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:1px">AFTER</span>';
+        }
+      });
+    });
+})();
+</script>
+
 </body>
 </html>
