@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 const aiExamples = [
   { pair: "standard_living", style: "Modern Minimalist", room: "Living Room", location: "Brooklyn, NY" },
@@ -10,42 +10,46 @@ const aiExamples = [
   { pair: "coastal_living", style: "Coastal Modern", room: "Living Room", location: "Portland, OR" },
 ];
 
+function RetryImg({ src, alt, style }: { src: string; alt: string; style?: React.CSSProperties }) {
+  const [retries, setRetries] = useState(0);
+  const [currentSrc, setCurrentSrc] = useState(src);
+
+  useEffect(() => { setCurrentSrc(src); setRetries(0); }, [src]);
+
+  const handleError = useCallback(() => {
+    if (retries < 4) {
+      const delay = Math.min(1000 * Math.pow(2, retries), 8000);
+      setTimeout(() => {
+        setRetries((r) => r + 1);
+        setCurrentSrc(src + "&retry=" + (retries + 1));
+      }, delay);
+    }
+  }, [retries, src]);
+
+  return (
+    <img
+      src={currentSrc}
+      alt={alt}
+      onError={handleError}
+      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", ...style }}
+    />
+  );
+}
+
 function Card({ item, badge, urls }: { item: typeof aiExamples[0]; badge: string; urls: Record<string, string> }) {
   const beforeUrl = urls[item.pair + "_before"];
   const afterUrl = urls[item.pair + "_after"];
-  const hasBefore = !!beforeUrl;
-  const hasAfter = !!afterUrl;
 
   return (
     <div style={{ background: "#fff", borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
       <div style={{ display: "flex", gap: 0 }}>
-        <div style={{ flex: 1, position: "relative" }}>
-          <div
-            style={{
-              background: hasBefore ? `url(${beforeUrl}) center/cover no-repeat` : "linear-gradient(135deg,#cbd5e1,#94a3b8)",
-              height: 220,
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "flex-start",
-              padding: 10,
-            }}
-          >
-            <span style={{ background: "rgba(0,0,0,0.6)", color: "#fff", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>BEFORE</span>
-          </div>
+        <div style={{ flex: 1, position: "relative", height: 220, overflow: "hidden", background: "#e2e8f0" }}>
+          {beforeUrl && <RetryImg src={beforeUrl} alt={`${item.style} - Before`} />}
+          <span style={{ position: "absolute", top: 10, left: 10, background: "rgba(0,0,0,0.6)", color: "#fff", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>BEFORE</span>
         </div>
-        <div style={{ flex: 1, position: "relative" }}>
-          <div
-            style={{
-              background: hasAfter ? `url(${afterUrl}) center/cover no-repeat` : "linear-gradient(135deg,#a0896e,#8B7355)",
-              height: 220,
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "flex-start",
-              padding: 10,
-            }}
-          >
-            <span style={{ background: "rgba(16,185,129,0.85)", color: "#fff", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>AFTER</span>
-          </div>
+        <div style={{ flex: 1, position: "relative", height: 220, overflow: "hidden", background: "#e2e8f0" }}>
+          {afterUrl && <RetryImg src={afterUrl} alt={`${item.style} - After`} />}
+          <span style={{ position: "absolute", top: 10, left: 10, background: "rgba(16,185,129,0.85)", color: "#fff", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>AFTER</span>
         </div>
       </div>
       <div style={{ padding: "16px 20px" }}>
