@@ -2,12 +2,12 @@ import Head from "next/head";
 import { useEffect, useState, useCallback, useRef } from "react";
 
 const aiExamples = [
-  { pair: "standard_living", style: "Modern Minimalist", room: "Living Room", location: "Brooklyn, NY" },
-  { pair: "scandinavian_master", style: "Scandinavian", room: "Master Bedroom", location: "Austin, TX" },
-  { pair: "coastal_kitchen", style: "Coastal", room: "Kitchen", location: "Miami, FL" },
-  { pair: "coastal_dining", style: "Coastal Elegance", room: "Dining Room", location: "Nashville, TN" },
-  { pair: "industrial_master", style: "Industrial Chic", room: "Master Suite", location: "Chicago, IL" },
-  { pair: "coastal_living", style: "Coastal Modern", room: "Living Room", location: "Portland, OR" },
+  { num: 1, label: "Staging Example 1" },
+  { num: 2, label: "Staging Example 2" },
+  { num: 3, label: "Staging Example 3" },
+  { num: 4, label: "Staging Example 4" },
+  { num: 5, label: "Staging Example 5" },
+  { num: 6, label: "Staging Example 6" },
 ];
 
 function RetryImg({ src, alt, lazy }: { src: string; alt: string; lazy?: boolean }) {
@@ -48,12 +48,11 @@ function RetryImg({ src, alt, lazy }: { src: string; alt: string; lazy?: boolean
   );
 }
 
-function Card({ item, badge, urls, index }: { item: typeof aiExamples[0]; badge: string; urls: Record<string, string>; index: number }) {
-  const beforeUrl = urls[item.pair + "_before"];
-  const afterUrl = urls[item.pair + "_after"];
+function Card({ item, urls, index }: { item: typeof aiExamples[0]; urls: Record<string, string>; index: number }) {
+  const beforeUrl = urls["gallery:" + item.num + "_before"];
+  const afterUrl = urls["gallery:" + item.num + "_after"];
   const [ready, setReady] = useState(false);
 
-  // Stagger card rendering: first pair immediately, then 800ms delay per pair
   useEffect(() => {
     if (!beforeUrl) return;
     const delay = index * 800;
@@ -65,20 +64,20 @@ function Card({ item, badge, urls, index }: { item: typeof aiExamples[0]; badge:
     <div style={{ background: "#fff", borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
       <div style={{ display: "flex", gap: 0 }}>
         <div style={{ flex: 1, position: "relative", height: 220, overflow: "hidden", background: "#e2e8f0" }}>
-          {ready && beforeUrl && <RetryImg src={beforeUrl} alt={`${item.style} - Before`} lazy={index > 1} />}
+          {ready && beforeUrl && <RetryImg src={beforeUrl} alt={`${item.label} - Before`} lazy={index > 1} />}
           <span style={{ position: "absolute", top: 10, left: 10, background: "rgba(0,0,0,0.6)", color: "#fff", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>BEFORE</span>
         </div>
         <div style={{ flex: 1, position: "relative", height: 220, overflow: "hidden", background: "#e2e8f0" }}>
-          {ready && afterUrl && <RetryImg src={afterUrl} alt={`${item.style} - After`} lazy={index > 1} />}
+          {ready && afterUrl && <RetryImg src={afterUrl} alt={`${item.label} - After`} lazy={index > 1} />}
           <span style={{ position: "absolute", top: 10, left: 10, background: "rgba(16,185,129,0.85)", color: "#fff", padding: "4px 12px", borderRadius: 6, fontSize: 11, fontWeight: 700, letterSpacing: 1 }}>AFTER</span>
         </div>
       </div>
       <div style={{ padding: "16px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-          <span style={{ background: badge === "AI" ? "#10b981" : "#2563eb", color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 4 }}>{badge}</span>
-          <span style={{ fontWeight: 700, fontSize: 16, color: "#0a0a0a" }}>{item.style}</span>
+          <span style={{ background: "#10b981", color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 4 }}>AI</span>
+          <span style={{ fontWeight: 700, fontSize: 16, color: "#0a0a0a" }}>{item.label}</span>
         </div>
-        <p style={{ margin: 0, fontSize: 14, color: "#666" }}>{item.room} &bull; {item.location}</p>
+        <p style={{ margin: 0, fontSize: 14, color: "#666" }}>Before &amp; After &bull; AI Virtual Staging</p>
       </div>
     </div>
   );
@@ -133,7 +132,7 @@ export default function GalleryPage() {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(440px, 1fr))", gap: 24 }}>
               {aiExamples.map((item, i) => (
-                <Card key={item.pair} item={item} badge="AI" urls={urls} index={i} />
+                <Card key={item.num} item={item} urls={urls} index={i} />
               ))}
             </div>
           </section>
