@@ -252,17 +252,18 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 
 /* -- TIKTOK HERO SLIDER -- */
 .tiktok-phone{
-  width:380px;height:480px;
+  width:320px;height:569px;
   background:linear-gradient(145deg,#1a1a1a,#252525);
-  border-radius:28px;
+  border-radius:32px;
   border:1px solid rgba(255,255,255,0.08);
   overflow:hidden;
   position:relative;
   box-shadow:0 40px 80px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.05) inset;
+  aspect-ratio:9/16;
 }
 .tiktok-phone-inner{
   margin:8px;
-  border-radius:22px;
+  border-radius:26px;
   overflow:hidden;
   height:calc(100% - 16px);
   position:relative;
@@ -280,17 +281,10 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
   top:0;left:0;
   width:100%;
   height:100%;
-  display:flex;
   transition:transform 0.5s cubic-bezier(0.23,1,0.32,1);
   will-change:transform;
 }
-.tiktok-slide .slide-half{
-  flex:1;
-  position:relative;
-  overflow:hidden;
-  background:#1a1a1a;
-}
-.tiktok-slide .slide-half img{
+.tiktok-slide img{
   width:100%;
   height:100%;
   object-fit:cover;
@@ -298,53 +292,27 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 }
 .slide-label{
   position:absolute;
-  top:12px;
-  padding:4px 12px;
-  border-radius:6px;
-  font-size:10px;
+  top:40px;
+  left:50%;
+  transform:translateX(-50%);
+  padding:6px 18px;
+  border-radius:8px;
+  font-size:12px;
   font-weight:800;
-  letter-spacing:1.5px;
+  letter-spacing:2px;
   text-transform:uppercase;
   font-family:var(--font-heading);
   z-index:5;
 }
 .slide-label.before{
-  left:8px;
   background:rgba(0,0,0,0.7);
   color:#fff;
+  backdrop-filter:blur(6px);
 }
 .slide-label.after{
-  left:8px;
-  background:rgba(16,185,129,0.85);
+  background:rgba(16,185,129,0.9);
   color:#fff;
-}
-.slide-divider{
-  position:absolute;
-  top:0;bottom:0;
-  left:50%;
-  width:2px;
-  background:rgba(255,255,255,0.25);
-  z-index:4;
-  transform:translateX(-50%);
-}
-.slide-divider::after{
-  content:'VS';
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:var(--emerald);
-  color:#fff;
-  width:32px;
-  height:32px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:9px;
-  font-weight:900;
-  font-family:var(--font-heading);
-  letter-spacing:0.5px;
+  backdrop-filter:blur(6px);
 }
 
 /* TikTok-style sidebar actions */
@@ -509,12 +477,12 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
   .section-title{font-size:28px}
   .urgency h2{font-size:28px}
   .pricing-tabs{flex-wrap:wrap}
-  .tiktok-phone{width:300px;height:400px}
+  .tiktok-phone{width:260px;height:462px}
   .tiktok-actions{right:6px;bottom:80px;gap:10px}
   .tiktok-action .action-icon{width:30px;height:30px;font-size:14px}
 }
 @media(max-width:480px){
-  .tiktok-phone{width:260px;height:360px}
+  .tiktok-phone{width:220px;height:391px}
   .float-badge{display:none}
   .contact-form .form-row{grid-template-columns:1fr}
 }
@@ -584,22 +552,22 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
             <!-- 27 slides generated dynamically by JS below -->
           </div>
           <div class="slide-counter" id="slideCounter">1/27</div>
-          <div class="tiktok-actions">
+          <div class="tiktok-actions" id="tiktokActions">
             <div class="tiktok-action" data-action="like">
               <div class="action-icon">&#10084;</div>
-              <span class="action-count">24.5K</span>
+              <span class="action-count" id="statLikes">24.5K</span>
             </div>
             <div class="tiktok-action" data-action="comment">
               <div class="action-icon">&#128172;</div>
-              <span class="action-count">1,847</span>
+              <span class="action-count" id="statComments">1,847</span>
             </div>
             <div class="tiktok-action" data-action="share">
               <div class="action-icon">&#8618;</div>
-              <span class="action-count">3,291</span>
+              <span class="action-count" id="statShares">3,291</span>
             </div>
             <div class="tiktok-action" data-action="bookmark">
               <div class="action-icon">&#128278;</div>
-              <span class="action-count">892</span>
+              <span class="action-count" id="statSaves">892</span>
             </div>
           </div>
           <div class="tiktok-info" id="tiktokInfo">
@@ -980,13 +948,31 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
 // TIKTOK SLIDER + DYNAMIC IMAGE LOADER
 // ============================================
 (function(){
-  var TOTAL_SLIDES = 27;
+  var PAIRS = 27;
+  var TOTAL_SLIDES = PAIRS * 2; // 54: before, after, before, after...
   var SLIDE_INTERVAL = 4000;
   var MAX_RETRIES = 4;
   var STAGGER_DELAY = 200;
 
-  // Slide captions
-  var captions = [
+  // Generate random stats for each slide
+  function randBetween(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+  function formatNum(n) {
+    if(n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    return String(n);
+  }
+
+  var slideStats = [];
+  for(var s = 0; s < TOTAL_SLIDES; s++) {
+    slideStats.push({
+      likes: formatNum(randBetween(5000, 48000)),
+      comments: formatNum(randBetween(200, 5000)),
+      shares: formatNum(randBetween(500, 9500)),
+      saves: formatNum(randBetween(100, 3000))
+    });
+  }
+
+  // Slide captions — alternate before/after descriptions
+  var pairCaptions = [
     'Empty living room transformed into modern luxury',
     'Vacant bedroom staged with coastal elegance',
     'Bare kitchen brought to life with warm tones',
@@ -1016,84 +1002,57 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     'Final reveal: from empty to magazine-ready'
   ];
 
-  // Trending tags - shown on random slides (~9 of 27)
+  // Trending tags — shown on random "after" slides
   var trendingTags = [
-    'Staged in 3 seconds',
-    'Multi-Angle Staging',
-    'Touch of Human',
-    'AI-Powered',
-    'Sold 3x Faster',
-    'Before the Magic',
-    'Empty to Elegant',
-    'Buyer\'s First Impression',
-    'MLS Ready',
+    'Staged in 3 seconds', 'Multi-Angle Staging', 'Touch of Human',
+    'AI-Powered', 'Sold 3x Faster', 'Before the Magic',
+    'Empty to Elegant', 'Buyer\'s First Impression', 'MLS Ready',
     '60-Second Transformation'
   ];
-
-  // Randomly pick which slides get trending tags
-  var taggedSlides = {};
+  var taggedPairs = {};
   var taggedCount = 0;
   while(taggedCount < 9) {
-    var randIdx = Math.floor(Math.random() * TOTAL_SLIDES);
-    if(!taggedSlides[randIdx]) {
-      taggedSlides[randIdx] = trendingTags[taggedCount % trendingTags.length];
-      taggedCount++;
-    }
+    var ri = Math.floor(Math.random() * PAIRS);
+    if(!taggedPairs[ri]) { taggedPairs[ri] = trendingTags[taggedCount % trendingTags.length]; taggedCount++; }
   }
 
-  // Build TikTok slides
+  // Build slides: 54 total — each is a single full-bleed image
   var slidesContainer = document.getElementById('tiktokSlides');
   for(var i = 0; i < TOTAL_SLIDES; i++) {
+    var pairIdx = Math.floor(i / 2);    // which pair (0-26)
+    var isBefore = (i % 2 === 0);       // even = before, odd = after
+
     var slide = document.createElement('div');
     slide.className = 'tiktok-slide';
     slide.setAttribute('data-index', i);
     if(i > 0) slide.style.transform = 'translateY(100%)';
 
-    var beforeHalf = document.createElement('div');
-    beforeHalf.className = 'slide-half';
-    var beforeImg = document.createElement('img');
-    beforeImg.alt = 'Before ' + (i+1);
-    beforeImg.setAttribute('data-hero-key', 'hero:slide' + (i+1) + '_before');
-    beforeImg.loading = 'lazy';
-    beforeHalf.appendChild(beforeImg);
-    var beforeLabel = document.createElement('div');
-    beforeLabel.className = 'slide-label before';
-    beforeLabel.textContent = 'BEFORE';
-    beforeHalf.appendChild(beforeLabel);
+    var img = document.createElement('img');
+    img.alt = (isBefore ? 'Before' : 'After') + ' ' + (pairIdx + 1);
+    img.setAttribute('data-hero-key', 'hero:slide' + (pairIdx + 1) + (isBefore ? '_before' : '_after'));
+    img.loading = 'lazy';
+    slide.appendChild(img);
 
-    var afterHalf = document.createElement('div');
-    afterHalf.className = 'slide-half';
-    var afterImg = document.createElement('img');
-    afterImg.alt = 'After ' + (i+1);
-    afterImg.setAttribute('data-hero-key', 'hero:slide' + (i+1) + '_after');
-    afterImg.loading = 'lazy';
-    afterHalf.appendChild(afterImg);
-    var afterLabel = document.createElement('div');
-    afterLabel.className = 'slide-label after';
-    afterLabel.textContent = 'AFTER';
-    afterHalf.appendChild(afterLabel);
+    var label = document.createElement('div');
+    label.className = 'slide-label ' + (isBefore ? 'before' : 'after');
+    label.textContent = isBefore ? 'BEFORE' : 'AFTER';
+    slide.appendChild(label);
 
-    var divider = document.createElement('div');
-    divider.className = 'slide-divider';
-
-    slide.appendChild(beforeHalf);
-    slide.appendChild(divider);
-    slide.appendChild(afterHalf);
-
-    // Add trending tag if applicable
-    if(taggedSlides[i]) {
+    // Trending tag on "after" slides only
+    if(!isBefore && taggedPairs[pairIdx]) {
       var tag = document.createElement('div');
-      tag.className = 'trending-tag' + (i % 2 === 0 ? '' : ' alt');
-      tag.textContent = taggedSlides[i];
-      tag.style.top = (30 + Math.random() * 30) + '%';
-      tag.style.left = (10 + Math.random() * 30) + '%';
+      tag.className = 'trending-tag' + (pairIdx % 2 === 0 ? '' : ' alt');
+      tag.textContent = taggedPairs[pairIdx];
+      tag.style.bottom = '100px';
+      tag.style.left = '12px';
+      tag.style.top = 'auto';
       slide.appendChild(tag);
     }
 
     slidesContainer.appendChild(slide);
   }
 
-  // TikTok slider state
+  // Slider state
   var currentSlide = 0;
   var autoTimer = null;
   var isHovered = false;
@@ -1102,39 +1061,37 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   var captionEl = document.getElementById('tiktokCaption');
   var tagsEl = document.getElementById('tiktokTags');
 
-  function updateSlide(newIndex, direction) {
-    if(newIndex < 0 || newIndex >= TOTAL_SLIDES || newIndex === currentSlide) return;
-    var oldSlide = slides[currentSlide];
-    var newSlide = slides[newIndex];
+  // Stat elements
+  var statLikes = document.getElementById('statLikes');
+  var statComments = document.getElementById('statComments');
+  var statShares = document.getElementById('statShares');
+  var statSaves = document.getElementById('statSaves');
 
-    // Position new slide off-screen
-    newSlide.style.transition = 'none';
-    newSlide.style.transform = direction === 'down' ? 'translateY(100%)' : 'translateY(-100%)';
+  function updateStats(idx) {
+    var st = slideStats[idx];
+    statLikes.textContent = st.likes;
+    statComments.textContent = st.comments;
+    statShares.textContent = st.shares;
+    statSaves.textContent = st.saves;
+  }
 
-    // Force reflow
-    void newSlide.offsetHeight;
+  function getCaptionForSlide(idx) {
+    var pairIdx = Math.floor(idx / 2);
+    var isBefore = (idx % 2 === 0);
+    var base = pairCaptions[pairIdx] || 'AI Virtual Staging';
+    return isBefore ? ('Before: ' + base) : ('After: ' + base);
+  }
 
-    // Animate both slides
-    newSlide.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
-    oldSlide.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
-
-    newSlide.style.transform = 'translateY(0)';
-    oldSlide.style.transform = direction === 'down' ? 'translateY(-100%)' : 'translateY(100%)';
-
-    currentSlide = newIndex;
-    counter.textContent = (currentSlide + 1) + '/' + TOTAL_SLIDES;
-    captionEl.textContent = captions[currentSlide] || 'AI Virtual Staging - Before & After';
-
-    // Update info tags
+  function updateInfoTags(idx) {
+    var pairIdx = Math.floor(idx / 2);
     tagsEl.innerHTML = '';
-    if(taggedSlides[currentSlide]) {
+    if(taggedPairs[pairIdx]) {
       var ts = document.createElement('span');
       ts.className = 'info-tag';
-      ts.textContent = '#' + taggedSlides[currentSlide].replace(/\s+/g, '');
+      ts.textContent = '#' + taggedPairs[pairIdx].replace(/\s+/g, '');
       tagsEl.appendChild(ts);
     }
-    var defaultTags = ['#VirtualStaging', '#AIStaging', '#RealEstate'];
-    defaultTags.forEach(function(t) {
+    ['#VirtualStaging','#AIStaging','#RealEstate'].forEach(function(t) {
       var ts = document.createElement('span');
       ts.className = 'info-tag';
       ts.textContent = t;
@@ -1142,26 +1099,39 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     });
   }
 
+  function updateSlide(newIndex, direction) {
+    if(newIndex < 0 || newIndex >= TOTAL_SLIDES || newIndex === currentSlide) return;
+    var oldSlide = slides[currentSlide];
+    var newSlide = slides[newIndex];
+
+    newSlide.style.transition = 'none';
+    newSlide.style.transform = direction === 'down' ? 'translateY(100%)' : 'translateY(-100%)';
+    void newSlide.offsetHeight;
+
+    newSlide.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
+    oldSlide.style.transition = 'transform 0.5s cubic-bezier(0.23,1,0.32,1)';
+    newSlide.style.transform = 'translateY(0)';
+    oldSlide.style.transform = direction === 'down' ? 'translateY(-100%)' : 'translateY(100%)';
+
+    currentSlide = newIndex;
+    var pairIdx = Math.floor(currentSlide / 2);
+    counter.textContent = (pairIdx + 1) + '/' + PAIRS;
+    captionEl.textContent = getCaptionForSlide(currentSlide);
+    updateStats(currentSlide);
+    updateInfoTags(currentSlide);
+  }
+
   function nextSlide() {
     var next = (currentSlide + 1) % TOTAL_SLIDES;
     updateSlide(next, 'down');
   }
-
   function prevSlide() {
     var prev = (currentSlide - 1 + TOTAL_SLIDES) % TOTAL_SLIDES;
     updateSlide(prev, 'up');
   }
 
-  function startAuto() {
-    stopAuto();
-    autoTimer = setInterval(function() {
-      if(!isHovered) nextSlide();
-    }, SLIDE_INTERVAL);
-  }
-
-  function stopAuto() {
-    if(autoTimer) { clearInterval(autoTimer); autoTimer = null; }
-  }
+  function startAuto() { stopAuto(); autoTimer = setInterval(function() { if(!isHovered) nextSlide(); }, SLIDE_INTERVAL); }
+  function stopAuto() { if(autoTimer) { clearInterval(autoTimer); autoTimer = null; } }
 
   // Pause on hover/touch
   var phone = document.getElementById('tiktokPhone');
@@ -1169,17 +1139,13 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
   phone.addEventListener('mouseleave', function() { isHovered = false; });
 
   // Touch navigation
-  var touchStartY = 0;
-  var touchStartTime = 0;
+  var touchStartY = 0, touchStartTime = 0;
   slidesContainer.addEventListener('touchstart', function(e) {
-    touchStartY = e.touches[0].clientY;
-    touchStartTime = Date.now();
-    isHovered = true;
+    touchStartY = e.touches[0].clientY; touchStartTime = Date.now(); isHovered = true;
   }, {passive: true});
   slidesContainer.addEventListener('touchend', function(e) {
     var deltaY = touchStartY - e.changedTouches[0].clientY;
-    var deltaTime = Date.now() - touchStartTime;
-    if(Math.abs(deltaY) > 30 && deltaTime < 500) {
+    if(Math.abs(deltaY) > 30 && (Date.now() - touchStartTime) < 500) {
       if(deltaY > 0) nextSlide(); else prevSlide();
     }
     isHovered = false;
@@ -1194,48 +1160,29 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     wheelTimeout = setTimeout(function() { wheelTimeout = null; }, 600);
   }, {passive: false});
 
-  // Initialize first slide caption/tags
-  captionEl.textContent = captions[0];
-  tagsEl.innerHTML = '';
-  if(taggedSlides[0]) {
-    var initTag = document.createElement('span');
-    initTag.className = 'info-tag';
-    initTag.textContent = '#' + taggedSlides[0].replace(/\s+/g, '');
-    tagsEl.appendChild(initTag);
-  }
-  ['#VirtualStaging','#AIStaging','#RealEstate'].forEach(function(t) {
-    var ts = document.createElement('span');
-    ts.className = 'info-tag';
-    ts.textContent = t;
-    tagsEl.appendChild(ts);
-  });
-
-  // Start auto-advance
+  // Initialize first slide
+  captionEl.textContent = getCaptionForSlide(0);
+  updateStats(0);
+  updateInfoTags(0);
   startAuto();
 
   // ============================================
   // DYNAMIC IMAGE LOADING FROM API
   // ============================================
 
-  // Load a single <img> element with retry logic
   function loadImageWithRetry(img, url, retries, delay) {
-    retries = retries || 0;
-    delay = delay || 1000;
+    retries = retries || 0; delay = delay || 1000;
     img.src = url;
     img.onerror = function() {
       if(retries < MAX_RETRIES) {
         var jitter = delay + Math.random() * delay * 0.5;
-        setTimeout(function() {
-          loadImageWithRetry(img, url, retries + 1, delay * 2);
-        }, jitter);
+        setTimeout(function() { loadImageWithRetry(img, url, retries + 1, delay * 2); }, jitter);
       }
     };
   }
 
-  // Set background-image on an element with retry logic
   function setBackgroundWithRetry(el, url, retries, delay) {
-    retries = retries || 0;
-    delay = delay || 1000;
+    retries = retries || 0; delay = delay || 1000;
     var testImg = new Image();
     testImg.onload = function() {
       el.style.backgroundImage = 'url(' + url + ')';
@@ -1246,15 +1193,12 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     testImg.onerror = function() {
       if(retries < MAX_RETRIES) {
         var jitter = delay + Math.random() * delay * 0.5;
-        setTimeout(function() {
-          setBackgroundWithRetry(el, url, retries + 1, delay * 2);
-        }, jitter);
+        setTimeout(function() { setBackgroundWithRetry(el, url, retries + 1, delay * 2); }, jitter);
       }
     };
     testImg.src = url;
   }
 
-  // Fetch image map from API and load all images
   fetch('/api/migrate-images')
     .then(function(res) { return res.json(); })
     .then(function(data) {
@@ -1269,16 +1213,11 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
         var afterKey = 'tile:' + tileNum + '_after';
         var beforeEl = card.querySelector('[data-before]');
         var afterEl = card.querySelector('[data-after]');
-
         if(imageMap[beforeKey] && beforeEl) {
-          setTimeout(function() {
-            setBackgroundWithRetry(beforeEl, imageMap[beforeKey]);
-          }, idx * STAGGER_DELAY);
+          setTimeout(function() { setBackgroundWithRetry(beforeEl, imageMap[beforeKey]); }, idx * STAGGER_DELAY);
         }
         if(imageMap[afterKey] && afterEl) {
-          setTimeout(function() {
-            setBackgroundWithRetry(afterEl, imageMap[afterKey]);
-          }, idx * STAGGER_DELAY + 100);
+          setTimeout(function() { setBackgroundWithRetry(afterEl, imageMap[afterKey]); }, idx * STAGGER_DELAY + 100);
         }
       });
 
@@ -1287,15 +1226,11 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       heroImgs.forEach(function(img, idx) {
         var key = img.getAttribute('data-hero-key');
         if(imageMap[key]) {
-          setTimeout(function() {
-            loadImageWithRetry(img, imageMap[key]);
-          }, idx * STAGGER_DELAY);
+          setTimeout(function() { loadImageWithRetry(img, imageMap[key]); }, idx * STAGGER_DELAY);
         }
       });
     })
-    .catch(function(err) {
-      console.error('Failed to load images from API:', err);
-    });
+    .catch(function(err) { console.error('Failed to load images from API:', err); });
 })();
 </script>
 </body>
