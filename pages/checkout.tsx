@@ -8,8 +8,34 @@ export default function CheckoutLauncher() {
   useEffect(() => {
     if (!router.isReady) return;
 
-    const { jobId } = router.query;
+    const { jobId, credits, price } = router.query;
 
+    // Credit purchase flow (from homepage pricing buttons)
+    if (credits && price) {
+      (async () => {
+        try {
+          setMsg("Redirecting to payment...");
+          const resp = await fetch("/api/create-plan-checkout", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              credits: String(credits),
+              price: String(price),
+            }),
+          });
+
+          const json = await resp.json();
+          if (!json.url) throw new Error(json.error || "Checkout failed");
+
+          window.location.href = json.url;
+        } catch (e: any) {
+          setMsg(e?.message || "Checkout failed. Please try again.");
+        }
+      })();
+      return;
+    }
+
+    // AI staging job flow (original demo checkout)
     if (!jobId || typeof jobId !== "string") {
       setMsg("Missing jobId. Please go back and try again.");
       return;
@@ -17,7 +43,6 @@ export default function CheckoutLauncher() {
 
     (async () => {
       try {
-        // Call your existing API that creates the Stripe Checkout Session
         const resp = await fetch("/api/stripe-checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -27,7 +52,6 @@ export default function CheckoutLauncher() {
         const json = await resp.json();
         if (!json.ok || !json.url) throw new Error(json.error || "Checkout failed");
 
-        // Top-level redirect to Stripe
         window.location.href = json.url;
       } catch (e: any) {
         setMsg(e?.message || "Checkout failed.");
