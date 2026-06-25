@@ -6,26 +6,63 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
 });
 
 const PLANS: Record<string, { name: string; description: string; amountCents: number; images: number; type: string }> = {
-  "ai-5":     { name: "AI Starter Pack",       description: "5 AI staged photos",              amountCents: 500,   images: 5,  type: "one_time" },
-  "ai-25":    { name: "AI Best Value Bundle",   description: "25 AI staged photos",             amountCents: 5000,  images: 25, type: "one_time" },
-  "ai-50":    { name: "AI Agent Pro Pack",      description: "50 AI staged photos",             amountCents: 7500,  images: 50, type: "one_time" },
-  "ai-100":   { name: "AI Brokerage Pack",      description: "100 AI staged photos",            amountCents: 10000, images: 100,type: "one_time" },
-  "pro-1":    { name: "Pro Single Room",        description: "1 professionally staged image",   amountCents: 1000,  images: 1,  type: "one_time" },
-  "pro-5":    { name: "Pro 5-Room Bundle",      description: "5 professionally staged images",  amountCents: 4000,  images: 5,  type: "one_time" },
-  "pro-10":   { name: "Pro 10-Room Bundle",     description: "10 professionally staged images", amountCents: 7500,  images: 10, type: "one_time" },
+  "ai-5":    { name: "AI Starter Pack",     description: "5 AI staged photos",                  amountCents: 500,   images: 5,   type: "one_time" },
+  "ai-25":   { name: "AI Best Value Bundle", description: "25 AI staged photos",                 amountCents: 5000,  images: 25,  type: "one_time" },
+  "ai-50":   { name: "AI Agent Pro Pack",    description: "50 AI staged photos",                 amountCents: 7500,  images: 50,  type: "one_time" },
+  "ai-100":  { name: "AI Brokerage Pack",    description: "100 AI staged photos",                amountCents: 10000, images: 100, type: "one_time" },
+  "pro-1":   { name: "Pro Single Room",      description: "1 professionally staged image",       amountCents: 1000,  images: 1,   type: "one_time" },
+  "pro-5":   { name: "Pro 5-Room Bundle",    description: "5 professionally staged images",      amountCents: 4000,  images: 5,   type: "one_time" },
+  "pro-10":  { name: "Pro 10-Room Bundle",   description: "10 professionally staged images",     amountCents: 7500,  images: 10,  type: "one_time" },
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const { planId, email } = req.body || {};
+    const { planId, email, credits, price } = req.body || {};
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.iconicvirtual.ai";
 
+    // Dynamic credits+price mode (from homepage pricing buttons)
+    if (credits && price) {
+      const creditCount = parseInt(credits, 10);
+      const priceAmount = parseFloat(price);
+      if (isNaN(creditCount) || isNaN(priceAmount) || creditCount <= 0 || priceAmount <= 0) {
+        return res.status(400).json({ error: "Invalid credits or price" });
+      }
+
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        customer_email: email || undefined,
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "usd",
+              unit_amount: Math.round(priceAmount * 100),
+              product_data: {
+                name: creditCount + " Virtual Staging Credits",
+                description: creditCount + " AI staged photos",
+              },
+            },
+          },
+        ],
+        metadata: {
+          credits: String(creditCount),
+          price: String(priceAmount),
+          source: "homepage_pricing",
+        },
+        success_url: siteUrl + "/success?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url: siteUrl + "/home.html#pricing",
+      });
+
+      return res.status(200).json({ url: session.url });
+    }
+
+    // Plan-based mode (from offers page)
     if (!email) return res.status(400).json({ error: "Email is required" });
     if (!planId || !PLANS[planId]) return res.status(400).json({ error: "Invalid plan" });
 
     const plan = PLANS[planId];
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.iconicvirtual.ai";
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -50,8 +87,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         plan_type: plan.type,
         source: "offers_page",
       },
-      success_url: `${siteUrl}/offers.html?success=1&plan=${planId}`,
-      cancel_url: `${siteUrl}/offers.html?canceled=1`,
+      success_url: siteUrl + "/success?session_id={CHECKOUT_SESSION_ID}",
+      cancel_url: siteUrl + "/home.html#pricing",
     });
 
     return res.status(200).json({ url: session.url });
