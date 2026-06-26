@@ -32,7 +32,7 @@ img{max-width:100%;display:block}
 
 /* -- ANNOUNCEMENT BAR -- */
 .announcement{background:linear-gradient(90deg,var(--midnight),var(--midnight-light));color:#fff;padding:12px 24px;text-align:center;font-size:14px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;position:relative;overflow:hidden}
-.announcement::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(16,185,129,0.08),transparent);pointer-events:none}
+.announcement::before{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,transparent,rgba(16,185,129,0.08),transparent);pointer-events:none}
 .announcement a{color:var(--emerald-light);font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .announcement .countdown{display:inline-flex;gap:6px}
 .announcement .countdown span{background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.3);padding:3px 8px;border-radius:6px;font-weight:700;font-size:13px;font-family:var(--font-heading);color:var(--emerald-light);min-width:36px;text-align:center}
@@ -486,6 +486,11 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
   .float-badge{display:none}
   .contact-form .form-row{grid-template-columns:1fr}
 }
+
+.pricing-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);padding:4px 16px;border-radius:20px;font-size:12px;font-weight:700;font-family:var(--font-heading);z-index:2;white-space:nowrap}
+.pricing-badge.most-popular{background:var(--emerald);color:#fff}
+.pricing-badge.best-value{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff}
+.best-value-sticker{position:absolute;top:-8px;right:-8px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;font-size:10px;font-weight:800;line-height:1.1;font-family:var(--font-heading);box-shadow:0 4px 12px rgba(245,158,11,0.4);z-index:3;transform:rotate(12deg)}
 </style>
 </head>
 <body>
@@ -587,7 +592,7 @@ nav a:hover{color:var(--midnight);background:var(--grey-50)}
 <!-- Stats Bar -->
 <div class="stats-bar">
   <div class="stats-inner">
-    <div class="stat"><div class="number">$<span class="em">1</span></div><div class="label">Per AI Staged Photo</div></div>
+    <div class="stat"><div class="number">$<span class="em">8</span></div><div class="label">Per Staged Photo<br><span style="font-size:11px;font-weight:600;color:var(--emerald)">Or Less</span></div></div>
     <div class="stat"><div class="number"><span class="em">60</span>s</div><div class="label">Average Turnaround</div></div>
     <div class="stat"><div class="number"><span class="em">73</span>%</div><div class="label">Faster Listing Sales</div></div>
     <div class="stat"><div class="number"><span class="em">12K</span>+</div><div class="label">Agents Nationwide</div></div>
@@ -879,13 +884,13 @@ document.querySelectorAll('.faq-q').forEach(q=>{
   var pricingData = {
     'ai-onetime': [
       {name:'Small AI Pack',desc:'Perfect for a quick listing',price:60,per:'$6.00 per image',unit:'10 credits',features:['10 AI staged images','15+ design styles','Under 5-min turnaround','High-res 4K download','Unlimited downloads','Commercial license'],btn:'Buy Credits',btnClass:'secondary',link:'/checkout?credits=10&price=60'},
-      {name:'Medium AI Pack',desc:'Great for apartments &amp; studios',price:180,per:'$4.50 per image',unit:'40 credits',features:['40 AI staged images','15+ design styles','Under 5-min turnaround','High-res 4K download','Style variations','Commercial license'],btn:'Best Value \u2192',btnClass:'primary',featured:true,link:'/checkout?credits=40&price=180'},
+      {name:'Medium AI Pack',desc:'Great for apartments &amp; studios',price:180,per:'$4.50 per image',unit:'40 credits',features:['40 AI staged images','15+ design styles','Under 5-min turnaround','High-res 4K download','Style variations','Commercial license'],btn:'Buy Credits',btnClass:'primary',featured:true,featuredText:'Most Popular',link:'/checkout?credits=40&price=180'},
       {name:'Big AI Pack',desc:'Best for houses &amp; rentals',price:255,per:'$3.00 per image',unit:'85 credits',features:['85 AI staged images','15+ design styles','Under 5-min turnaround','High-res 4K download','Style variations','Commercial license'],btn:'Buy Credits',btnClass:'secondary',link:'/checkout?credits=85&price=255'}
     ],
     'ai-membership': [
       {name:'AI Starter',desc:'10 credits/month',price:39,per:'$3.90 per image',unit:'10 credits/mo',features:['10 AI credits per month','All design styles','Under 5 min turnaround','Credits refill monthly','Cancel anytime','Commercial license'],btn:'Start Plan',btnClass:'secondary',link:'/checkout?credits=10&price=39',recurring:'/mo'},
-      {name:'AI Premium',desc:'40 credits/month',price:79,per:'$1.98 per image',unit:'40 credits/mo',features:['40 AI credits per month','All design styles','Priority processing','Credits refill monthly','Cancel anytime','Commercial license'],btn:'Best Value \u2192',btnClass:'primary',featured:true,link:'/checkout?credits=40&price=79',recurring:'/mo'},
-      {name:'AI Pro',desc:'160 credits/month',price:199,per:'$1.24 per image',unit:'160 credits/mo',features:['160 AI credits per month','All design styles','Priority processing','Credits refill monthly','Dedicated support','Commercial license'],btn:'Start Plan',btnClass:'secondary',link:'/checkout?credits=160&price=199',recurring:'/mo'}
+      {name:'AI Pro',desc:'160 credits/month',price:199,per:'$1.24 per image',unit:'160 credits/mo',features:['160 AI credits per month','All design styles','Priority processing','Credits refill monthly','Dedicated support','Commercial license'],btn:'Best Value \u2192',btnClass:'primary',featured:true,featuredText:'Best Value',link:'/checkout?credits=160&price=199',recurring:'/mo'},
+    {name:'AI Premium',desc:'40 credits/month',price:79,per:'$1.98 per image',unit:'40 credits/mo',features:['40 AI credits per month','All design styles','Priority processing','Credits refill monthly','Cancel anytime','Commercial license'],btn:'Start Plan',btnClass:'secondary',link:'/checkout?credits=40&price=79',recurring:'/mo'}
     ],
     'traditional': [
       {name:'Single Room',desc:'1 professionally staged image',price:15,per:'$15.00 per image',unit:'1 image',features:['1 expert-staged image','Dedicated designer','24-hour turnaround','High-res 4K download','Commercial license','Revision included'],btn:'Order Now',btnClass:'secondary',link:'/checkout?credits=1&price=15'},
@@ -978,38 +983,38 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     });
   }
 
-  // Slide captions — alternate before/after descriptions
+  // Slide captions â alternate before/after descriptions
   var pairCaptions = [
-    'Empty living room transformed into modern luxury',
-    'Vacant bedroom staged with coastal elegance',
-    'Bare kitchen brought to life with warm tones',
-    'Open space reimagined as a cozy family room',
-    'Unfurnished studio gets designer treatment',
-    'Blank canvas turned into a Scandinavian retreat',
-    'Raw space becomes an inviting dining area',
-    'Empty master suite staged for quick sale',
-    'Vacant loft transformed into urban oasis',
-    'Plain room elevated with mid-century modern style',
-    'Bare walls become a gallery-worthy living space',
-    'Unfinished space staged as a home office',
-    'Empty apartment gets luxury penthouse feel',
-    'Vacant condo transformed with farmhouse charm',
-    'Blank room reimagined as a serene bedroom',
-    'Raw kitchen staged with contemporary finishes',
-    'Empty space becomes a welcoming entryway',
-    'Unfurnished room gets bohemian chic makeover',
-    'Vacant home staged for open house success',
-    'Bare space transformed into a cozy reading nook',
-    'Empty room becomes an art-filled living area',
-    'Unfinished basement staged as entertainment room',
-    'Vacant unit gets industrial-modern treatment',
-    'Plain space reimagined with tropical vibes',
-    'Empty bedroom transformed into guest paradise',
-    'Bare kitchen becomes a chef\'s dream',
+    'Empty canvas brought to life',
+    'Bare bones reimagined beautifully',
+    'Room with a view, now with a vision',
+    'Open space, endless possibilities',
+    'A blank slate transformed',
+    'From empty to inviting',
+    'Raw space meets refined taste',
+    'Four walls, one stunning story',
+    'Empty room, full potential',
+    'The art of seeing what could be',
+    'A fresh start for this space',
+    'Bringing warmth to bare walls',
+    'Where emptiness becomes elegance',
+    'Turning square footage into charm',
+    'A quiet room finds its voice',
+    'Clean lines, bold transformation',
+    'First impressions, reimagined',
+    'Potential unlocked in every corner',
+    'Staged to sell, designed to inspire',
+    'From vacant to vibrant',
+    'Every room tells a story',
+    'The before you have to see to believe',
+    'Proof that staging changes everything',
+    'Space redefined with intention',
+    'Simple room, stunning result',
+    'Light, space, and possibility\'s dream',
     'Final reveal: from empty to magazine-ready'
   ];
 
-  // Trending tags — shown on random "after" slides
+  // Trending tags â shown on random "after" slides
   var trendingTags = [
     'Staged in 3 seconds', 'Multi-Angle Staging', 'Touch of Human',
     'AI-Powered', 'Sold 3x Faster', 'Before the Magic',
@@ -1023,7 +1028,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
     if(!taggedPairs[ri]) { taggedPairs[ri] = trendingTags[taggedCount % trendingTags.length]; taggedCount++; }
   }
 
-  // Build slides: 54 total — each is a single full-bleed image
+  // Build slides: 54 total â each is a single full-bleed image
   var slidesContainer = document.getElementById('tiktokSlides');
   for(var i = 0; i < TOTAL_SLIDES; i++) {
     var pairIdx = Math.floor(i / 2);    // which pair (0-26)
@@ -1098,7 +1103,7 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       ts.textContent = '#' + taggedPairs[pairIdx].replace(/\s+/g, '');
       tagsEl.appendChild(ts);
     }
-    ['#VirtualStaging','#AIStaging','#RealEstate'].forEach(function(t) {
+    ['#VirtualStaging','#HumanTouch','#RealEstate'].forEach(function(t) {
       var ts = document.createElement('span');
       ts.className = 'info-tag';
       ts.textContent = t;
@@ -1238,6 +1243,65 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>{
       });
     })
     .catch(function(err) { console.error('Failed to load images from API:', err); });
+})();
+</script>
+
+<script>
+(function(){
+  var origRender = window.renderCards;
+  if(!origRender) return;
+  window.renderCards = function(tabKey){
+    origRender(tabKey);
+    setTimeout(function(){
+      var grid = document.getElementById("pricingGrid");
+      if(!grid) return;
+      var cards = grid.querySelectorAll(".pricing-card");
+      grid.querySelectorAll(".pricing-badge,.best-value-sticker").forEach(function(el){el.remove()});
+      var data = pricingData[tabKey] || [];
+      cards.forEach(function(card, i){
+        var d = data[i];
+        if(!d) return;
+        card.style.position = "relative";
+        if(d.featured && d.featuredText){
+          var badge = document.createElement("div");
+          badge.className = "pricing-badge most-popular";
+          badge.textContent = d.featuredText;
+          card.insertBefore(badge, card.firstChild);
+        } else if(d.featured){
+          var badge = document.createElement("div");
+          badge.className = "pricing-badge best-value";
+          badge.textContent = "Best Value";
+          card.insertBefore(badge, card.firstChild);
+        }
+        if(d.bestValue){
+          var sticker = document.createElement("div");
+          sticker.className = "best-value-sticker";
+          sticker.innerHTML = "\u2B50<br>Best<br>Value";
+          card.appendChild(sticker);
+        }
+      });
+    }, 50);
+  };
+  var active = document.querySelector(".pricing-tab.active");
+  
+  // Add per-image pricing header for ai-onetime tab
+  var origRender2 = window.renderCards;
+  window.renderCards = function(tabKey){
+    origRender2(tabKey);
+    var header = document.getElementById('perImageHeader');
+    if(header) header.remove();
+    if(tabKey === 'ai-onetime'){
+      var grid = document.getElementById('pricingGrid');
+      if(grid){
+        var h = document.createElement('div');
+        h.id = 'perImageHeader';
+        h.style.cssText = 'text-align:center;margin-bottom:28px;';
+        h.innerHTML = '<div style="font-size:32px;font-weight:900;color:var(--midnight);font-family:var(--font-heading);letter-spacing:-0.5px">$8/Image <span style=\'color:var(--text-muted);font-weight:600;font-size:24px\'>or less</span></div><div style=\'font-size:15px;color:var(--text-muted);margin-top:4px\'>Choose a pack below</div>';
+        grid.parentNode.insertBefore(h, grid);
+      }
+    }
+  };
+  if(active) renderCards(active.dataset.tab);
 })();
 </script>
 </body>
