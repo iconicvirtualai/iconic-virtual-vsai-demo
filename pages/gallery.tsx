@@ -127,18 +127,23 @@ export default function GalleryPage() {
               <div style={{ width: 4, height: 28, background: "#2563eb", borderRadius: 2 }}></div>
               <div>
                 <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Pro Virtual Staging</h2>
-                <p style={{ margin: "4px 0 0", fontSize: 14, color: "#888" }}>Results in 24 Hours or Less | From $6/Image"grid", gridTemplateColumns: "repeat(auto-fill, minmax(440px, 1fr))", gap: 24 }}>
+                <p style={{ margin: "4px 0 0", fontSize: 14, color: "#888" }}>Results in 24 Hours or Less | From $6/Image</p>
+              </div>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(440px, 1fr))", gap: 24 }}>
               {aiExamples.map((item, i) => (
                 <Card key={item.num} item={item} urls={urls} index={i} />
               ))}
             </div>
           </section>
 
+
           {/* CTA */}
           <div style={{ textAlign: "center", padding: "48px 24px", background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
             <h2 style={{ fontSize: 28, fontWeight: 900, marginBottom: 12 }}>Submit an Order to Our Design Team</h2>
-            <p style={{ fontSize: 16, color: "#666", marginBottom: 24 }}>Our professional designers deliver magazine-quality virtual staging within 24 hours."/pro-order.html" style={{ display: "inline-block", background: "#2563eb", color: "#fff", padding: "14px 32px", borderRadius: 8, textDecoration: "none", fontWeight: 700, fontSize: 16 }}>Submit a Pro Order</a>
-              <a href="/home.html#pricing" style={{ display: "inline-block", background: "transparent", color: "#2563eb", padding: "14px 32px", borderRadius: 8, textDecoration: "none", fontWeight: 700, fontSize: 16, border: "2px solid #2563eb", marginLeft: 12 }}>View Pricing</a>
+            <p style={{ fontSize: 16, color: "#666", marginBottom: 24 }}>Our professional designers deliver magazine-quality virtual staging within 24 hours.</p>
+            <a href="/pro-order.html" style={{ display: "inline-block", background: "#2563eb", color: "#fff", padding: "14px 32px", borderRadius: 8, textDecoration: "none", fontWeight: 700, fontSize: 16 }}>Submit a Pro Order</a>
+            <a href="/home.html#pricing" style={{ display: "inline-block", background: "transparent", color: "#2563eb", padding: "14px 32px", borderRadius: 8, textDecoration: "none", fontWeight: 700, fontSize: 16, border: "2px solid #2563eb", marginLeft: 12 }}>View Pricing</a>
           </div>
         </main>
 
