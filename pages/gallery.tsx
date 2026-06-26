@@ -74,10 +74,10 @@ function Card({ item, urls, index }: { item: typeof aiExamples[0]; urls: Record<
       </div>
       <div style={{ padding: "16px 20px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-          <span style={{ background: "#10b981", color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 4 }}>AI</span>
+          <span style={{ background: "#2563eb", color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 4 }}>PRO</span>
           <span style={{ fontWeight: 700, fontSize: 16, color: "#0a0a0a" }}>{item.label}</span>
         </div>
-        <p style={{ margin: 0, fontSize: 14, color: "#666" }}>Before &amp; After &bull; AI Virtual Staging</p>
+        <p style={{ margin: 0, fontSize: 14, color: "#666" }}>Before &amp; After &bull; Pro Virtual Staging</p>
       </div>
     </div>
   );
@@ -109,28 +109,25 @@ export default function GalleryPage() {
             <span style={{ display: "inline-flex", width: 36, height: 36, fontSize: 14, background: "linear-gradient(135deg,#0a0a0a,#18181b)", borderRadius: 10, color: "#fff", alignItems: "center", justifyContent: "center", fontWeight: 900 }}>IV</span>
             <span style={{ fontSize: 18, fontWeight: 700, color: "#0a0a0a" }}>IconicVirtual.AI</span>
           </a>
-          <a href="/home.html" style={{ color: "#10b981", textDecoration: "none", fontWeight: 500 }}>&larr; Back to Home</a>
+          <a href="/home.html" style={{ color: "#2563eb", textDecoration: "none", fontWeight: 500 }}>&larr; Back to Home</a>
         </header>
 
         <main style={{ maxWidth: 1000, margin: "0 auto", padding: "60px 24px" }}>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <span style={{ display: "inline-block", background: "#10b981", color: "#fff", fontSize: 12, fontWeight: 700, letterSpacing: 2, padding: "6px 16px", borderRadius: 20, marginBottom: 16 }}>GALLERY</span>
-            <h1 style={{ fontSize: 36, fontWeight: 900, marginBottom: 12 }}>Before &amp; After Staging Examples</h1>
+            <span style={{ display: "inline-block", background: "#2563eb", color: "#fff", fontSize: 12, fontWeight: 700, letterSpacing: 2, padding: "6px 16px", borderRadius: 20, marginBottom: 16 }}>GALLERY</span>
+            <h1 style={{ fontSize: 36, fontWeight: 900, marginBottom: 12 }}>Virtually Staged by Our Human Design Team</h1>
             <p style={{ fontSize: 18, color: "#666", maxWidth: 600, margin: "0 auto" }}>
-              See how IconicVirtual.AI transforms empty rooms into beautifully staged spaces that sell homes faster.
+              See how our professional design team transforms empty rooms into beautifully staged spaces that sell homes faster.
             </p>
           </div>
 
-          {/* AI Staging Section */}
+          {/* Pro Staging Section */}
           <section style={{ marginBottom: 64 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-              <div style={{ width: 4, height: 28, background: "#10b981", borderRadius: 2 }}></div>
+              <div style={{ width: 4, height: 28, background: "#2563eb", borderRadius: 2 }}></div>
               <div>
-                <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>AI Virtual Staging</h2>
-                <p style={{ margin: "4px 0 0", fontSize: 14, color: "#888" }}>Instant results in under 60 seconds &bull; From $1/image</p>
-              </div>
-            </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(440px, 1fr))", gap: 24 }}>
+                <h2 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>Pro Virtual Staging</h2>
+                <p style={{ margin: "4px 0 0", fontSize: 14, color: "#888" }}>Results in 24 Hours or Less | From $6/Image"grid", gridTemplateColumns: "repeat(auto-fill, minmax(440px, 1fr))", gap: 24 }}>
               {aiExamples.map((item, i) => (
                 <Card key={item.num} item={item} urls={urls} index={i} />
               ))}
@@ -139,9 +136,9 @@ export default function GalleryPage() {
 
           {/* CTA */}
           <div style={{ textAlign: "center", padding: "48px 24px", background: "#fff", borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
-            <h2 style={{ fontSize: 28, fontWeight: 900, marginBottom: 12 }}>Ready to stage your listing?</h2>
-            <p style={{ fontSize: 16, color: "#666", marginBottom: 24 }}>Try AI staging free — no sign-up required.</p>
-            <a href="/staging-dashboard.html" style={{ display: "inline-block", background: "#10b981", color: "#fff", padding: "14px 32px", borderRadius: 8, textDecoration: "none", fontWeight: 700, fontSize: 16 }}>Try AI Staging Free</a>
+            <h2 style={{ fontSize: 28, fontWeight: 900, marginBottom: 12 }}>Submit an Order to Our Design Team</h2>
+            <p style={{ fontSize: 16, color: "#666", marginBottom: 24 }}>Our professional designers deliver magazine-quality virtual staging within 24 hours."/pro-order.html" style={{ display: "inline-block", background: "#2563eb", color: "#fff", padding: "14px 32px", borderRadius: 8, textDecoration: "none", fontWeight: 700, fontSize: 16 }}>Submit a Pro Order</a>
+              <a href="/home.html#pricing" style={{ display: "inline-block", background: "transparent", color: "#2563eb", padding: "14px 32px", borderRadius: 8, textDecoration: "none", fontWeight: 700, fontSize: 16, border: "2px solid #2563eb", marginLeft: 12 }}>View Pricing</a>
           </div>
         </main>
 
