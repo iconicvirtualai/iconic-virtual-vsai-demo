@@ -1,10 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import Stripe from "stripe";
-
-// Stripe v16+ (matches the package.json update you made)
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, {
-  apiVersion: "2024-06-20",
-});
+import { HD_DOWNLOAD_AMOUNT_CENTS } from "../../../lib/catalog";
+import { getPublicSiteUrl, getStripe, getStripeSecretKey } from "../../../lib/stripeServer";
 
 type Body = {
   email: string;
@@ -44,11 +40,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!email) return res.status(400).json({ error: "Missing email" });
     if (!downloadUrl) return res.status(400).json({ error: "Missing downloadUrl" });
-    if (!amountCents || Number(amountCents) < 50) {
-      return res.status(400).json({ error: "Missing/invalid amountCents" });
+    if (!getStripeSecretKey()) {
+      return res.status(500).json({ error: "STRIPE_SECRET_KEY is not set." });
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://iconicvirtual.ai";
+    const siteUrl = getPublicSiteUrl(req);
+    const stripe = getStripe();
+    // Client amountCents is ignored. Studio downloads are the catalog price.
+    void amountCents;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -62,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           quantity: 1,
           price_data: {
             currency: (currency || "usd").toLowerCase(),
-            unit_amount: Number(amountCents),
+            unit_amount: HD_DOWNLOAD_AMOUNT_CENTS,
             product_data: {
               name: "IconicVirtual.AI Render Download",
               description: "Your chosen staged render download",

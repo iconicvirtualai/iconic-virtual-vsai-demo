@@ -220,8 +220,8 @@ const pendingPurchaseRef = useRef<CartItem | null>(null);
 
         const data = json?.ok ? json.data : json;
 
-        const fallbackRooms = ["living", "bed", "kitchen", "dining", "home_office"];
-        const fallbackStyles = ["standard", "modern", "scandinavian", "luxury"];
+        const fallbackRooms = ["living", "bed", "kitchen", "dining", "home_office", "outdoor", "kids_room"];
+        const fallbackStyles = ["standard", "modern", "scandinavian", "industrial", "midcentury", "luxury", "farmhouse", "coastal"];
         const finalRoomTypes = normalizeOptionList(data?.room_types || data?.roomTypes, fallbackRooms);
         const finalStyles = normalizeOptionList(
           data?.styles || data?.style_list || data?.design_styles,
@@ -234,8 +234,8 @@ const pendingPurchaseRef = useRef<CartItem | null>(null);
         setStyle(finalStyles[0]);
       } catch (e) {
         console.error("Failed to fetch VSAI options", e);
-        const fallbackRooms = ["living", "bed", "kitchen", "dining", "home_office"];
-        const fallbackStyles = ["standard", "modern", "scandinavian", "luxury"];
+        const fallbackRooms = ["living", "bed", "kitchen", "dining", "home_office", "outdoor", "kids_room"];
+        const fallbackStyles = ["standard", "modern", "scandinavian", "industrial", "midcentury", "luxury", "farmhouse", "coastal"];
         setRoomTypes(fallbackRooms);
         setStyles(fallbackStyles);
         setRoomType(fallbackRooms[0]);

@@ -1,9 +1,10 @@
 // pages/api/post-checkout.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import Stripe from "stripe";
 import { db } from "../../lib/firebaseAdmin";
+import { grantFromCheckoutSession } from "../../lib/grantCredits";
+import { getStripe, getStripeSecretKey } from "../../lib/stripeServer";
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+const STRIPE_SECRET_KEY = getStripeSecretKey();
 
 // Use whichever env var name you already use in vsai-create.ts
 const VSAI_API_KEY =
@@ -22,6 +23,9 @@ type Resp =
         receiptUrl: string | null;
         invoiceUrl: string | null;
         customerEmail: string | null;
+        credits: number;
+        creditStatus: string | null;
+        planName: string | null;
       };
     }
   | { ok: false; error: string; raw?: any };
@@ -41,14 +45,18 @@ export default async function handler(
     const { session_id } = req.body as { session_id?: string };
     if (!session_id) return res.status(400).json({ ok: false, error: "session_id is required" });
 
-    const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
+    const stripe = getStripe();
 
     const session = await stripe.checkout.sessions.retrieve(session_id, {
-      expand: ["payment_intent", "payment_intent.latest_charge"],
+      expand: ["payment_intent", "payment_intent.latest_charge", "line_items"],
     });
 
     const paid = session.payment_status === "paid";
     if (!paid) return res.status(400).json({ ok: false, error: "Payment not completed.", raw: session });
+
+    const linePrice = session.line_items?.data?.[0]?.price;
+    const linePriceId = typeof linePrice === "string" ? linePrice : linePrice?.id || null;
+    const creditGrant = await grantFromCheckoutSession(session, linePriceId);
 
     const meta: any = session.metadata || {};
     const jobId: string | null = meta.jobId || null;
@@ -81,6 +89,9 @@ export default async function handler(
           receiptUrl,
           invoiceUrl,
           customerEmail,
+          credits: creditGrant.credits,
+          creditStatus: creditGrant.status,
+          planName: creditGrant.planName,
         },
       });
     }
@@ -228,6 +239,9 @@ export default async function handler(
         receiptUrl,
         invoiceUrl,
         customerEmail,
+        credits: creditGrant.credits,
+        creditStatus: creditGrant.status,
+        planName: creditGrant.planName,
       },
     });
   } catch (err: any) {

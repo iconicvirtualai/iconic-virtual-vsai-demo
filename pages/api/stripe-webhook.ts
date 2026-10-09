@@ -3,6 +3,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
 import { sendOrderEmail, sendOrderSms } from "../../lib/notify";
 import { db } from "../../lib/firebaseAdmin";
+import { grantFromCheckoutSession, grantFromRenewalInvoice } from "../../lib/grantCredits";
+import { getStripeSecretKey, getStripeWebhookSecret, STRIPE_API_VERSION } from "../../lib/stripeServer";
 
 export const config = {
   api: {
@@ -10,8 +12,8 @@ export const config = {
   },
 };
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || "";
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || "";
+const STRIPE_SECRET_KEY = getStripeSecretKey();
+const STRIPE_WEBHOOK_SECRET = getStripeWebhookSecret();
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "");
 
 function buffer(readable: any) {
@@ -27,7 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
   if (!STRIPE_SECRET_KEY || !STRIPE_WEBHOOK_SECRET) return res.status(500).send("Webhook not configured");
 
-  const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
+  const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: STRIPE_API_VERSION });
 
   let event: Stripe.Event;
 
@@ -51,8 +53,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const full = await stripe.checkout.sessions.retrieve(session.id, {
-        expand: ["payment_intent", "payment_intent.latest_charge"],
+        expand: ["payment_intent", "payment_intent.latest_charge", "line_items"],
       });
+
+      const linePrice = full.line_items?.data?.[0]?.price;
+      const linePriceId = typeof linePrice === "string" ? linePrice : linePrice?.id || null;
+      await grantFromCheckoutSession(full, linePriceId);
 
       const customerEmail = full.customer_details?.email || null;
       const customerPhone = (full.customer_details as any)?.phone || null;
@@ -163,6 +169,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
 
+      return res.status(200).json({ received: true });
+    }
+
+    if (event.type === "invoice.paid") {
+      await grantFromRenewalInvoice(event.data.object as Stripe.Invoice, stripe);
       return res.status(200).json({ received: true });
     }
 

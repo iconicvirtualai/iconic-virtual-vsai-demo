@@ -20,7 +20,7 @@ export default function DashboardRebuild() {
 
           <div>
             <div className="font-semibold text-lg">
-              StageAI
+              Iconic Virtual
             </div>
 
             <div className="text-xs text-gray-500">

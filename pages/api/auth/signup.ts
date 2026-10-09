@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { db } from "../../../lib/firebaseAdmin";
 import { hashPassword, createToken } from "../../../lib/auth";
+import { applyPendingCredits } from "../../../lib/grantCredits";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -48,6 +49,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const token = await createToken(userRef.id, normalizedEmail);
+    try {
+      await applyPendingCredits(userRef.id, normalizedEmail);
+    } catch (pendingErr) {
+      console.error("applyPendingCredits signup error:", pendingErr);
+    }
 
     return res.status(201).json({
       ok: true,

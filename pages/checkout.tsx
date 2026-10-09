@@ -8,20 +8,18 @@ export default function CheckoutLauncher() {
   useEffect(() => {
     if (!router.isReady) return;
 
-    const { jobId, credits, price } = router.query;
+    const { jobId, product, planId, credits, price } = router.query;
+    const productId = (typeof product === "string" && product) || (typeof planId === "string" && planId) || "";
 
-    // Credit purchase flow (from homepage pricing buttons)
-    if (credits && price) {
+    // Credit purchase flow. The price is looked up on the server from product id.
+    if (productId) {
       (async () => {
         try {
           setMsg("Redirecting to payment...");
           const resp = await fetch("/api/create-plan-checkout", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              credits: String(credits),
-              price: String(price),
-            }),
+            body: JSON.stringify({ productId }),
           });
 
           const json = await resp.json();
@@ -32,6 +30,11 @@ export default function CheckoutLauncher() {
           setMsg(e?.message || "Checkout failed. Please try again.");
         }
       })();
+      return;
+    }
+
+    if ((credits || price) && !productId) {
+      setMsg("This checkout link is out of date. Go back to pricing and choose a pack. The price is set on the server.");
       return;
     }
 

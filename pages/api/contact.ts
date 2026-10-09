@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       from: process.env.FROM_EMAIL || process.env.GMAIL_SMTP_USER,
       to: email.trim(),
       subject: "We received your message - IconicVirtual.AI",
-      html: "<div style=\"font-family:sans-serif;max-width:600px;margin:0 auto\"><h2>Thanks for reaching out, " + (firstName || "there").trim() + "!</h2><p>We received your message and will get back to you within 24 hours.</p><p style=\"color:#6b7280;font-size:14px\">Your message: " + message.trim() + "</p><p>- The IconicVirtual.AI Team</p></div>",
+      html: "<div style=\"font-family:sans-serif;max-width:600px;margin:0 auto\"><h2>Thanks for reaching out, " + (firstName || "there").trim() + "!</h2><p>We received your message at virtualstaging@iconicvirtual.ai.</p><p style=\"color:#6b7280;font-size:14px\">Your message: " + message.trim() + "</p><p>- The IconicVirtual.AI Team</p></div>",
     });
 
     return res.status(200).json({ ok: true, message: "Message received" });

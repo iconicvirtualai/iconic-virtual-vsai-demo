@@ -14,6 +14,9 @@ type ApiResp =
         customerEmail: string | null;
         customerPhone: string | null;
         smsSent: boolean;
+        credits?: number;
+        creditStatus?: string | null;
+        planName?: string | null;
       };
     }
   | { ok: false; error: string };
@@ -77,6 +80,23 @@ export default function SuccessPage() {
         }
 
         const selectedUrl = json.data.selectedUrl;
+        const credits = json.data.credits || 0;
+        const creditStatus = json.data.creditStatus;
+        if (!selectedUrl && credits > 0) {
+          const where =
+            creditStatus === "pending"
+              ? "Create an account with the same email you used at checkout and the credits will be waiting."
+              : "They are on the account for the email you used at checkout.";
+          setStatusText(
+            (json.data.planName || "Your pack") +
+              " is paid. " +
+              credits +
+              " credits recorded. " +
+              where
+          );
+          setLoading(false);
+          return;
+        }
         if (!selectedUrl) {
           setStatusText("Payment succeeded, but we couldn't find the purchased image.");
           setLoading(false);

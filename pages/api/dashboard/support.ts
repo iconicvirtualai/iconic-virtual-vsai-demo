@@ -130,7 +130,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         from: process.env.FROM_EMAIL || process.env.GMAIL_SMTP_USER,
         to: email.trim(),
         subject: user.name + " thinks you will love Iconic Virtual AI",
-        html: "<h2>" + user.name + " invited you to Iconic Virtual AI!</h2><p>Sign up and you both get 10 free credits.</p><p><a href=\"https://www.iconicvirtual.ai/login?ref=" + ref.id + "\">Claim Your Free Credits</a></p>",
+        html: "<h2>" + user.name + " invited you to Iconic Virtual AI.</h2><p>Create an account to stage listing photos. This invite does not add free credits.</p><p><a href=\"https://www.iconicvirtual.ai/login?ref=" + ref.id + "\">Open Iconic Virtual</a></p>",
       });
       return res.status(201).json({ ok: true, message: "Referral sent!" });
     } catch (err: any) {

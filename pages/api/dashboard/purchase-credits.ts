@@ -1,25 +1,8 @@
-// pages/api/dashboard/purchase-credits.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import Stripe from "stripe";
+import { getProductByStripePriceId } from "../../../lib/catalog";
 import { db } from "../../../lib/firebaseAdmin";
 import { verifyToken } from "../../../lib/auth";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string, { apiVersion: "2024-06-20" });
-
-const PRICE_MAP: Record<string, { name: string; credits: number; type: "one_time" | "subscription"; category: string }> = {
-  "price_1SfpAJCRfvDEtw05sLJJV2l6": { name: "Small AI Pack", credits: 10, type: "one_time", category: "ai" },
-  "price_1SfpB1CRfvDEtw05Ot05yIiM": { name: "Medium AI Pack", credits: 40, type: "one_time", category: "ai" },
-  "price_1SfpBoCRfvDEtw05CIjrT22M": { name: "Big AI Pack", credits: 85, type: "one_time", category: "ai" },
-  "price_1SfpCgCRfvDEtw05OPv3bp4n": { name: "Single Room Traditional", credits: 1, type: "one_time", category: "traditional" },
-  "price_1SfpDMCRfvDEtw054NgbiHCe": { name: "Small Property Traditional", credits: 10, type: "one_time", category: "traditional" },
-  "price_1SfpDpCRfvDEtw05B5SLOA9I": { name: "Large Property Traditional", credits: 20, type: "one_time", category: "traditional" },
-  "price_1SfomqCRfvDEtw05fsBsZSDo": { name: "AI Starter", credits: 10, type: "subscription", category: "ai" },
-  "price_1SfoqnCRfvDEtw05LVaF8uM5": { name: "AI Premium", credits: 40, type: "subscription", category: "ai" },
-  "price_1SforxCRfvDEtw052rdFBqmK": { name: "AI Pro", credits: 160, type: "subscription", category: "ai" },
-  "price_1Sfow3CRfvDEtw05TKPIkgbZ": { name: "T Starter", credits: 10, type: "subscription", category: "traditional" },
-  "price_1Sfp7qCRfvDEtw05c4FxCYlG": { name: "T Premium", credits: 20, type: "subscription", category: "traditional" },
-  "price_1Sfp90CRfvDEtw0566rRv8QO": { name: "T Pro", credits: 50, type: "subscription", category: "traditional" },
-};
+import { getPublicSiteUrl, getStripe, getStripeSecretKey } from "../../../lib/stripeServer";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method not allowed" });
@@ -29,29 +12,52 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const decoded = await verifyToken(authHeader.slice(7));
   if (!decoded) return res.status(401).json({ ok: false, error: "Invalid token" });
 
-  const { priceId } = req.body;
-  if (!priceId || !PRICE_MAP[priceId]) return res.status(400).json({ ok: false, error: "Invalid priceId" });
+  if (!getStripeSecretKey()) {
+    return res.status(500).json({ ok: false, error: "STRIPE_SECRET_KEY is not set." });
+  }
 
-  const plan = PRICE_MAP[priceId];
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.iconicvirtual.ai";
+  const { priceId } = req.body || {};
+  const plan = getProductByStripePriceId(priceId);
+  if (!plan || !plan.stripePriceId || !plan.dashboardMode) {
+    return res.status(400).json({ ok: false, error: "Invalid priceId" });
+  }
+
+  const siteUrl = getPublicSiteUrl(req);
+  const stripe = getStripe();
 
   try {
     const userSnap = await db.collection("users").doc(decoded.userId).get();
     const userEmail = userSnap.exists ? userSnap.data()?.email : decoded.email;
+    const mode = plan.dashboardMode;
 
     const session = await stripe.checkout.sessions.create({
-      mode: plan.type === "subscription" ? "subscription" : "payment",
+      mode,
       customer_email: userEmail,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: plan.stripePriceId, quantity: 1 }],
       metadata: {
         userId: decoded.userId,
-        priceId,
+        priceId: plan.stripePriceId,
+        productId: plan.id,
         planName: plan.name,
         credits: String(plan.credits),
         category: plan.category,
-        purchaseType: plan.type,
+        purchaseType: mode === "subscription" ? "subscription" : "one_time",
         source: "dashboard",
       },
+      subscription_data:
+        mode === "subscription"
+          ? {
+              metadata: {
+                userId: decoded.userId,
+                priceId: plan.stripePriceId,
+                productId: plan.id,
+                planName: plan.name,
+                credits: String(plan.credits),
+                category: plan.category,
+                email: userEmail || "",
+              },
+            }
+          : undefined,
       success_url: `${siteUrl}/staging-dashboard.html?purchase=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${siteUrl}/staging-dashboard.html?purchase=canceled`,
     });
