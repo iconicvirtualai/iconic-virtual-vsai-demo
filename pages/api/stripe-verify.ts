@@ -1,11 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import Stripe from "stripe";
+import { getStripeSecretKey, STRIPE_API_VERSION } from "../../lib/stripeServer";
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+const STRIPE_SECRET_KEY = getStripeSecretKey();
 
 const stripe = STRIPE_SECRET_KEY
   ? new Stripe(STRIPE_SECRET_KEY, {
-      apiVersion: "2024-06-20" as Stripe.LatestApiVersion,
+      apiVersion: STRIPE_API_VERSION,
     })
   : null;
 

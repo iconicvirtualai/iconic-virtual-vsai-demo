@@ -29,16 +29,16 @@ export default function HelpPage() {
           </p>
           <p style={{ fontSize: 18, lineHeight: 1.7, color: "#444", marginBottom: 20 }}>
             <strong>How does AI staging work?</strong><br />
-            Upload a photo of an empty or unfurnished room, select a style, and our AI generates a professionally staged version in under 60 seconds.
+            Upload a photo of an empty or unfurnished room, select a style, and the studio generates a staged version. Pay the listed price to download it.
           </p>
           <h2 style={{ fontSize: 24, fontWeight: 700, marginTop: 40, marginBottom: 16 }}>Billing &amp; Credits</h2>
           <p style={{ fontSize: 18, lineHeight: 1.7, color: "#444", marginBottom: 20 }}>
             <strong>How much does it cost?</strong><br />
-            AI staging starts at $1 per photo. We offer credit packages for volume discounts. Visit our pricing section for current rates.
+            Prices are printed on each pack on the home page and the offers page. The offers page includes 5 AI photos for $5.
           </p>
           <p style={{ fontSize: 18, lineHeight: 1.7, color: "#444", marginBottom: 20 }}>
             <strong>Do credits expire?</strong><br />
-            No, your credits never expire. Use them whenever you need.
+            Purchased credits are stored on the account. The product does not run an expiry timer, and it does not roll unused credits forward for 30 days.
           </p>
           <h2 style={{ fontSize: 24, fontWeight: 700, marginTop: 40, marginBottom: 16 }}>Pro Staging</h2>
           <p style={{ fontSize: 18, lineHeight: 1.7, color: "#444", marginBottom: 20 }}>

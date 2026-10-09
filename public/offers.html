@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Special Offers | IconicVirtual.AI</title>
-<meta name="description" content="Limited-time virtual staging deals. AI staging from $1/photo, Pro staging from $8/image. Save up to 70% on bundle packs.">
+<meta name="description" content="Iconic Virtual staging packs. AI packs start at $5 for 5 photos. Pro packs start at $10 for 1 image. Each button charges the printed price once.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230a0a0a'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-weight='bold' fill='%2310b981' font-family='system-ui'%3EIV%3C/text%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -139,36 +139,28 @@ img{max-width:100%;display:block}
 </header>
 
 <section class="hero">
-  <span class="hero-badge">LIMITED TIME OFFERS</span>
-  <h1>Stage Smarter. <span class="accent">Save More.</span></h1>
-  <p>Exclusive bundle pricing for agents and brokerages. Up to 70% off regular per-image rates. No subscriptions, no commitments.</p>
-  <div class="hero-stats">
-    <div class="hero-stat"><div class="num">$1</div><div class="label">Per AI Photo</div></div>
-    <div class="hero-stat"><div class="num">$8</div><div class="label">Per Pro Photo</div></div>
-    <div class="hero-stat"><div class="num">70%</div><div class="label">Max Savings</div></div>
-    <div class="hero-stat"><div class="num">12K+</div><div class="label">Agents Trust Us</div></div>
-  </div>
+  <span class="hero-badge">CREDIT PACKS</span>
+  <h1>AI and pro <span class="accent">credit packs</span>.</h1>
+  <p>Each button charges the price printed on that card, once, through Stripe. These packs are not subscriptions.</p>
 </section>
 
 <div class="section">
   <div class="section-title">
     <span class="badge badge-ai">AI STAGING</span>
     <h2>AI Virtual Staging Packs</h2>
-    <p>Instant results in under 60 seconds. High-res, MLS-ready images with commercial license included.</p>
+    <p>AI credits for the studio. You choose a room type and a style, then download after the image is ready.</p>
   </div>
   <div class="cards">
     <div class="card">
       <div class="card-type card-type-ai">AI STAGING</div>
       <h3>Starter Pack</h3>
-      <div class="original">Normally $15</div>
       <div class="price">$5 <span>total</span></div>
       <div class="per">$1.00/photo • 5 photos</div>
       <ul>
         <li>5 AI staged images</li>
-        <li>100+ design styles</li>
-        <li>60-second delivery</li>
-        <li>4K high-res downloads</li>
-        <li>Commercial license</li>
+        <li>Studio design styles</li>
+        <li>Charged once at $5</li>
+        <li>Download after the image is ready</li>
       </ul>
       <button class="btn-emerald" onclick="startCheckout('ai-5')">Get Starter Pack →</button>
     </div>
@@ -176,28 +168,25 @@ img{max-width:100%;display:block}
       <div class="card-badge card-badge-ai">BEST VALUE</div>
       <div class="card-type card-type-ai">AI STAGING</div>
       <h3>Best Value Bundle</h3>
-      <div class="original">Normally $75</div>
       <div class="price">$50 <span>total</span></div>
       <div class="per">$2.00/photo • 25 photos</div>
       <ul>
         <li>25 AI staged images</li>
-        <li>100+ design styles</li>
-        <li>60-second delivery</li>
-        <li>4K high-res downloads</li>
-        <li>Commercial license</li>
+        <li>Studio design styles</li>
+        <li>Charged once at $50</li>
+        <li>Download after the image is ready</li>
       </ul>
       <button class="btn-emerald" onclick="startCheckout('ai-25')">Get Best Value Bundle →</button>
     </div>
     <div class="card">
       <div class="card-type card-type-ai">AI STAGING</div>
       <h3>Agent Pro Pack</h3>
-      <div class="original">Normally $150</div>
       <div class="price">$75 <span>total</span></div>
       <div class="per">$1.50/photo • 50 photos</div>
       <ul>
         <li>50 AI staged images</li>
-        <li>100+ design styles</li>
-        <li>60-second delivery</li>
+        <li>Studio design styles</li>
+        <li>Charged once at $75</li>
         <li>Bulk upload support</li>
         <li>Commercial license</li>
       </ul>
@@ -207,13 +196,12 @@ img{max-width:100%;display:block}
       <div class="card-badge card-badge-danger">TEAMS</div>
       <div class="card-type card-type-ai">AI STAGING</div>
       <h3>Brokerage Pack</h3>
-      <div class="original">Normally $300</div>
       <div class="price">$100 <span>total</span></div>
       <div class="per">$1.00/photo • 100 photos</div>
       <ul>
         <li>100 AI staged images</li>
         <li>Share across team</li>
-        <li>60-second delivery</li>
+        <li>Charged once at $100</li>
         <li>Priority support</li>
         <li>Commercial license</li>
       </ul>
@@ -226,21 +214,18 @@ img{max-width:100%;display:block}
   <div class="section-title">
     <span class="badge badge-pro">PRO STAGING</span>
     <h2>Professional Designer Staging</h2>
-    <p>Magazine-quality staging by our expert design team. 24-hour turnaround with free revisions.</p>
+    <p>Pro credits for designer staging. Charged once at the price on the card.</p>
   </div>
   <div class="cards">
     <div class="card">
       <div class="card-type card-type-pro">PRO STAGING</div>
       <h3>Single Room</h3>
-      <div class="original">Normally $15</div>
       <div class="price">$10 <span>total</span></div>
       <div class="per">1 professionally staged image</div>
       <ul>
         <li>Expert designer assigned</li>
-        <li>24-hour turnaround</li>
-        <li>1 free revision</li>
-        <li>High-res download</li>
-        <li>Commercial license</li>
+        <li>Design team stages the photo</li>
+        <li>Download after the image is ready</li>
       </ul>
       <button class="btn-taupe" onclick="startCheckout('pro-1')">Order Single Room →</button>
     </div>
@@ -248,30 +233,24 @@ img{max-width:100%;display:block}
       <div class="card-badge card-badge-pro">POPULAR</div>
       <div class="card-type card-type-pro">PRO STAGING</div>
       <h3>5-Room Bundle</h3>
-      <div class="original">Normally $62.50</div>
       <div class="price">$40 <span>total</span></div>
       <div class="per">$8.00/image • 5 images</div>
       <ul>
         <li>5 designer-staged images</li>
-        <li>24-hour turnaround</li>
-        <li>2 free revisions each</li>
-        <li>Multi-angle staging</li>
-        <li>Commercial license</li>
+        <li>Design team stages the photos</li>
+        <li>Download after the images are ready</li>
       </ul>
       <button class="btn-taupe" onclick="startCheckout('pro-5')">Order 5-Room Bundle →</button>
     </div>
     <div class="card">
       <div class="card-type card-type-pro">PRO STAGING</div>
       <h3>10-Room Bundle</h3>
-      <div class="original">Normally $125</div>
       <div class="price">$75 <span>total</span></div>
       <div class="per">$7.50/image • 10 images</div>
       <ul>
         <li>10 designer-staged images</li>
-        <li>Priority turnaround</li>
-        <li>2 free revisions each</li>
-        <li>Dedicated designer</li>
-        <li>Commercial license</li>
+        <li>Design team stages the photos</li>
+        <li>Download after the images are ready</li>
       </ul>
       <button class="btn-taupe" onclick="startCheckout('pro-10')">Order 10-Room Bundle →</button>
     </div>

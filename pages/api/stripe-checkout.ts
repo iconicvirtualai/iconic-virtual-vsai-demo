@@ -1,22 +1,11 @@
 // pages/api/stripe-checkout.ts
 import type { NextApiRequest, NextApiResponse } from "next";
-import Stripe from "stripe";
+import { HD_DOWNLOAD_AMOUNT_CENTS } from "../../lib/catalog";
+import { getPublicSiteUrl, getStripe, getStripeSecretKey } from "../../lib/stripeServer";
 
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+const STRIPE_SECRET_KEY = getStripeSecretKey();
 
 type Resp = { ok: true; url: string } | { ok: false; error: string };
-
-function getBaseUrl(req: NextApiRequest) {
-  const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  if (envUrl) return envUrl.replace(/\/$/, "");
-
-  const proto =
-    (req.headers["x-forwarded-proto"] as string) ||
-    (req.headers["x-forwarded-protocol"] as string) ||
-    "https";
-  const host = (req.headers["x-forwarded-host"] as string) || req.headers.host;
-  return `${proto}://${host}`;
-}
 
 export default async function handler(
   req: NextApiRequest,
@@ -44,8 +33,8 @@ export default async function handler(
         .json({ ok: false, error: "Missing jobId in request body." });
     }
 
-    const stripe = new Stripe(STRIPE_SECRET_KEY, { apiVersion: "2024-06-20" });
-    const baseUrl = getBaseUrl(req);
+    const stripe = getStripe();
+    const baseUrl = getPublicSiteUrl(req);
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -58,7 +47,7 @@ export default async function handler(
         {
           price_data: {
             currency: "usd",
-            unit_amount: 500, // $5
+            unit_amount: HD_DOWNLOAD_AMOUNT_CENTS,
             product_data: {
               name: "Virtual Staging – High Resolution Download",
             },
